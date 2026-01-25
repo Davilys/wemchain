@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { NoCreditModal } from "@/components/credits/NoCreditModal";
+import { CreditConsumptionInfo } from "@/components/credits/CreditConsumptionInfo";
 import { 
   Upload, 
   CheckCircle2, 
@@ -66,6 +68,7 @@ export default function NovoRegistro() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showNoCreditModal, setShowNoCreditModal] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -157,12 +160,7 @@ export default function NovoRegistro() {
     }
 
     if (!hasCredits) {
-      toast({
-        title: "Sem créditos",
-        description: "Você precisa de créditos para registrar.",
-        variant: "destructive"
-      });
-      navigate("/checkout");
+      setShowNoCreditModal(true);
       return;
     }
 
@@ -381,6 +379,11 @@ export default function NovoRegistro() {
               </div>
             </div>
 
+            {/* Credit Consumption Info */}
+            {file && hash && hasCredits && (
+              <CreditConsumptionInfo variant="default" />
+            )}
+
             {/* Terms Checkbox */}
             {file && hash && (
               <div className="flex items-start gap-3">
@@ -407,7 +410,7 @@ export default function NovoRegistro() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading || !hasCredits}
+                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading}
                 className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium"
               >
                 {loading ? (
@@ -425,6 +428,12 @@ export default function NovoRegistro() {
             </div>
           </CardContent>
         </Card>
+
+        {/* No Credit Modal */}
+        <NoCreditModal 
+          open={showNoCreditModal} 
+          onClose={() => setShowNoCreditModal(false)} 
+        />
       </div>
     </DashboardLayout>
   );

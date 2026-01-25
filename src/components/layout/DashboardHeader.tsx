@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Menu, Coins, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { Menu, LogOut, User, Settings, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import { useCredits } from "@/hooks/useCredits";
+import { HeaderCreditBadge } from "@/components/credits/HeaderCreditBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,6 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
-  const { credits, loading: creditsLoading } = useCredits();
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
@@ -53,30 +52,8 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
 
       {/* Right: Credits + Theme + User */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Credits - Always Visible */}
-        <Link 
-          to="/creditos"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors"
-        >
-          <Coins className="h-4 w-4 text-primary" />
-          <span className="font-body font-semibold text-primary text-sm">
-            {creditsLoading ? "..." : credits?.available_credits || 0}
-          </span>
-          <span className="hidden sm:inline text-xs text-muted-foreground">
-            créditos
-          </span>
-        </Link>
-
-        {/* Buy Credits Button */}
-        <Button 
-          asChild 
-          size="sm" 
-          className="hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium h-8 px-3 text-xs"
-        >
-          <Link to="/checkout">
-            Comprar créditos
-          </Link>
-        </Button>
+        {/* Credits Badge - Always Visible */}
+        <HeaderCreditBadge showBuyButton={true} />
 
         {/* Theme Toggle */}
         <ThemeToggle />
@@ -99,9 +76,9 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
-              <Link to="/perfil" className="flex items-center gap-2">
+              <Link to="/creditos" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Meu Perfil
+                Meus Créditos
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">

@@ -1,30 +1,31 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Plus, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
+  Search,
+  FileText,
+  Clock,
+  CheckCircle2,
   AlertCircle,
+  ArrowLeft,
   Shield,
   Download,
+  ExternalLink,
   Loader2,
-  Search,
-  Eye,
-  ExternalLink
+  Eye
 } from "lucide-react";
 
 interface Registro {
   id: string;
   nome_ativo: string;
   tipo_ativo: string;
+  arquivo_nome: string;
   status: string;
   hash_sha256: string | null;
   created_at: string;
@@ -37,9 +38,12 @@ interface Registro {
 export default function MeusRegistros() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status");
+
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -61,6 +65,7 @@ export default function MeusRegistros() {
           id,
           nome_ativo,
           tipo_ativo,
+          arquivo_nome,
           status,
           hash_sha256,
           created_at,
@@ -74,43 +79,47 @@ export default function MeusRegistros() {
       if (error) throw error;
       setRegistros(data || []);
     } catch (error) {
-      console.error("Erro ao buscar registros:", error);
+      console.error("Erro:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmado":
-        return (
-          <Badge className="bg-success/10 text-success border-success/20 font-body font-medium">
-            <CheckCircle2 className="h-3 w-3 mr-1.5" />
-            Confirmado
-          </Badge>
-        );
-      case "processando":
-        return (
-          <Badge className="bg-warning/10 text-warning border-warning/20 font-body font-medium">
-            <Clock className="h-3 w-3 mr-1.5 animate-pulse" />
-            Processando
-          </Badge>
-        );
-      case "falhou":
-        return (
-          <Badge className="bg-destructive/10 text-destructive border-destructive/20 font-body font-medium">
-            <AlertCircle className="h-3 w-3 mr-1.5" />
-            Falhou
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-muted text-muted-foreground font-body font-medium">
-            <Clock className="h-3 w-3 mr-1.5" />
-            Pendente
-          </Badge>
-        );
-    }
+  const filteredRegistros = registros.filter(r => {
+    const matchesSearch = r.nome_ativo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          r.arquivo_nome.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = !statusFilter || r.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusConfig = (status: string) => {
+    const configs = {
+      confirmado: { 
+        icon: CheckCircle2, 
+        label: "Confirmado", 
+        className: "bg-success/10 text-success border-success/20",
+        dotColor: "bg-success"
+      },
+      processando: { 
+        icon: Clock, 
+        label: "Processando", 
+        className: "bg-primary/10 text-primary border-primary/20",
+        dotColor: "bg-primary"
+      },
+      pendente: { 
+        icon: Clock, 
+        label: "Pendente", 
+        className: "bg-warning/10 text-warning border-warning/20",
+        dotColor: "bg-warning"
+      },
+      falhou: { 
+        icon: AlertCircle, 
+        label: "Falhou", 
+        className: "bg-destructive/10 text-destructive border-destructive/20",
+        dotColor: "bg-destructive"
+      },
+    };
+    return configs[status as keyof typeof configs] || configs.pendente;
   };
 
   const formatDate = (dateString: string) => {
@@ -118,16 +127,8 @@ export default function MeusRegistros() {
       day: "2-digit",
       month: "short",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
-
-  const filteredRegistros = registros.filter(
-    (r) =>
-      r.nome_ativo.toLowerCase().includes(search.toLowerCase()) ||
-      r.tipo_ativo.toLowerCase().includes(search.toLowerCase())
-  );
 
   if (authLoading) {
     return (
@@ -141,131 +142,175 @@ export default function MeusRegistros() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">Meus Registros</h1>
-            <p className="font-body text-muted-foreground">
-              {registros.length} registro{registros.length !== 1 ? "s" : ""} encontrado{registros.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold rounded-xl shadow-lg btn-premium group">
-            <Link to="/novo-registro">
-              <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-              Novo Registro
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+            <Link to="/dashboard">
+              <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
+          <div className="flex-1">
+            <h1 className="font-display text-2xl font-bold text-foreground">
+              {statusFilter === "confirmado" ? "Certificados" : "Meus Registros"}
+            </h1>
+            <p className="font-body text-sm text-muted-foreground">
+              {filteredRegistros.length} registro{filteredRegistros.length !== 1 ? 's' : ''} encontrado{filteredRegistros.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
 
-        {/* Busca */}
-        <div className="relative max-w-md">
+        {/* Search */}
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar registros..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            placeholder="Buscar por nome..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 font-body"
           />
         </div>
 
-        {/* Lista de Registros */}
+        {/* Status Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <Link to="/meus-registros">
+            <Badge 
+              variant={!statusFilter ? "default" : "outline"}
+              className={`cursor-pointer font-body ${!statusFilter ? 'bg-primary text-primary-foreground' : ''}`}
+            >
+              Todos
+            </Badge>
+          </Link>
+          <Link to="/meus-registros?status=pendente">
+            <Badge 
+              variant={statusFilter === "pendente" ? "default" : "outline"}
+              className={`cursor-pointer font-body ${statusFilter === "pendente" ? 'bg-warning text-warning-foreground' : ''}`}
+            >
+              🟡 Pendente
+            </Badge>
+          </Link>
+          <Link to="/meus-registros?status=processando">
+            <Badge 
+              variant={statusFilter === "processando" ? "default" : "outline"}
+              className={`cursor-pointer font-body ${statusFilter === "processando" ? 'bg-primary text-primary-foreground' : ''}`}
+            >
+              🔵 Processando
+            </Badge>
+          </Link>
+          <Link to="/meus-registros?status=confirmado">
+            <Badge 
+              variant={statusFilter === "confirmado" ? "default" : "outline"}
+              className={`cursor-pointer font-body ${statusFilter === "confirmado" ? 'bg-success text-success-foreground' : ''}`}
+            >
+              🟢 Confirmado
+            </Badge>
+          </Link>
+          <Link to="/meus-registros?status=falhou">
+            <Badge 
+              variant={statusFilter === "falhou" ? "default" : "outline"}
+              className={`cursor-pointer font-body ${statusFilter === "falhou" ? 'bg-destructive text-destructive-foreground' : ''}`}
+            >
+              🔴 Falhou
+            </Badge>
+          </Link>
+        </div>
+
+        {/* Registros List */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : filteredRegistros.length === 0 ? (
-          <Card className="card-premium">
+          <Card className="border-border/50">
             <CardContent className="text-center py-16">
-              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center mx-auto mb-6">
-                <FileText className="h-10 w-10 text-muted-foreground" />
+              <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-xl font-bold mb-3">
-                {search ? "Nenhum resultado encontrado" : "Nenhum registro ainda"}
-              </h3>
-              <p className="font-body text-muted-foreground mb-6 max-w-sm mx-auto">
-                {search
-                  ? "Tente buscar com outros termos"
-                  : "Comece registrando sua primeira marca em blockchain."}
+              <h3 className="font-display text-lg font-semibold mb-2">Nenhum registro encontrado</h3>
+              <p className="font-body text-sm text-muted-foreground mb-4">
+                {searchQuery ? "Tente buscar por outro termo" : "Comece registrando seu primeiro arquivo"}
               </p>
-              {!search && (
-                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl btn-premium">
-                  <Link to="/novo-registro">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Registro
-                  </Link>
+              {!searchQuery && (
+                <Button asChild className="bg-primary text-primary-foreground">
+                  <Link to="/novo-registro">Novo Registro</Link>
                 </Button>
               )}
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {filteredRegistros.map((registro, index) => (
-              <Card
-                key={registro.id}
-                className="card-premium border-border/50 hover:border-primary/30 transition-all duration-300 animate-fade-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                        <Shield className="h-7 w-7 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-body font-semibold text-lg text-foreground">
-                          {registro.nome_ativo}
-                        </h3>
-                        <p className="font-body text-sm text-muted-foreground">
-                          {registro.tipo_ativo.replace("_", " ")} • {formatDate(registro.created_at)}
-                        </p>
-                        {registro.hash_sha256 && (
-                          <p className="font-mono text-xs text-muted-foreground truncate max-w-xs mt-1">
-                            Hash: {registro.hash_sha256.substring(0, 20)}...
+          <div className="space-y-3">
+            {filteredRegistros.map((registro) => {
+              const statusConfig = getStatusConfig(registro.status);
+              const StatusIcon = statusConfig.icon;
+
+              return (
+                <Card key={registro.id} className="border-border/50 hover:border-primary/30 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Left: Icon + Info */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Shield className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-body font-medium text-foreground text-sm truncate">
+                            {registro.nome_ativo}
                           </p>
-                        )}
+                          <p className="font-body text-xs text-muted-foreground">
+                            {registro.tipo_ativo.replace("_", " ")} • {formatDate(registro.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(registro.status)}
+                      {/* Right: Status + Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge className={`${statusConfig.className} font-body text-xs`}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {statusConfig.label}
+                        </Badge>
 
-                      {registro.status === "confirmado" && registro.transacoes_blockchain && (
-                        <a
-                          href={`https://polygonscan.com/tx/${registro.transacoes_blockchain.tx_hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:text-primary/80"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
+                        {/* Blockchain Link */}
+                        {registro.status === "confirmado" && registro.transacoes_blockchain && (
+                          <a
+                            href={`https://polygonscan.com/tx/${registro.transacoes_blockchain.tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 transition-colors"
+                            title="Ver na blockchain"
+                          >
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                          </a>
+                        )}
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="h-9 w-9 rounded-lg hover:bg-primary/10"
-                      >
-                        <Link to={`/certificado/${registro.id}`}>
-                          <Eye className="h-4 w-4 text-primary" />
-                        </Link>
-                      </Button>
-
-                      {registro.status === "confirmado" && (
+                        {/* View Details */}
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 rounded-lg hover:bg-primary/10"
+                          asChild
+                          className="h-8 w-8"
                         >
-                          <Download className="h-4 w-4 text-primary" />
+                          <Link to={`/certificado/${registro.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
                         </Button>
-                      )}
+
+                        {/* Download - Only for confirmed */}
+                        {registro.status === "confirmado" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Baixar certificado"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

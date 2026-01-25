@@ -1,8 +1,9 @@
-import { Menu, Bell, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, Coins, LogOut, User, Settings, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface DashboardHeaderProps {
   onToggleSidebar: () => void;
@@ -18,69 +20,102 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
+  const { credits, loading: creditsLoading } = useCredits();
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4 md:px-6">
+      {/* Left: Menu + Logo */}
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="lg:hidden"
+          className="lg:hidden h-9 w-9"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Search */}
-        <div className="hidden md:flex items-center">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar registros..."
-              className="pl-9 w-64 bg-muted border-0 font-body"
-            />
+        <Link to="/dashboard" className="flex items-center gap-3">
+          <img 
+            src={webmarcasLogo} 
+            alt="WebMarcas" 
+            className="h-8 w-auto"
+          />
+          <div className="hidden sm:block">
+            <span className="text-xs text-muted-foreground font-body">
+              Prova de Anterioridade em Blockchain
+            </span>
           </div>
-        </div>
+        </Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Right: Credits + Theme + User */}
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Credits - Always Visible */}
+        <Link 
+          to="/creditos"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors"
+        >
+          <Coins className="h-4 w-4 text-primary" />
+          <span className="font-body font-semibold text-primary text-sm">
+            {creditsLoading ? "..." : credits?.available_credits || 0}
+          </span>
+          <span className="hidden sm:inline text-xs text-muted-foreground">
+            créditos
+          </span>
+        </Link>
+
+        {/* Buy Credits Button */}
+        <Button 
+          asChild 
+          size="sm" 
+          className="hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium h-8 px-3 text-xs"
+        >
+          <Link to="/checkout">
+            Comprar créditos
+          </Link>
+        </Button>
+
         {/* Theme Toggle */}
         <ThemeToggle />
-
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-        </Button>
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 px-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground font-body text-sm">
+            <Button variant="ghost" className="gap-2 px-2 h-9">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="bg-muted text-muted-foreground font-body text-xs">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline font-body text-sm">
-                {user?.email}
-              </span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="font-body">
-              Meu Perfil
+            <div className="px-2 py-1.5 text-xs text-muted-foreground font-body truncate">
+              {user?.email}
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
+              <Link to="/perfil" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Meu Perfil
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="font-body">
-              Configurações
+            <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
+              <Link to="/configuracoes" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configurações
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={signOut}
-              className="text-destructive font-body"
+              className="text-destructive font-body text-sm cursor-pointer"
             >
+              <LogOut className="h-4 w-4 mr-2" />
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>

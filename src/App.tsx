@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import ComoFunciona from "./pages/ComoFunciona";
+import Creditos from "./pages/Creditos";
 import Servicos from "./pages/Servicos";
 import Vantagens from "./pages/Vantagens";
 import Verificar from "./pages/Verificar";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/novo-registro" element={<NovoRegistro />} />
               <Route path="/meus-registros" element={<MeusRegistros />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/creditos" element={<Creditos />} />
               <Route path="/processando/:id" element={<Processando />} />
               <Route path="/certificado/:id" element={<Certificado />} />
               {/* Admin Routes */}

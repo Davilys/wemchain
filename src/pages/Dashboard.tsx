@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { LegalNotice } from "@/components/legal/LegalNotice";
+import { CreditBalanceCard } from "@/components/credits/CreditBalanceCard";
+import { CreditHistory } from "@/components/credits/CreditHistory";
 import { 
   Plus, 
   FileText, 
@@ -43,6 +47,7 @@ interface Stats {
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
+  const { credits, ledger, loading: creditsLoading } = useCredits();
   const navigate = useNavigate();
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, confirmados: 0, pendentes: 0, processando: 0 });
@@ -156,29 +161,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Legal Notice */}
-      <LegalNotice />
+    <DashboardLayout>
+      <div className="space-y-8 animate-fade-in">
+        {/* Legal Notice */}
+        <LegalNotice />
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-primary" />
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <h1 className="font-display text-3xl font-bold text-foreground">Dashboard</h1>
             </div>
-            <h1 className="font-display text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="font-body text-muted-foreground">Gerencie seus registros em blockchain</p>
           </div>
-          <p className="font-body text-muted-foreground">Gerencie seus registros em blockchain</p>
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold rounded-xl shadow-lg btn-premium group">
+            <Link to="/novo-registro">
+              <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+              Novo Registro
+            </Link>
+          </Button>
         </div>
-        <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold rounded-xl shadow-lg btn-premium group">
-          <Link to="/novo-registro">
-            <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-            Novo Registro
-          </Link>
-        </Button>
-      </div>
 
+        {/* Card de Créditos */}
+        <CreditBalanceCard
+          availableCredits={credits?.available_credits || 0}
+          totalCredits={credits?.total_credits || 0}
+          usedCredits={credits?.used_credits || 0}
+          loading={creditsLoading}
+        />
       {/* Stats Cards - Premium */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-premium border-border/50 overflow-hidden group">
@@ -386,5 +399,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 }

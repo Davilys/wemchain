@@ -92,7 +92,11 @@ export default function Processando() {
       supabase.from("registros").select("*, transacoes_blockchain (*)").eq("id", id).single()
         .then(({ data, error }) => {
           if (error || !data) { navigate("/dashboard"); return; }
-          if (data.status === "confirmado" && data.transacoes_blockchain?.length > 0) { navigate(`/certificado/${id}`); return; }
+          // transacoes_blockchain is a one-to-one relation, check if it exists
+          const hasTransaction = Array.isArray(data.transacoes_blockchain) 
+            ? data.transacoes_blockchain.length > 0 
+            : data.transacoes_blockchain !== null;
+          if (data.status === "confirmado" && hasTransaction) { navigate(`/certificado/${id}`); return; }
           if (data.status === "pendente") processRegistro(id);
           setLoading(false);
         });

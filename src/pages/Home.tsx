@@ -42,33 +42,33 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-10 animate-fade-up">
               <Award className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-primary tracking-wide">
-                Líder em Registro de Marcas no Brasil
+                Prova de Anterioridade em Blockchain
               </span>
             </div>
 
             {/* Main Title - WebMarcas Style */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
-              <span className="text-foreground">Registre sua marca e</span>
+              <span className="text-foreground">Registre sua criação na</span>
               <br />
-              <span className="text-primary text-shadow-glow">torne ela única!</span>
+              <span className="text-primary text-shadow-glow">Blockchain!</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
-              Processo <span className="text-foreground font-medium">100% online</span>, protocolo em até 48h e garantia de registro.
+              Comprove a <span className="text-foreground font-medium">existência e autoria</span> do seu arquivo com registro imutável.
               <br className="hidden sm:block" />
-              <span className="text-foreground font-medium">Dono da marca é quem registra primeiro.</span> Proteja-se agora.
+              <span className="text-foreground font-medium">Prova jurídica de anterioridade</span> aceita em tribunais.
             </p>
 
-            {/* CTA Buttons - Exact WebMarcas style */}
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 animate-fade-up delay-300 px-4">
               <Button 
                 asChild 
                 size="lg" 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
-                <Link to="/verificar">
-                  Consultar viabilidade
+                <Link to="/cadastro">
+                  Registrar Agora
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -78,26 +78,26 @@ export default function Home() {
                 variant="outline"
                 className="border-2 border-secondary bg-secondary/80 text-foreground hover:bg-secondary font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
               >
-                <Link to="/cadastro">
-                  Registrar por R$699
+                <Link to="/servicos">
+                  Ver Preços
                 </Link>
               </Button>
             </div>
 
-            {/* Offer Badge - Red accent like reference */}
+            {/* Trust Badge */}
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary/60 border border-border/50 mb-12 animate-fade-up delay-400">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <ShieldCheck className="h-4 w-4 text-green-500" />
               <span className="text-sm text-muted-foreground">
-                Oferta válida até <span className="text-red-500 font-bold">30/01</span>
+                Registro permanente e <span className="text-foreground font-medium">verificável publicamente</span>
               </span>
             </div>
 
-            {/* Feature Cards Row - Matching WebMarcas exactly */}
+            {/* Feature Cards Row */}
             <div className="flex flex-wrap gap-4 justify-center items-center animate-fade-up delay-500 px-4 max-w-4xl mx-auto">
               {[
-                { icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10", label: "Proteção Total" },
-                { icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", label: "Registro Rápido" },
-                { icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10", label: "Garantia" },
+                { icon: Lock, color: "text-blue-500", bg: "bg-blue-500/10", label: "Imutável" },
+                { icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", label: "Instantâneo" },
+                { icon: Globe, color: "text-green-500", bg: "bg-green-500/10", label: "Verificável" },
                 { icon: Award, color: "text-yellow-500", bg: "bg-yellow-500/10", label: "Certificado" },
               ].map((item, index) => (
                 <div 
@@ -125,10 +125,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
             {[
-              { value: "15.000+", label: "Marcas Registradas", icon: Shield },
-              { value: "98%", label: "Taxa de Aprovação", icon: CheckCircle2 },
-              { value: "48h", label: "Tempo de Protocolo", icon: Clock },
-              { value: "10 anos", label: "Validade do Registro", icon: Award },
+              { value: "10.000+", label: "Arquivos Registrados", icon: FileCheck },
+              { value: "100%", label: "Verificáveis", icon: CheckCircle2 },
+              { value: "Minutos", label: "Tempo de Registro", icon: Clock },
+              { value: "Eterno", label: "Validade na Blockchain", icon: Database },
             ].map((stat, index) => (
               <div key={index} className="text-center group">
                 <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors">
@@ -300,8 +300,8 @@ export default function Home() {
                 ))}
               </div>
               <div>
-                <div className="text-lg md:text-xl font-bold text-foreground">+15.000</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Clientes satisfeitos</div>
+                <div className="text-lg md:text-xl font-bold text-foreground">+10.000</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Registros realizados</div>
               </div>
             </div>
             
@@ -326,8 +326,8 @@ export default function Home() {
                 <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-green-500" />
               </div>
               <div>
-                <div className="text-lg md:text-xl font-bold text-foreground">98%</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Taxa de aprovação</div>
+                <div className="text-lg md:text-xl font-bold text-foreground">100%</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Imutável e verificável</div>
               </div>
             </div>
           </div>

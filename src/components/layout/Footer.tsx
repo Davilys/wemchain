@@ -4,7 +4,7 @@ import { Shield, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const whatsappNumber = "5511999999999"; // TODO: Substituir pelo número real
+  const whatsappNumber = "5511911120225"; // WebMarcas: (11) 91112-0225
   const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre os serviços da WebMarcas.");
 
   return (
@@ -16,10 +16,11 @@ export function Footer() {
             <Link to="/" className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-secondary" />
               <span className="font-display text-2xl font-bold">
-                Web<span className="text-secondary">Marcas</span>
+                <span className="text-white">Web</span>
+                <span className="text-secondary">Marcas</span>
               </span>
             </Link>
-            <p className="text-primary-foreground/80 text-sm leading-relaxed">
+            <p className="font-body text-primary-foreground/80 text-sm leading-relaxed">
               Proteção jurídica completa para sua marca com registro em blockchain. 
               Prova de anterioridade imutável e verificável.
             </p>
@@ -29,16 +30,16 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-display text-lg font-semibold">Links Rápidos</h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/como-funciona" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/como-funciona" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Como Funciona
               </Link>
-              <Link to="/servicos" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/servicos" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Serviços e Preços
               </Link>
-              <Link to="/vantagens" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/vantagens" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Vantagens Jurídicas
               </Link>
-              <Link to="/verificar" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/verificar" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Verificar Certificado
               </Link>
             </nav>
@@ -48,13 +49,13 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-display text-lg font-semibold">Área do Cliente</h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/login" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/login" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Acessar Conta
               </Link>
-              <Link to="/cadastro" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/cadastro" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Criar Conta
               </Link>
-              <Link to="/dashboard" className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+              <Link to="/dashboard" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Meus Registros
               </Link>
             </nav>
@@ -68,26 +69,26 @@ export function Footer() {
                 href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
+                className="flex items-center gap-2 font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
               >
                 <MessageCircle className="h-4 w-4" />
-                WhatsApp
+                (11) 91112-0225
               </a>
               <a 
-                href="tel:+551199999999"
-                className="flex items-center gap-2 text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
+                href="tel:+5511911120225"
+                className="flex items-center gap-2 font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
               >
                 <Phone className="h-4 w-4" />
-                (11) 99999-9999
+                (11) 91112-0225
               </a>
               <a 
-                href="mailto:contato@webmarcas.com.br"
-                className="flex items-center gap-2 text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
+                href="mailto:ola@webmarcas.net"
+                className="flex items-center gap-2 font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
               >
                 <Mail className="h-4 w-4" />
-                contato@webmarcas.com.br
+                ola@webmarcas.net
               </a>
-              <div className="flex items-start gap-2 text-primary-foreground/80 text-sm">
+              <div className="flex items-start gap-2 font-body text-primary-foreground/80 text-sm">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>São Paulo, SP - Brasil</span>
               </div>
@@ -97,14 +98,14 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-primary-foreground/60 text-sm">
+          <p className="font-body text-primary-foreground/60 text-sm">
             © {currentYear} WebMarcas. Todos os direitos reservados.
           </p>
           <div className="flex gap-6">
-            <Link to="/termos" className="text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
+            <Link to="/termos" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
               Termos de Uso
             </Link>
-            <Link to="/privacidade" className="text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
+            <Link to="/privacidade" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
               Política de Privacidade
             </Link>
           </div>

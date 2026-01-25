@@ -194,6 +194,53 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          issued_at: string
+          last_downloaded_at: string | null
+          registro_id: string
+          reissued_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          issued_at?: string
+          last_downloaded_at?: string | null
+          registro_id: string
+          reissued_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          issued_at?: string
+          last_downloaded_at?: string | null
+          registro_id?: string
+          reissued_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: true
+            referencedRelation: "registros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credits: {
         Row: {
           available_credits: number

@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.monitor-system]
 verify_jwt = false
+
+[functions.generate-certificate]
+verify_jwt = false

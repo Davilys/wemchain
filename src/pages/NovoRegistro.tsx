@@ -7,12 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NoCreditModal } from "@/components/credits/NoCreditModal";
 import { CreditConsumptionInfo } from "@/components/credits/CreditConsumptionInfo";
+import { AuthorsList } from "@/components/registro/AuthorsList";
+import { Author } from "@/components/registro/AddAuthorModal";
 import { 
   Upload, 
   CheckCircle2, 
@@ -24,7 +33,10 @@ import {
   File,
   Lock,
   AlertTriangle,
-  Coins
+  Coins,
+  Globe,
+  EyeOff,
+  Info
 } from "lucide-react";
 
 const acceptedTypes = [
@@ -56,6 +68,11 @@ const getTipoAtivo = (category: string): string => {
   return map[category] || "outro";
 };
 
+interface UserProfile {
+  full_name: string | null;
+  cpf_cnpj: string | null;
+}
+
 export default function NovoRegistro() {
   const { user, loading: authLoading } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
@@ -69,6 +86,12 @@ export default function NovoRegistro() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showNoCreditModal, setShowNoCreditModal] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  
+  // Author state
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [coauthors, setCoauthors] = useState<Author[]>([]);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -76,7 +99,42 @@ export default function NovoRegistro() {
     }
   }, [user, authLoading, navigate]);
 
+  // Fetch user profile for primary author
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name, cpf_cnpj")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
   const hasCredits = (credits?.available_credits || 0) > 0;
+
+  // Primary author derived from profile
+  const primaryAuthor: Omit<Author, "id" | "display_order"> | null = profile?.full_name 
+    ? {
+        name: profile.full_name,
+        email: user?.email || "",
+        document_type: (profile.cpf_cnpj?.replace(/\D/g, "").length || 0) > 11 ? "CNPJ" : "CPF",
+        document_number: profile.cpf_cnpj?.replace(/\D/g, "") || "",
+        role: "PRIMARY",
+      }
+    : null;
 
   const generateHash = useCallback(async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
@@ -112,7 +170,6 @@ export default function NovoRegistro() {
     setHashLoading(true);
     setUploadProgress(0);
     
-    // Simulate progress
     const interval = setInterval(() => {
       setUploadProgress(prev => Math.min(prev + 15, 90));
     }, 100);
@@ -159,6 +216,15 @@ export default function NovoRegistro() {
       return;
     }
 
+    if (!primaryAuthor) {
+      toast({
+        title: "Perfil incompleto",
+        description: "Complete seu perfil com nome e documento antes de registrar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!hasCredits) {
       setShowNoCreditModal(true);
       return;
@@ -195,6 +261,34 @@ export default function NovoRegistro() {
 
       if (registroError) throw registroError;
 
+      // Insert authors (primary + coauthors)
+      const authorsToInsert = [
+        {
+          registro_id: registro.id,
+          name: primaryAuthor.name,
+          email: primaryAuthor.email,
+          document_type: primaryAuthor.document_type,
+          document_number: primaryAuthor.document_number,
+          role: "PRIMARY",
+          display_order: 0,
+        },
+        ...coauthors.map((author, index) => ({
+          registro_id: registro.id,
+          name: author.name,
+          email: author.email,
+          document_type: author.document_type,
+          document_number: author.document_number,
+          role: "COAUTHOR",
+          display_order: index + 1,
+        })),
+      ];
+
+      const { error: authorsError } = await supabase
+        .from("record_authors")
+        .insert(authorsToInsert);
+
+      if (authorsError) throw authorsError;
+
       toast({
         title: "Registro criado!",
         description: "Seu arquivo está sendo processado.",
@@ -213,7 +307,7 @@ export default function NovoRegistro() {
     }
   };
 
-  if (authLoading || creditsLoading) {
+  if (authLoading || creditsLoading || profileLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -268,12 +362,103 @@ export default function NovoRegistro() {
           </Card>
         )}
 
+        {/* Profile Warning */}
+        {!primaryAuthor && (
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-sm font-medium text-destructive">
+                    Perfil incompleto
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground">
+                    Complete seu perfil com nome e documento para ser o autor principal.
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/dashboard">
+                    Completar Perfil
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Main Card */}
         <Card className="border-border/50">
           <CardContent className="p-6 space-y-6">
+            {/* Authors Section */}
+            {primaryAuthor && (
+              <AuthorsList
+                authors={coauthors}
+                onAuthorsChange={setCoauthors}
+                primaryAuthor={primaryAuthor}
+                readOnly={false}
+              />
+            )}
+
+            {/* Visibility Toggle */}
+            <div className="space-y-3">
+              <Label className="font-body font-medium">Visibilidade do registro</Label>
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+                <div className="flex items-center gap-3">
+                  {isPublic ? (
+                    <Globe className="h-5 w-5 text-primary" />
+                  ) : (
+                    <EyeOff className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <div>
+                    <p className="font-body text-sm font-medium text-foreground">
+                      {isPublic ? "Público" : "Privado"}
+                    </p>
+                    <p className="font-body text-xs text-muted-foreground">
+                      {isPublic 
+                        ? "Qualquer pessoa pode verificar este registro" 
+                        : "Apenas você pode ver os detalhes"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>
+                          <strong>Público:</strong> O hash e metadados ficam visíveis para verificação externa.
+                        </p>
+                        <p className="mt-1">
+                          <strong>Privado:</strong> Apenas você tem acesso aos detalhes do registro.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Switch
+                    checked={isPublic}
+                    onCheckedChange={setIsPublic}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* File Upload */}
             <div className="space-y-3">
-              <Label className="font-body font-medium">Arquivo</Label>
+              <div className="flex items-center gap-2">
+                <Label className="font-body font-medium">Arquivo</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertTriangle className="h-4 w-4 text-warning cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>⚠️ Atenção: o nome do arquivo será usado como título do registro e não poderá ser alterado após o registro.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               
               {!file ? (
                 <label className="block cursor-pointer">
@@ -410,7 +595,7 @@ export default function NovoRegistro() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading}
+                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading || !primaryAuthor}
                 className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium"
               >
                 {loading ? (

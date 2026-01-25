@@ -28,14 +28,14 @@ export function NoCreditModal({ open, onClose }: NoCreditModalProps) {
             Você não possui créditos disponíveis
           </AlertDialogTitle>
           <AlertDialogDescription className="font-body text-sm text-muted-foreground">
-            Para realizar este registro em blockchain, você precisa adquirir créditos. 
-            Cada crédito corresponde a um registro com certificado digital.
+            Para realizar este Registro de Propriedade em Blockchain, você precisa adquirir créditos. 
+            Registros adicionais custam R$ 49,00 cada.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="p-4 rounded-lg bg-muted/50 border border-border/50 my-4">
           <p className="font-body text-xs text-muted-foreground text-center">
-            <strong className="text-foreground">1 crédito = 1 registro</strong>
+            <strong className="text-foreground">1 crédito = 1 Registro de Propriedade</strong>
             <br />
             Seu arquivo será registrado em blockchain pública com prova de anterioridade.
           </p>

@@ -152,10 +152,10 @@ export default function MeusRegistros() {
           </Button>
           <div className="flex-1">
             <h1 className="font-display text-2xl font-bold text-foreground">
-              {statusFilter === "confirmado" ? "Certificados" : "Meus Registros"}
+              {statusFilter === "confirmado" ? "Certificados" : "Registros de Propriedade"}
             </h1>
             <p className="font-body text-sm text-muted-foreground">
-              {filteredRegistros.length} registro{filteredRegistros.length !== 1 ? 's' : ''} encontrado{filteredRegistros.length !== 1 ? 's' : ''}
+              {filteredRegistros.length} registro{filteredRegistros.length !== 1 ? 's' : ''} de propriedade encontrado{filteredRegistros.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -228,11 +228,11 @@ export default function MeusRegistros() {
               </div>
               <h3 className="font-display text-lg font-semibold mb-2">Nenhum registro encontrado</h3>
               <p className="font-body text-sm text-muted-foreground mb-4">
-                {searchQuery ? "Tente buscar por outro termo" : "Comece registrando seu primeiro arquivo"}
+                {searchQuery ? "Tente buscar por outro termo" : "Comece registrando sua primeira propriedade"}
               </p>
               {!searchQuery && (
                 <Button asChild className="bg-primary text-primary-foreground">
-                  <Link to="/novo-registro">Novo Registro</Link>
+                  <Link to="/novo-registro">Novo Registro de Propriedade</Link>
                 </Button>
               )}
             </CardContent>

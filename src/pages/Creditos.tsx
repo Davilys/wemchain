@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,14 +9,15 @@ import { useCredits } from "@/hooks/useCredits";
 import { CreditBalanceCard } from "@/components/credits/CreditBalanceCard";
 import { CreditHistory } from "@/components/credits/CreditHistory";
 import { 
-  Coins, 
   Plus, 
   ArrowLeft,
   Loader2,
   Info,
   Shield,
   CheckCircle2,
-  Zap
+  Zap,
+  Building2,
+  FileText
 } from "lucide-react";
 
 export default function Creditos() {
@@ -53,7 +54,7 @@ export default function Creditos() {
           <div className="flex-1">
             <h1 className="font-display text-2xl font-bold text-foreground">Meus Créditos</h1>
             <p className="font-body text-sm text-muted-foreground">
-              Gerencie seus créditos para registros em blockchain
+              Gerencie seus créditos para Registros de Propriedade em Blockchain
             </p>
           </div>
         </div>
@@ -78,7 +79,7 @@ export default function Creditos() {
                   Como funcionam os créditos?
                 </p>
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">
-                  Cada crédito corresponde a <strong className="text-foreground">um registro em blockchain</strong> com emissão de certificado digital.
+                  Cada crédito corresponde a <strong className="text-foreground">um Registro de Propriedade em Blockchain</strong> com emissão de certificado digital.
                   Os créditos são liberados após confirmação do pagamento e utilizados somente após a conclusão do registro.
                 </p>
               </div>
@@ -89,7 +90,7 @@ export default function Creditos() {
         {/* Plans Section */}
         <div>
           <h2 className="font-display text-lg font-semibold text-foreground mb-4">
-            Planos Disponíveis
+            Registros de Propriedade
           </h2>
           <div className="grid md:grid-cols-3 gap-4">
             {/* Básico */}
@@ -97,7 +98,7 @@ export default function Creditos() {
               <CardContent className="p-5">
                 <div className="mb-4">
                   <p className="font-display font-bold text-foreground text-lg">Básico</p>
-                  <p className="font-body text-xs text-muted-foreground">Ideal para registro único</p>
+                  <p className="font-body text-xs text-muted-foreground">Registro avulso de propriedade</p>
                 </div>
                 <p className="font-display text-3xl font-bold text-primary mb-4">
                   R$ 49
@@ -105,7 +106,7 @@ export default function Creditos() {
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    1 registro em blockchain
+                    1 Registro de Propriedade
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
@@ -124,7 +125,7 @@ export default function Creditos() {
               </CardContent>
             </Card>
 
-            {/* Profissional - Popular */}
+            {/* Profissional */}
             <Card className="border-primary/40 bg-primary/5 relative hover:shadow-xl transition-all">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground font-body text-xs px-3">
@@ -143,7 +144,7 @@ export default function Creditos() {
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    <strong className="text-foreground">5 registros</strong> em blockchain
+                    <strong className="text-foreground">5 Registros</strong> de Propriedade
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
@@ -166,34 +167,41 @@ export default function Creditos() {
               </CardContent>
             </Card>
 
-            {/* Mensal */}
+            {/* Business */}
             <Card className="border-border/50 hover:border-primary/30 transition-all hover:shadow-lg">
               <CardContent className="p-5">
-                <div className="mb-4">
-                  <p className="font-display font-bold text-foreground text-lg">Mensal</p>
-                  <p className="font-body text-xs text-muted-foreground">Para uso recorrente</p>
+                <div className="flex items-center gap-2 mb-4">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-display font-bold text-foreground text-lg">Business</p>
+                    <p className="font-body text-xs text-muted-foreground">Gestão de Propriedade Intelectual</p>
+                  </div>
                 </div>
                 <p className="font-display text-3xl font-bold text-primary mb-1">
                   R$ 99
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
-                <p className="font-body text-xs text-muted-foreground mb-4">5 créditos por ciclo</p>
+                <p className="font-body text-xs text-muted-foreground mb-4">1 crédito incluso + gestão completa</p>
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    5 créditos mensais
+                    1 crédito incluso por mês
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Renovação automática
+                    Registros adicionais R$ 49
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Cancele quando quiser
+                    Gestão de projetos
+                  </li>
+                  <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                    Dashboard completo
                   </li>
                 </ul>
                 <Button asChild variant="outline" className="w-full font-body font-medium border-primary/30 hover:bg-primary/5">
-                  <Link to="/checkout?plan=mensal">
+                  <Link to="/checkout?plan=business">
                     Assinar plano
                   </Link>
                 </Button>
@@ -201,6 +209,32 @@ export default function Creditos() {
             </Card>
           </div>
         </div>
+
+        {/* Additional Registration */}
+        <Card className="border-dashed border-2 border-border/50 hover:border-primary/30 transition-all">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-display font-semibold text-foreground">Registro Adicional</p>
+                  <p className="font-body text-sm text-muted-foreground">1 Registro de Propriedade em Blockchain</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-display text-2xl font-bold text-primary">R$ 49</p>
+                <Button asChild size="sm" variant="outline" className="mt-2 font-body">
+                  <Link to="/checkout?plan=adicional">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Comprar
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Credit History */}
         <CreditHistory entries={ledger} />
@@ -210,7 +244,7 @@ export default function Creditos() {
           <div className="flex items-start gap-3">
             <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <p className="font-body text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Transparência:</strong> Os créditos são liberados após confirmação do pagamento e utilizados somente após a conclusão do registro em blockchain. Cada registro gera prova técnica de anterioridade com validade jurídica.
+              <strong className="text-foreground">Transparência:</strong> Os créditos são liberados após confirmação do pagamento e utilizados somente após a conclusão do Registro de Propriedade em Blockchain. Cada registro gera prova técnica de anterioridade com validade jurídica.
             </p>
           </div>
         </div>

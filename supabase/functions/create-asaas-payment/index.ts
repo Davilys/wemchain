@@ -5,34 +5,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Configuração de planos
-const PLANS = {
+// Configuração de planos - CORRIGIDO PLANO BUSINESS
+const PLANS: Record<string, {
+  name: string;
+  value: number;
+  credits: number;
+  description: string;
+  isSubscription: boolean;
+  cycle?: string;
+}> = {
   BASICO: {
     name: "Básico",
     value: 49.00,
     credits: 1,
-    description: "1 registro em blockchain",
+    description: "1 Registro de Propriedade em Blockchain",
     isSubscription: false,
   },
   PROFISSIONAL: {
     name: "Profissional",
     value: 149.00,
     credits: 5,
-    description: "5 registros em blockchain",
+    description: "5 Registros de Propriedade em Blockchain",
     isSubscription: false,
   },
-  MENSAL: {
-    name: "Mensal",
+  BUSINESS: {
+    name: "Business",
     value: 99.00,
-    credits: 5,
-    description: "5 registros por mês",
+    credits: 1, // CORRIGIDO: 1 crédito incluso, não 5
+    description: "Plano Business - Gestão de Propriedade Intelectual",
     isSubscription: true,
     cycle: "MONTHLY",
+  },
+  ADICIONAL: {
+    name: "Registro Adicional",
+    value: 49.00,
+    credits: 1,
+    description: "Registro Adicional de Propriedade",
+    isSubscription: false,
   },
 };
 
 interface CreatePaymentRequest {
-  planType: "BASICO" | "PROFISSIONAL" | "MENSAL";
+  planType: "BASICO" | "PROFISSIONAL" | "BUSINESS" | "ADICIONAL";
   customerName: string;
   customerEmail: string;
   customerCpfCnpj: string;

@@ -283,47 +283,50 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
 
   y += 22;
 
-  // Technical details grid
+  // Technical details grid - 2 columns side by side
+  const colWidth = (contentWidth - 4) / 2;
+  
   pdf.setFillColor(250, 251, 255);
-  pdf.rect(margin, y - 3, contentWidth / 2 - 2, 20, "F");
-  pdf.rect(margin + contentWidth / 2 + 2, y - 3, contentWidth / 2 - 2, 20, "F");
+  pdf.rect(margin, y - 3, colWidth, 18, "F");
+  pdf.rect(margin + colWidth + 4, y - 3, colWidth, 18, "F");
   
   pdf.setTextColor(30, 40, 60);
   pdf.setFontSize(9);
   
-  // Left column
+  // Left column - Método
   pdf.setFont("helvetica", "normal");
-  pdf.text("Método:", margin + 4, y + 3);
+  pdf.text("Método:", margin + 4, y + 2);
   pdf.setFont("helvetica", "bold");
-  pdf.text(certificateData.technical.method, margin + 4, y + 9);
+  pdf.text(certificateData.technical.method, margin + 4, y + 8);
   
+  // Left column - Blockchain
   pdf.setFont("helvetica", "normal");
-  pdf.text("Confirmação:", margin + 4, y + 15);
+  pdf.text("Blockchain:", margin + 4, y + 14);
   
-  // Right column
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Blockchain:", margin + contentWidth / 2 + 6, y + 3);
+  // Right column - Network
   pdf.setFont("helvetica", "bold");
-  pdf.text(certificateData.technical.network, margin + contentWidth / 2 + 6, y + 9);
+  pdf.text(certificateData.technical.network, margin + colWidth + 8, y + 8);
   
+  // Right column - Data de Confirmação
   pdf.setFont("helvetica", "normal");
-  pdf.text("Data:", margin + contentWidth / 2 + 6, y + 15);
-  
+  pdf.text("Confirmado em:", margin + colWidth + 8, y + 2);
+
   y += 22;
 
-  // Confirmation date spanning full width
+  // Confirmation date full width
   pdf.setFillColor(245, 250, 255);
   pdf.rect(margin, y - 3, contentWidth, 10, "F");
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-  pdf.text(`Data de Confirmação: ${certificateData.confirmationDate}`, margin + 4, y + 3);
+  pdf.setTextColor(30, 40, 60);
+  pdf.text(`Data de Confirmação: ${certificateData.confirmationDate}`, margin + 4, y + 4);
 
   y += 14;
 
-  // TX Hash
+  // TX Hash box
   pdf.setFillColor(240, 245, 255);
   pdf.setDrawColor(0, 100, 180);
-  pdf.roundedRect(margin, y - 3, contentWidth, 14, 2, 2, "FD");
+  pdf.roundedRect(margin, y - 3, contentWidth, 16, 2, 2, "FD");
   
   pdf.setTextColor(60, 80, 120);
   pdf.setFontSize(8);
@@ -334,18 +337,19 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
   pdf.setFontSize(6);
   pdf.setTextColor(0, 60, 120);
   
-  const txHashDisplay = certificateData.technical.txHash.length > 80 
-    ? certificateData.technical.txHash.substring(0, 80) + "..."
+  // Truncate TX hash to fit
+  const txHashDisplay = certificateData.technical.txHash.length > 85 
+    ? certificateData.technical.txHash.substring(0, 85) + "..."
     : certificateData.technical.txHash;
-  pdf.text(txHashDisplay, margin + 4, y + 8);
+  pdf.text(txHashDisplay, margin + 4, y + 9);
 
-  y += 18;
+  y += 20;
 
   // ===== LEGAL DISCLAIMER =====
   pdf.setFillColor(255, 250, 230);
   pdf.setDrawColor(200, 160, 50);
   pdf.setLineWidth(0.5);
-  pdf.roundedRect(margin, y - 2, contentWidth, 28, 2, 2, "FD");
+  pdf.roundedRect(margin, y - 2, contentWidth, 26, 2, 2, "FD");
   
   pdf.setFontSize(9);
   pdf.setFont("helvetica", "bold");
@@ -353,22 +357,28 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
   pdf.text("AVISO LEGAL IMPORTANTE", margin + 4, y + 4);
   
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(7);
+  pdf.setFontSize(6.5);
   pdf.setTextColor(100, 80, 30);
   
   const disclaimerLines = pdf.splitTextToSize(certificateData.legal.disclaimer, contentWidth - 8);
   disclaimerLines.forEach((line: string, index: number) => {
-    if (index < 3) { // Limit to 3 lines
-      pdf.text(line, margin + 4, y + 10 + (index * 5));
+    if (index < 3) {
+      pdf.text(line, margin + 4, y + 10 + (index * 4.5));
     }
   });
 
-  y += 32;
+  y += 30;
 
   // ===== VERIFICATION SECTION WITH QR CODE =====
+  const qrBoxHeight = 42;
+  const qrSize = 34;
+  
   pdf.setFillColor(235, 245, 255);
   pdf.setDrawColor(0, 100, 180);
-  pdf.roundedRect(margin, y - 2, contentWidth, 35, 2, 2, "FD");
+  pdf.roundedRect(margin, y - 2, contentWidth, qrBoxHeight, 2, 2, "FD");
+  
+  // Text content on the left side (leave space for QR on right)
+  const textAreaWidth = contentWidth - qrSize - 12;
   
   pdf.setFontSize(10);
   pdf.setFont("helvetica", "bold");
@@ -376,29 +386,48 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
   pdf.text("VERIFICAÇÃO INDEPENDENTE", margin + 4, y + 5);
   
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
+  pdf.setFontSize(7.5);
   pdf.setTextColor(40, 60, 100);
   
   const verificationText = "Este certificado pode ser verificado de forma independente através do protocolo OpenTimestamps ou em nosso portal de verificação pública.";
-  const verifyLines = pdf.splitTextToSize(verificationText, contentWidth - 50);
+  const verifyLines = pdf.splitTextToSize(verificationText, textAreaWidth);
   verifyLines.forEach((line: string, index: number) => {
-    pdf.text(line, margin + 4, y + 12 + (index * 4));
+    if (index < 3) {
+      pdf.text(line, margin + 4, y + 12 + (index * 4));
+    }
   });
   
   pdf.setFontSize(7);
+  pdf.setFont("helvetica", "bold");
   pdf.setTextColor(0, 80, 160);
   pdf.text(`ID: ${certificateData.technical.registroId}`, margin + 4, y + 28);
   
-  // Add QR Code
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(6.5);
+  pdf.setTextColor(60, 80, 120);
+  pdf.text("webmarcas.net/verificar-registro", margin + 4, y + 34);
+  
+  // Add QR Code on the right - properly sized and positioned
   if (qrCodeDataUrl) {
     try {
-      pdf.addImage(qrCodeDataUrl, "PNG", pageWidth - margin - 32, y + 2, 28, 28);
+      const qrX = pageWidth - margin - qrSize - 4;
+      const qrY = y + (qrBoxHeight - qrSize) / 2;
+      pdf.addImage(qrCodeDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
     } catch (e) {
       console.error("Error adding QR code:", e);
+      // Fallback: draw placeholder box
+      pdf.setDrawColor(0, 100, 180);
+      pdf.setFillColor(255, 255, 255);
+      const qrX = pageWidth - margin - qrSize - 4;
+      const qrY = y + (qrBoxHeight - qrSize) / 2;
+      pdf.roundedRect(qrX, qrY, qrSize, qrSize, 2, 2, "FD");
+      pdf.setFontSize(6);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("QR Code", qrX + qrSize/2, qrY + qrSize/2, { align: "center" });
     }
   }
 
-  y += 40;
+  y += qrBoxHeight + 6;
 
   // ===== FOOTER =====
   const footerY = pageHeight - 20;

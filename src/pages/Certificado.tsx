@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
+import { downloadCertificate } from "@/services/certificateService";
 
 interface TransacaoBlockchain {
   id: string;
@@ -44,6 +45,7 @@ export default function Certificado() {
   
   const [registro, setRegistro] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -98,6 +100,35 @@ export default function Certificado() {
       title: "Copiado!",
       description: `${label} copiado para a área de transferência.`,
     });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!id || registro.status !== 'confirmado') {
+      toast({
+        title: "Não disponível",
+        description: "Certificado só pode ser baixado para registros confirmados.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDownloadingPDF(true);
+    try {
+      await downloadCertificate(id);
+      toast({
+        title: "Download iniciado!",
+        description: "Seu certificado PDF foi gerado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast({
+        title: "Erro ao gerar certificado",
+        description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingPDF(false);
+    }
   };
 
   const getVerificationUrl = (txHash: string, network: string) => {
@@ -464,10 +495,25 @@ export default function Certificado() {
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold py-6"
-            onClick={() => toast({ title: "Em breve!", description: "Download do PDF será implementado em breve." })}
+            onClick={handleDownloadPDF}
+            disabled={downloadingPDF || registro.status !== 'confirmado'}
           >
-            <Download className="h-5 w-5 mr-2" />
-            Baixar Certificado PDF
+            {downloadingPDF ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Gerando PDF...
+              </>
+            ) : registro.status !== 'confirmado' ? (
+              <>
+                <Download className="h-5 w-5 mr-2" />
+                Aguardando Confirmação
+              </>
+            ) : (
+              <>
+                <Download className="h-5 w-5 mr-2" />
+                Baixar Certificado PDF
+              </>
+            )}
           </Button>
           {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
             <Button

@@ -47,7 +47,7 @@ export function Header() {
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? "bg-background/95 backdrop-blur-xl border-b border-border shadow-lg" 
+          ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm" 
           : "bg-transparent"
       }`}
     >
@@ -55,15 +55,16 @@ export function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 md:gap-3 group">
-            <div className="relative h-9 w-9 md:h-11 md:w-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-colors">
+            <div className="relative h-9 w-9 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-colors overflow-hidden">
               <img 
                 src={webmarcasLogo} 
                 alt="WebMarcas" 
-                className="h-6 w-6 md:h-8 md:w-8 object-contain"
+                className="h-6 w-6 md:h-7 md:w-7 object-contain"
               />
             </div>
-            <span className="font-display text-lg md:text-xl font-bold text-foreground">
-              WebMarcas
+            <span className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+              <span className="text-foreground">Web</span>
+              <span className="text-primary">Marcas</span>
             </span>
           </Link>
 
@@ -73,23 +74,27 @@ export function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-3 xl:px-4 py-2 rounded-lg text-sm font-medium font-body transition-all duration-200 ${
+                className={`px-3 xl:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(link.href)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/login"
+              className="px-3 xl:px-4 py-2 rounded-lg text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200"
+            >
+              Registrar
+            </Link>
           </nav>
 
           {/* Right side buttons */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
+          <div className="hidden md:flex items-center gap-3">
             {/* Language selector */}
-            <Button variant="ghost" size="sm" className="font-body text-muted-foreground hover:text-foreground px-2">
-              BR
-            </Button>
+            <span className="text-sm font-medium text-muted-foreground">BR</span>
 
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -99,25 +104,25 @@ export function Header() {
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 font-body border-border/50 hover:border-primary/50">
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                     <User className="h-4 w-4" />
-                    <span className="hidden lg:inline">Minha Conta</span>
+                    <span className="hidden lg:inline">Área do Cliente</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border">
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer font-body">
+                    <Link to="/dashboard" className="cursor-pointer">
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/meus-registros" className="cursor-pointer font-body">
+                    <Link to="/meus-registros" className="cursor-pointer">
                       Meus Registros
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer font-body">
+                  <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair
                   </DropdownMenuItem>
@@ -125,14 +130,12 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" size="sm" asChild className="font-body font-medium text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" asChild className="font-medium text-muted-foreground hover:text-foreground">
                   <Link to="/login">Área do Cliente</Link>
                 </Button>
-                <Button size="sm" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold rounded-xl shadow-lg glow-cyan">
-                  <Link to="/verificar" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span className="hidden lg:inline">Consultar Marca</span>
-                    <span className="lg:hidden">Consultar</span>
+                <Button size="sm" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl px-5">
+                  <Link to="/verificar">
+                    Consultar Marca
                   </Link>
                 </Button>
               </>

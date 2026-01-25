@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Playfair Display'", "Georgia", "serif"],
-        body: ["'Montserrat'", "system-ui", "sans-serif"],
+        display: ["'Inter'", "system-ui", "sans-serif"],
+        body: ["'Inter'", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -77,8 +77,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        'glow': '0 0 20px hsl(var(--secondary) / 0.3)',
-        'glow-lg': '0 0 40px hsl(var(--secondary) / 0.4)',
+        'glow': '0 0 15px hsl(var(--primary) / 0.25)',
+        'glow-lg': '0 0 30px hsl(var(--primary) / 0.35)',
       },
       keyframes: {
         "accordion-down": {
@@ -118,8 +118,8 @@ export default {
           "50%": { transform: "translateY(-10px)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--secondary) / 0.3)" },
-          "50%": { boxShadow: "0 0 40px hsl(var(--secondary) / 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 15px hsl(210 100% 50% / 0.2)" },
+          "50%": { boxShadow: "0 0 30px hsl(210 100% 50% / 0.35)" },
         },
         "bounce-soft": {
           "0%, 100%": { transform: "translateY(0)" },

@@ -24,6 +24,14 @@ export function Footer() {
               Proteção jurídica completa para sua marca com registro em blockchain. 
               Prova de anterioridade imutável e verificável.
             </p>
+            <a 
+              href="https://www.webpatentes.com.br" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-body text-secondary hover:text-secondary/80 transition-colors text-sm font-medium"
+            >
+              Uma empresa do grupo WebPatentes →
+            </a>
           </div>
 
           {/* Links Rápidos */}
@@ -98,9 +106,20 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="font-body text-primary-foreground/60 text-sm">
-            © {currentYear} WebMarcas. Todos os direitos reservados.
-          </p>
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+            <p className="font-body text-primary-foreground/60 text-sm">
+              © {currentYear} WebMarcas. Todos os direitos reservados.
+            </p>
+            <span className="hidden md:inline text-primary-foreground/40">|</span>
+            <a 
+              href="https://www.webpatentes.com.br" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm"
+            >
+              Grupo WebPatentes
+            </a>
+          </div>
           <div className="flex gap-6">
             <Link to="/termos" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
               Termos de Uso

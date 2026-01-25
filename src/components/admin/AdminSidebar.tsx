@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
@@ -77,6 +78,13 @@ const financeMenuItems = [
 ];
 
 const systemMenuItems = [
+  {
+    title: "Monitoramento",
+    url: "/admin/monitoramento",
+    icon: Activity,
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-400/10",
+  },
   {
     title: "Logs e Auditoria",
     url: "/admin/logs",

@@ -18,7 +18,7 @@ const navLinks = [
   { href: "/vantagens", label: "Vantagens Jurídicas" },
   { href: "/como-funciona", label: "Como Funciona" },
   { href: "/servicos", label: "Preços" },
-  { href: "/verificar", label: "Verificar Registro" },
+  { href: "/verificar-registro", label: "Verificar Prova" },
 ];
 
 export function Header() {

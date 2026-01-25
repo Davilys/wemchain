@@ -18,7 +18,8 @@ import {
   ArrowLeft,
   QrCode,
   Clock,
-  Info
+  Info,
+  Search
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
@@ -364,36 +365,60 @@ export default function Certificado() {
                 )}
               </div>
 
-              {/* QR Code / Verification */}
-              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-muted/30 rounded-xl">
-                <div className="h-32 w-32 bg-background border border-border rounded-xl flex items-center justify-center flex-shrink-0">
-                  <QrCode className="h-20 w-20 text-muted-foreground" />
-                </div>
-                <div className="text-center md:text-left">
-                  <h4 className="font-display font-semibold text-foreground mb-2">Verificação Pública</h4>
-                  <p className="font-body text-sm text-muted-foreground mb-3">
-                    {txData?.timestamp_method === "OPEN_TIMESTAMP" 
-                      ? "Verifique este timestamp usando ferramentas OpenTimestamps oficiais."
-                      : "Verifique este registro usando o hash SHA-256 do arquivo original."}
-                  </p>
-                  {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
-                    <Button 
-                      variant="outline" 
-                      asChild
-                      className="font-body"
-                    >
-                      <a 
-                        href={getVerificationUrl(txData.tx_hash, txData.network)!} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
+              {/* Independent Verification Section */}
+              <div className="bg-success/5 rounded-xl p-6 border border-success/20">
+                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-success" />
+                  Verificação Independente
+                </h4>
+                <p className="font-body text-sm text-foreground mb-4">
+                  <strong>Esta prova pode ser verificada de forma independente</strong>, sem qualquer 
+                  intervenção da WebMarcas, por meio do protocolo OpenTimestamps, utilizando 
+                  blockchain pública do Bitcoin.
+                </p>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <div className="h-24 w-24 bg-background border border-border rounded-xl flex items-center justify-center flex-shrink-0">
+                    <QrCode className="h-16 w-16 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <p className="font-body text-sm text-muted-foreground mb-3">
+                      A WebMarcas <strong className="text-foreground">não controla a blockchain</strong>, 
+                      <strong className="text-foreground"> não gera a data</strong> e 
+                      <strong className="text-foreground"> não pode alterar o registro</strong>.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          asChild
+                          className="font-body"
+                        >
+                          <a 
+                            href={getVerificationUrl(txData.tx_hash, txData.network)!} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            {txData.timestamp_method === "OPEN_TIMESTAMP" 
+                              ? "OpenTimestamps.org"
+                              : "Verificar Blockchain"}
+                          </a>
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        asChild
+                        className="font-body"
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        {txData.timestamp_method === "OPEN_TIMESTAMP" 
-                          ? "OpenTimestamps.org"
-                          : "Verificar Blockchain"}
-                      </a>
-                    </Button>
-                  )}
+                        <a href="/verificar-registro">
+                          <Search className="h-4 w-4 mr-2" />
+                          Verificação Pública
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import NovoRegistro from "./pages/NovoRegistro";
 import Processando from "./pages/Processando";
 import Certificado from "./pages/Certificado";
+import VerificarRegistro from "./pages/VerificarRegistro";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/servicos" element={<Servicos />} />
               <Route path="/vantagens" element={<Vantagens />} />
               <Route path="/verificar" element={<Verificar />} />
+              <Route path="/verificar-registro" element={<VerificarRegistro />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/dashboard" element={<Dashboard />} />

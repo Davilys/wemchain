@@ -47,8 +47,11 @@ export function Footer() {
               <Link to="/vantagens" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Vantagens Jurídicas
               </Link>
+              <Link to="/verificar-registro" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+                Verificação Pública
+              </Link>
               <Link to="/verificar" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
-                Verificar Certificado
+                Verificar por Hash/TXID
               </Link>
             </nav>
           </div>

@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      asaas_payments: {
+        Row: {
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          created_at: string
+          credits_amount: number
+          due_date: string | null
+          id: string
+          invoice_url: string | null
+          paid_at: string | null
+          payment_method: string | null
+          pix_copy_paste: string | null
+          pix_qr_code: string | null
+          plan_type: string
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          credits_amount: number
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          plan_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          credits_amount?: number
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          plan_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      credits: {
+        Row: {
+          available_credits: number
+          created_at: string
+          id: string
+          plan_type: string
+          total_credits: number
+          updated_at: string
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          available_credits?: number
+          created_at?: string
+          id?: string
+          plan_type?: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          available_credits?: number
+          created_at?: string
+          id?: string
+          plan_type?: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       pagamentos: {
         Row: {
           created_at: string
@@ -224,6 +314,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_credits: {
+        Args: { p_credits: number; p_plan_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      consume_credit: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Shield, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 import { z } from "zod";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -52,7 +53,7 @@ export default function Login() {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-12 px-4 bg-muted/30">
+      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-12 px-4 bg-gradient-hero">
         <div className="w-full max-w-md">
           {/* Back link */}
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 font-body text-sm transition-colors">
@@ -60,14 +61,17 @@ export default function Login() {
             Voltar para o site
           </Link>
 
-          <Card className="border-border/50 shadow-lg">
+          <Card className="border-border bg-card">
             <CardHeader className="text-center space-y-4 pb-2">
               <div className="mx-auto">
-                <Link to="/" className="flex items-center justify-center gap-2">
-                  <Shield className="h-10 w-10 text-primary" />
-                  <span className="font-display text-2xl font-bold">
-                    <span className="text-primary">Web</span>
-                    <span className="text-secondary">Marcas</span>
+                <Link to="/" className="flex items-center justify-center gap-3">
+                  <img 
+                    src={webmarcasLogo} 
+                    alt="WebMarcas" 
+                    className="h-12 w-12 object-contain"
+                  />
+                  <span className="font-display text-2xl font-bold text-foreground">
+                    WebMarcas
                   </span>
                 </Link>
               </div>
@@ -89,7 +93,7 @@ export default function Login() {
                       placeholder="seu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 font-body"
+                      className="pl-10 font-body bg-background border-border"
                       required
                     />
                   </div>
@@ -98,7 +102,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="font-body font-medium">Senha</Label>
-                    <Link to="/recuperar-senha" className="text-sm text-primary hover:text-secondary transition-colors font-body">
+                    <Link to="/recuperar-senha" className="text-sm text-primary hover:underline transition-colors font-body">
                       Esqueci minha senha
                     </Link>
                   </div>
@@ -110,7 +114,7 @@ export default function Login() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 font-body"
+                      className="pl-10 font-body bg-background border-border"
                       required
                     />
                   </div>
@@ -135,7 +139,7 @@ export default function Login() {
                 
                 <p className="text-sm text-muted-foreground text-center font-body">
                   Ainda não tem conta?{" "}
-                  <Link to="/cadastro" className="text-primary font-medium hover:text-secondary transition-colors">
+                  <Link to="/cadastro" className="text-primary font-medium hover:underline transition-colors">
                     Criar conta grátis
                   </Link>
                 </p>

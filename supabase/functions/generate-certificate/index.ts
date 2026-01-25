@@ -152,13 +152,13 @@ serve(async (req) => {
 
     console.log(`[GENERATE-CERTIFICATE] Processing for registro: ${registroId}, user: ${userId}`);
 
-    // Fetch registro with transaction data
-    const { data: registro, error: registroError } = await supabaseClient
+    // Use service role client for full data access
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch registro
+    const { data: registro, error: registroError } = await supabaseAdmin
       .from('registros')
-      .select(`
-        *,
-        transacoes_blockchain (*)
-      `)
+      .select('*')
       .eq('id', registroId)
       .eq('user_id', userId)
       .single();
@@ -170,6 +170,15 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Fetch transaction data separately
+    const { data: txData, error: txError } = await supabaseAdmin
+      .from('transacoes_blockchain')
+      .select('*')
+      .eq('registro_id', registroId)
+      .maybeSingle();
+
+    console.log('[GENERATE-CERTIFICATE] Transaction data:', txData, 'Error:', txError);
 
     // CRITICAL: Only generate for CONFIRMED registros
     if (registro.status !== 'confirmado') {
@@ -192,8 +201,7 @@ serve(async (req) => {
       );
     }
 
-    // Get transaction data
-    const txData = registro.transacoes_blockchain?.[0];
+    // Get transaction data - already fetched above
     if (!txData) {
       console.error('[GENERATE-CERTIFICATE] Missing transaction data');
       return new Response(
@@ -203,7 +211,7 @@ serve(async (req) => {
     }
 
     // Fetch user profile
-    const { data: profile } = await supabaseClient
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('full_name, cpf_cnpj')
       .eq('user_id', userId)
@@ -225,9 +233,6 @@ serve(async (req) => {
       confirmedAt: txData.confirmed_at || registro.updated_at,
       blockNumber: txData.block_number,
     });
-
-    // Use service role client for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if certificate already exists
     const { data: existingCert } = await supabaseAdmin

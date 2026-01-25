@@ -21,8 +21,8 @@ export function Footer() {
               </span>
             </Link>
             <p className="font-body text-primary-foreground/80 text-sm leading-relaxed">
-              Proteção jurídica completa para sua marca com registro em blockchain. 
-              Prova de anterioridade imutável e verificável.
+              Registro em blockchain para prova de anterioridade. 
+              Hash criptográfico + timestamp imutável para suas criações.
             </p>
             <a 
               href="https://www.webpatentes.com.br" 

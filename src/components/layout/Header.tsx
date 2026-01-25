@@ -15,10 +15,10 @@ import {
 
 const navLinks = [
   { href: "/", label: "Início" },
-  { href: "/vantagens", label: "Benefícios" },
+  { href: "/vantagens", label: "Vantagens Jurídicas" },
   { href: "/como-funciona", label: "Como Funciona" },
   { href: "/servicos", label: "Preços" },
-  { href: "/verificar", label: "Verificar Certificado" },
+  { href: "/verificar", label: "Verificar Registro" },
 ];
 
 export function Header() {

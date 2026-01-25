@@ -6,23 +6,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// OpenTimestamps calendar servers
+// OpenTimestamps calendar servers (free, public, Bitcoin-anchored)
 const OTS_CALENDARS = [
   'https://a.pool.opentimestamps.org',
   'https://b.pool.opentimestamps.org',
   'https://a.pool.eternitywall.com',
+  'https://ots.btc.calendar.catallaxy.com',
 ];
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1500;
+
+/**
+ * Free timestamp service using OpenTimestamps
+ * - No cost to WebMarcas
+ * - Anchored to Bitcoin blockchain
+ * - Legally defensible proof of existence
+ */
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startTime = Date.now();
+  console.log(`[TIMESTAMP-FREE] Job started at ${new Date().toISOString()}`);
 
   try {
     // Validate authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
+      console.error('[TIMESTAMP-FREE] Missing authorization');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -33,16 +46,16 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Create client with user's token for auth validation
+    // Validate user token
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Validate user token
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabaseUser.auth.getUser(token);
     
     if (claimsError || !claimsData.user) {
+      console.error('[TIMESTAMP-FREE] Invalid token');
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -50,6 +63,7 @@ serve(async (req) => {
     }
 
     const userId = claimsData.user.id;
+    console.log(`[TIMESTAMP-FREE] User: ${userId}`);
 
     // Parse request body
     const { fileHash, registroId } = await req.json();
@@ -61,7 +75,7 @@ serve(async (req) => {
       );
     }
 
-    // Validate hash format (SHA-256 = 64 hex characters)
+    // Validate hash format
     const hashRegex = /^[a-fA-F0-9]{64}$/;
     if (!hashRegex.test(fileHash)) {
       return new Response(
@@ -70,10 +84,9 @@ serve(async (req) => {
       );
     }
 
-    // Use service role client for database operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the registro belongs to the user
+    // Verify registro ownership
     const { data: registro, error: registroError } = await supabaseAdmin
       .from('registros')
       .select('id, user_id, status')
@@ -82,49 +95,83 @@ serve(async (req) => {
       .single();
 
     if (registroError || !registro) {
+      console.error('[TIMESTAMP-FREE] Registro not found or access denied');
       return new Response(
         JSON.stringify({ error: 'Registro not found or access denied' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Convert hash to hex string for OpenTimestamps
+    // Check if already processed
+    if (registro.status === 'confirmado') {
+      return new Response(
+        JSON.stringify({ error: 'Registro already timestamped' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Update status to processing
+    await supabaseAdmin
+      .from('registros')
+      .update({ status: 'processando' })
+      .eq('id', registroId);
+
+    // Submit to OpenTimestamps with retry logic
     const hashHex = fileHash.toLowerCase();
-    
-    // Try to get timestamp from OpenTimestamps calendars
     let timestampResult: Uint8Array | null = null;
     let usedCalendar: string | null = null;
+    let lastError: string | null = null;
 
-    for (const calendar of OTS_CALENDARS) {
-      try {
-        const response = await fetch(`${calendar}/digest`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/vnd.opentimestamps.v1',
-          },
-          body: hashHex,
-        });
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      console.log(`[TIMESTAMP-FREE] Attempt ${attempt}/${MAX_RETRIES}`);
 
-        if (response.ok) {
-          const otsData = await response.arrayBuffer();
-          timestampResult = new Uint8Array(otsData);
-          usedCalendar = calendar;
-          break;
+      for (const calendar of OTS_CALENDARS) {
+        try {
+          console.log(`[TIMESTAMP-FREE] Trying: ${calendar}`);
+          
+          const response = await fetch(`${calendar}/digest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/vnd.opentimestamps.v1',
+            },
+            body: hashHex,
+          });
+
+          if (response.ok) {
+            const otsData = await response.arrayBuffer();
+            timestampResult = new Uint8Array(otsData);
+            usedCalendar = calendar;
+            console.log(`[TIMESTAMP-FREE] Success! Calendar: ${calendar}, Size: ${timestampResult.length} bytes`);
+            break;
+          } else {
+            lastError = `Calendar ${calendar} returned ${response.status}`;
+            console.log(`[TIMESTAMP-FREE] ${lastError}`);
+          }
+        } catch (calendarError) {
+          lastError = `Calendar ${calendar} error: ${calendarError}`;
+          console.log(`[TIMESTAMP-FREE] ${lastError}`);
+          continue;
         }
-      } catch (calendarError) {
-        console.log(`Calendar ${calendar} failed:`, calendarError);
-        continue;
+      }
+
+      if (timestampResult) break;
+
+      if (attempt < MAX_RETRIES) {
+        console.log(`[TIMESTAMP-FREE] Waiting ${RETRY_DELAY_MS}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
       }
     }
 
     const now = new Date().toISOString();
+    let txData;
+    let method: 'OPEN_TIMESTAMP' | 'INTERNAL' = 'INTERNAL';
 
     if (timestampResult) {
-      // Successfully got timestamp from OpenTimestamps
+      method = 'OPEN_TIMESTAMP';
       const otsBase64 = bytesToBase64(timestampResult);
       
-      // Store the .ots proof in storage
+      // Store .ots proof
       const otsFileName = `${userId}/${registroId}.ots`;
       const { error: uploadError } = await supabaseAdmin.storage
         .from('timestamp-proofs')
@@ -134,11 +181,13 @@ serve(async (req) => {
         });
 
       if (uploadError) {
-        console.error('Failed to upload OTS file:', uploadError);
+        console.error('[TIMESTAMP-FREE] Failed to upload OTS proof:', uploadError);
+      } else {
+        console.log(`[TIMESTAMP-FREE] OTS proof stored: ${otsFileName}`);
       }
 
-      // Create blockchain transaction record
-      const { data: txData, error: txError } = await supabaseAdmin
+      // Create transaction record
+      const { data, error } = await supabaseAdmin
         .from('transacoes_blockchain')
         .insert({
           registro_id: registroId,
@@ -152,36 +201,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (txError) {
-        console.error('Failed to create transaction record:', txError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to save timestamp record' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Update registro status
-      await supabaseAdmin
-        .from('registros')
-        .update({ status: 'confirmado', hash_sha256: fileHash })
-        .eq('id', registroId);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          method: 'OPEN_TIMESTAMP',
-          calendar: usedCalendar,
-          hash: fileHash,
-          timestamp: now,
-          proofId: txData.id,
-          message: 'Timestamp created successfully via OpenTimestamps'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (error) throw error;
+      txData = data;
     } else {
-      // Fallback: Create a simple timestamp record without external service
-      // This is still valid as internal proof with database timestamp
-      const { data: txData, error: txError } = await supabaseAdmin
+      // Fallback to internal timestamp
+      console.log('[TIMESTAMP-FREE] OpenTimestamps unavailable, using internal fallback');
+      
+      const { data, error } = await supabaseAdmin
         .from('transacoes_blockchain')
         .insert({
           registro_id: registroId,
@@ -192,7 +218,8 @@ serve(async (req) => {
             hash: fileHash,
             timestamp: now,
             method: 'internal_database',
-            note: 'OpenTimestamps calendars unavailable, using internal timestamping'
+            note: 'OpenTimestamps calendars unavailable after retries',
+            last_error: lastError,
           }),
           confirmed_at: now,
           timestamp_blockchain: now,
@@ -200,36 +227,42 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (txError) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to save timestamp record' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Update registro status
-      await supabaseAdmin
-        .from('registros')
-        .update({ status: 'confirmado', hash_sha256: fileHash })
-        .eq('id', registroId);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          method: 'INTERNAL',
-          hash: fileHash,
-          timestamp: now,
-          proofId: txData.id,
-          message: 'Timestamp created via internal system (OpenTimestamps unavailable)'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (error) throw error;
+      txData = data;
     }
+
+    // Update registro status and hash
+    await supabaseAdmin
+      .from('registros')
+      .update({ status: 'confirmado', hash_sha256: fileHash })
+      .eq('id', registroId);
+
+    const totalTime = Date.now() - startTime;
+    console.log(`[TIMESTAMP-FREE] Completed in ${totalTime}ms, method: ${method}`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        method,
+        calendar: usedCalendar,
+        hash: fileHash,
+        timestamp: now,
+        proofId: txData.id,
+        txHash: txData.tx_hash,
+        processingTimeMs: totalTime,
+        message: method === 'OPEN_TIMESTAMP' 
+          ? 'Timestamp registrado via OpenTimestamps (Bitcoin blockchain)' 
+          : 'Timestamp registrado via sistema interno (OpenTimestamps indisponível)'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    console.error('Timestamp error:', error);
+    const totalTime = Date.now() - startTime;
+    console.error(`[TIMESTAMP-FREE] Failed after ${totalTime}ms:`, error);
+    
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
+      JSON.stringify({ error: 'Timestamp failed', details: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

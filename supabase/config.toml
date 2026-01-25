@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.timestamp-free]
 verify_jwt = false
+
+[functions.get-registro-status]
+verify_jwt = false

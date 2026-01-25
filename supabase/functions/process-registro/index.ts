@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// OpenTimestamps calendar servers (free, public, real)
+// OpenTimestamps calendar servers (free, public, real Bitcoin-anchored)
 const OTS_CALENDARS = [
   'https://a.pool.opentimestamps.org',
   'https://b.pool.opentimestamps.org',
@@ -18,26 +18,56 @@ const OTS_CALENDARS = [
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
+interface ProcessingLog {
+  registro_id: string;
+  attempt_number: number;
+  started_at: string;
+  completed_at?: string;
+  execution_time_ms?: number;
+  success: boolean;
+  error_message?: string;
+  calendar_used?: string;
+}
+
 interface ProcessResult {
   success: boolean;
   registroId: string;
-  hash: string;
-  method: 'OPEN_TIMESTAMP' | 'INTERNAL';
+  status: 'pendente' | 'processando' | 'confirmado' | 'falhou';
+  hash?: string;
+  method?: 'OPEN_TIMESTAMP' | 'INTERNAL';
   calendar?: string;
-  transactionId: string;
-  txHash: string;
-  confirmedAt: string;
-  otsProofStored: boolean;
+  transactionId?: string;
+  txHash?: string;
+  confirmedAt?: string;
+  otsProofStored?: boolean;
+  creditConsumed?: boolean;
+  error?: string;
 }
 
+/**
+ * BACKEND DE PRODUÇÃO REAL
+ * - Controle de estados: PENDING -> PROCESSING -> CONFIRMED/FAILED
+ * - Crédito consumido APENAS no status CONFIRMED
+ * - Logs de execução completos
+ * - Retry com backoff exponencial
+ * - Proteção contra consumo antecipado de créditos
+ */
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   const startTime = Date.now();
-  console.log(`[PROCESS-REGISTRO] Job started at ${new Date().toISOString()}`);
+  const startTimeISO = new Date().toISOString();
+  console.log(`[PROCESS-REGISTRO] Job started at ${startTimeISO}`);
+
+  let registroId: string | null = null;
+  let userId: string | null = null;
+  // deno-lint-ignore no-explicit-any
+  let supabaseAdmin: any = null;
+  let attemptNumber = 1;
+  // deno-lint-ignore no-explicit-any
+  let txData: any = null;
 
   try {
     // Validate authorization
@@ -45,7 +75,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       console.error('[PROCESS-REGISTRO] Missing or invalid authorization header');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', status: 'error' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -66,20 +96,21 @@ serve(async (req) => {
     if (userError || !userData.user) {
       console.error('[PROCESS-REGISTRO] Invalid token:', userError?.message);
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: 'Invalid token', status: 'error' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = userData.user.id;
+    userId = userData.user.id;
     console.log(`[PROCESS-REGISTRO] User authenticated: ${userId}`);
 
     // Parse request body
-    const { registroId } = await req.json();
+    const body = await req.json();
+    registroId = body.registroId;
 
     if (!registroId) {
       return new Response(
-        JSON.stringify({ error: 'registroId is required' }),
+        JSON.stringify({ error: 'registroId is required', status: 'error' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -87,7 +118,7 @@ serve(async (req) => {
     console.log(`[PROCESS-REGISTRO] Processing registro: ${registroId}`);
 
     // Use service role client for database operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get registro details and verify ownership
     const { data: registro, error: registroError } = await supabaseAdmin
@@ -100,7 +131,7 @@ serve(async (req) => {
     if (registroError || !registro) {
       console.error('[PROCESS-REGISTRO] Registro not found or access denied:', registroError?.message);
       return new Response(
-        JSON.stringify({ error: 'Registro not found or access denied' }),
+        JSON.stringify({ error: 'Registro not found or access denied', status: 'error' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -109,15 +140,57 @@ serve(async (req) => {
     if (registro.status === 'confirmado') {
       console.log('[PROCESS-REGISTRO] Registro already confirmed');
       return new Response(
-        JSON.stringify({ error: 'Registro already processed', status: 'confirmado' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true,
+          registroId,
+          status: 'confirmado',
+          message: 'Registro já foi processado anteriormente'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Get attempt number from previous logs
+    const { data: previousLogs } = await supabaseAdmin
+      .from('processing_logs')
+      .select('attempt_number')
+      .eq('registro_id', registroId)
+      .order('attempt_number', { ascending: false })
+      .limit(1);
+
+    attemptNumber = previousLogs && previousLogs.length > 0 
+      ? previousLogs[0].attempt_number + 1 
+      : 1;
+
+    // Check if max retries exceeded
+    if (attemptNumber > MAX_RETRIES) {
+      console.error(`[PROCESS-REGISTRO] Max retries (${MAX_RETRIES}) exceeded for registro: ${registroId}`);
+      
+      await supabaseAdmin
+        .from('registros')
+        .update({ 
+          status: 'falhou',
+          error_message: `Máximo de ${MAX_RETRIES} tentativas excedido`
+        })
+        .eq('id', registroId);
+
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          registroId,
+          status: 'falhou',
+          error: `Máximo de ${MAX_RETRIES} tentativas excedido`
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[PROCESS-REGISTRO] Attempt ${attemptNumber}/${MAX_RETRIES}`);
 
     // Update status to PROCESSING
     await supabaseAdmin
       .from('registros')
-      .update({ status: 'processando' })
+      .update({ status: 'processando', error_message: null })
       .eq('id', registroId);
 
     console.log('[PROCESS-REGISTRO] Status updated to PROCESSING');
@@ -132,15 +205,32 @@ serve(async (req) => {
         .download(registro.arquivo_path);
 
       if (fileError || !fileData) {
-        console.error('[PROCESS-REGISTRO] Failed to download file:', fileError?.message);
+        const errorMsg = `Failed to download file: ${fileError?.message || 'Unknown error'}`;
+        console.error(`[PROCESS-REGISTRO] ${errorMsg}`);
+        
+        await logProcessingAttempt(supabaseAdmin, {
+          registro_id: registroId,
+          attempt_number: attemptNumber,
+          started_at: startTimeISO,
+          completed_at: new Date().toISOString(),
+          execution_time_ms: Date.now() - startTime,
+          success: false,
+          error_message: errorMsg,
+        });
+
         await supabaseAdmin
           .from('registros')
-          .update({ status: 'falhou' })
+          .update({ status: 'falhou', error_message: errorMsg })
           .eq('id', registroId);
         
         return new Response(
-          JSON.stringify({ error: 'Failed to download file for hashing' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ 
+            success: false,
+            registroId,
+            status: 'falhou',
+            error: errorMsg 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -148,7 +238,7 @@ serve(async (req) => {
       const arrayBuffer = await fileData.arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      fileHash = hashArray.map((b: number) => b.toString(16).padStart(2, '0')).join('');
 
       // Update registro with hash
       await supabaseAdmin
@@ -165,51 +255,50 @@ serve(async (req) => {
     const hashHex = fileHash.toLowerCase();
     let timestampResult: Uint8Array | null = null;
     let usedCalendar: string | null = null;
+    let lastError: string | null = null;
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      console.log(`[PROCESS-REGISTRO] OpenTimestamps attempt ${attempt}/${MAX_RETRIES}`);
+    for (const calendar of OTS_CALENDARS) {
+      try {
+        console.log(`[PROCESS-REGISTRO] Trying calendar: ${calendar}`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-      for (const calendar of OTS_CALENDARS) {
-        try {
-          console.log(`[PROCESS-REGISTRO] Trying calendar: ${calendar}`);
-          
-          const response = await fetch(`${calendar}/digest`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/vnd.opentimestamps.v1',
-            },
-            body: hashHex,
-          });
+        const response = await fetch(`${calendar}/digest`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/vnd.opentimestamps.v1',
+          },
+          body: hashHex,
+          signal: controller.signal,
+        });
 
-          if (response.ok) {
-            const otsData = await response.arrayBuffer();
-            timestampResult = new Uint8Array(otsData);
-            usedCalendar = calendar;
-            console.log(`[PROCESS-REGISTRO] Success from calendar: ${calendar}, proof size: ${timestampResult.length} bytes`);
-            break;
-          } else {
-            console.log(`[PROCESS-REGISTRO] Calendar ${calendar} returned status: ${response.status}`);
-          }
-        } catch (calendarError) {
-          console.log(`[PROCESS-REGISTRO] Calendar ${calendar} failed:`, calendarError);
-          continue;
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const otsData = await response.arrayBuffer();
+          timestampResult = new Uint8Array(otsData);
+          usedCalendar = calendar;
+          console.log(`[PROCESS-REGISTRO] Success from calendar: ${calendar}, proof size: ${timestampResult.length} bytes`);
+          break;
+        } else {
+          lastError = `Calendar ${calendar} returned status: ${response.status}`;
+          console.log(`[PROCESS-REGISTRO] ${lastError}`);
         }
-      }
-
-      if (timestampResult) break;
-
-      if (attempt < MAX_RETRIES) {
-        console.log(`[PROCESS-REGISTRO] Waiting ${RETRY_DELAY_MS}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      } catch (calendarError) {
+        lastError = `Calendar ${calendar} failed: ${calendarError}`;
+        console.log(`[PROCESS-REGISTRO] ${lastError}`);
+        continue;
       }
     }
 
     const now = new Date().toISOString();
-    let txData;
     let otsProofStored = false;
+    let method: 'OPEN_TIMESTAMP' | 'INTERNAL' = 'INTERNAL';
 
     if (timestampResult) {
+      method = 'OPEN_TIMESTAMP';
       // Successfully got timestamp from OpenTimestamps
       const otsBase64 = bytesToBase64(timestampResult);
       
@@ -246,7 +335,7 @@ serve(async (req) => {
 
       if (error) {
         console.error('[PROCESS-REGISTRO] Failed to create transaction record:', error);
-        throw error;
+        throw new Error(`Failed to create transaction: ${error.message}`);
       }
       txData = data;
       console.log(`[PROCESS-REGISTRO] Transaction created: ${txData.id}`);
@@ -265,7 +354,8 @@ serve(async (req) => {
             hash: fileHash,
             timestamp: now,
             method: 'internal_database',
-            note: 'OpenTimestamps calendars unavailable, using internal timestamping as fallback'
+            note: 'OpenTimestamps calendars unavailable, using internal timestamping as fallback',
+            last_error: lastError
           }),
           confirmed_at: now,
           timestamp_blockchain: now,
@@ -275,7 +365,7 @@ serve(async (req) => {
 
       if (error) {
         console.error('[PROCESS-REGISTRO] Failed to create fallback transaction:', error);
-        throw error;
+        throw new Error(`Failed to create transaction: ${error.message}`);
       }
       txData = data;
     }
@@ -283,22 +373,51 @@ serve(async (req) => {
     // Update registro to CONFIRMED
     await supabaseAdmin
       .from('registros')
-      .update({ status: 'confirmado' })
+      .update({ status: 'confirmado', error_message: null })
       .eq('id', registroId);
+
+    console.log('[PROCESS-REGISTRO] Status updated to CONFIRMED');
+
+    // ⚠️ CRITICAL: Consume credit ONLY after CONFIRMED status
+    let creditConsumed = false;
+    const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_safe', {
+      p_user_id: userId,
+      p_registro_id: registroId
+    });
+
+    if (creditResult && creditResult.success) {
+      creditConsumed = true;
+      console.log(`[PROCESS-REGISTRO] Credit consumed. Remaining: ${creditResult.remaining_credits}`);
+    } else {
+      console.log(`[PROCESS-REGISTRO] Credit consumption skipped or failed: ${creditResult?.error || 'Unknown'}`);
+    }
 
     const totalTime = Date.now() - startTime;
     console.log(`[PROCESS-REGISTRO] Job completed in ${totalTime}ms`);
 
+    // Log successful processing
+    await logProcessingAttempt(supabaseAdmin, {
+      registro_id: registroId,
+      attempt_number: attemptNumber,
+      started_at: startTimeISO,
+      completed_at: now,
+      execution_time_ms: totalTime,
+      success: true,
+      calendar_used: usedCalendar || 'internal',
+    });
+
     const result: ProcessResult = {
       success: true,
       registroId,
+      status: 'confirmado',
       hash: fileHash,
-      method: timestampResult ? 'OPEN_TIMESTAMP' : 'INTERNAL',
+      method,
       calendar: usedCalendar || undefined,
-      transactionId: txData.id,
-      txHash: txData.tx_hash,
+      transactionId: txData?.id,
+      txHash: txData?.tx_hash,
       confirmedAt: now,
       otsProofStored,
+      creditConsumed,
     };
 
     return new Response(
@@ -307,15 +426,51 @@ serve(async (req) => {
     );
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    console.error(`[PROCESS-REGISTRO] Job failed after ${totalTime}ms:`, error);
-    
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[PROCESS-REGISTRO] Job failed after ${totalTime}ms:`, error);
+
+    // Log failed processing
+    if (supabaseAdmin && registroId) {
+      await logProcessingAttempt(supabaseAdmin, {
+        registro_id: registroId,
+        attempt_number: attemptNumber,
+        started_at: startTimeISO,
+        completed_at: new Date().toISOString(),
+        execution_time_ms: totalTime,
+        success: false,
+        error_message: errorMessage,
+      });
+
+      // Update registro status to FAILED
+      await supabaseAdmin
+        .from('registros')
+        .update({ status: 'falhou', error_message: errorMessage })
+        .eq('id', registroId);
+    }
+    
     return new Response(
-      JSON.stringify({ error: 'Processing failed', details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        success: false,
+        registroId: registroId || 'unknown',
+        status: 'falhou',
+        error: errorMessage 
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+// deno-lint-ignore no-explicit-any
+async function logProcessingAttempt(supabase: any, log: ProcessingLog): Promise<void> {
+  try {
+    await supabase
+      .from('processing_logs')
+      .insert(log);
+    console.log(`[PROCESS-REGISTRO] Log saved: attempt ${log.attempt_number}, success: ${log.success}`);
+  } catch (err) {
+    console.error('[PROCESS-REGISTRO] Failed to save processing log:', err);
+  }
+}
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';

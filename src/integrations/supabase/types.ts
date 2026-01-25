@@ -259,6 +259,53 @@ export type Database = {
           },
         ]
       }
+      processing_logs: {
+        Row: {
+          attempt_number: number
+          calendar_used: string | null
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          registro_id: string
+          started_at: string
+          success: boolean
+        }
+        Insert: {
+          attempt_number?: number
+          calendar_used?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          registro_id: string
+          started_at?: string
+          success?: boolean
+        }
+        Update: {
+          attempt_number?: number
+          calendar_used?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          registro_id?: string
+          started_at?: string
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_logs_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -299,6 +346,7 @@ export type Database = {
           arquivo_tamanho: number | null
           created_at: string
           descricao: string | null
+          error_message: string | null
           hash_sha256: string | null
           id: string
           nome_ativo: string
@@ -313,6 +361,7 @@ export type Database = {
           arquivo_tamanho?: number | null
           created_at?: string
           descricao?: string | null
+          error_message?: string | null
           hash_sha256?: string | null
           id?: string
           nome_ativo: string
@@ -327,6 +376,7 @@ export type Database = {
           arquivo_tamanho?: number | null
           created_at?: string
           descricao?: string | null
+          error_message?: string | null
           hash_sha256?: string | null
           id?: string
           nome_ativo?: string
@@ -451,6 +501,10 @@ export type Database = {
         Returns: boolean
       }
       consume_credit: { Args: { p_user_id: string }; Returns: boolean }
+      consume_credit_safe: {
+        Args: { p_registro_id: string; p_user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

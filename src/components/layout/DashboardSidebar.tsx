@@ -28,7 +28,7 @@ const menuItems = [
     icon: Plus,
   },
   {
-    title: "Meus Registros",
+    title: "Registros de Propriedade",
     url: "/meus-registros",
     icon: FileText,
   },
@@ -111,7 +111,7 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
             className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Comprar Créditos
+            Registros de Propriedade
           </Link>
         </div>
       )}

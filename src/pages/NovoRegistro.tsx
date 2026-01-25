@@ -235,10 +235,10 @@ export default function NovoRegistro() {
           </Button>
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              Novo registro em blockchain
+              Novo Registro de Propriedade
             </h1>
             <p className="font-body text-sm text-muted-foreground">
-              Registre seu arquivo com prova de anterioridade
+              Registre seu arquivo em blockchain com prova de anterioridade
             </p>
           </div>
         </div>
@@ -393,8 +393,8 @@ export default function NovoRegistro() {
                   onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
                   className="mt-0.5"
                 />
-                <Label htmlFor="terms" className="font-body text-sm text-muted-foreground cursor-pointer">
-                  Estou ciente que este registro consome <strong className="text-foreground">1 crédito</strong>
+              <Label htmlFor="terms" className="font-body text-sm text-muted-foreground cursor-pointer">
+                  Estou ciente que este Registro de Propriedade consome <strong className="text-foreground">1 crédito</strong>
                 </Label>
               </div>
             )}
@@ -421,7 +421,7 @@ export default function NovoRegistro() {
                 ) : (
                   <>
                     <Shield className="h-4 w-4 mr-2" />
-                    Registrar em blockchain
+                    Registrar Propriedade
                   </>
                 )}
               </Button>

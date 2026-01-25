@@ -9,7 +9,7 @@ export function CreditConsumptionInfo({ variant = "default" }: CreditConsumption
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
         <Coins className="h-3 w-3" />
-        <span>Este registro consumirá <strong className="text-foreground">1 crédito</strong></span>
+        <span>Este Registro de Propriedade consumirá <strong className="text-foreground">1 crédito</strong></span>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export function CreditConsumptionInfo({ variant = "default" }: CreditConsumption
         </div>
         <div className="space-y-1">
           <p className="font-body text-sm font-medium text-foreground">
-            Este registro consumirá 1 crédito
+            Este Registro de Propriedade consumirá 1 crédito
           </p>
           <p className="font-body text-xs text-muted-foreground">
             Os créditos são liberados após confirmação do pagamento e utilizados somente após a conclusão do registro em blockchain.

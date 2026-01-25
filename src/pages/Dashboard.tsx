@@ -126,7 +126,7 @@ export default function Dashboard() {
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="font-body text-sm text-muted-foreground">
-            Gerencie seus registros em blockchain
+            Gerencie seus Registros de Propriedade em Blockchain
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export default function Dashboard() {
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-body">Registros</p>
+                  <p className="text-xs text-muted-foreground font-body">Propriedades</p>
                   <p className="text-2xl font-bold text-foreground font-display">{stats.total}</p>
                 </div>
               </div>
@@ -204,7 +204,7 @@ export default function Dashboard() {
           >
             <Link to="/novo-registro">
               <Plus className="h-5 w-5 mr-2" />
-              Novo registro em blockchain
+              Novo Registro de Propriedade
             </Link>
           </Button>
           <Button 
@@ -215,7 +215,7 @@ export default function Dashboard() {
           >
             <Link to="/checkout">
               <Coins className="h-5 w-5 mr-2" />
-              Comprar créditos
+              Registros de Propriedade
             </Link>
           </Button>
         </div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
         <Card className="border-border/50">
           <CardContent className="p-0">
             <div className="flex items-center justify-between p-4 border-b border-border/50">
-              <h2 className="font-display text-lg font-semibold">Últimos Registros</h2>
+              <h2 className="font-display text-lg font-semibold">Registros de Propriedade</h2>
               <Button variant="ghost" size="sm" asChild className="font-body text-primary">
                 <Link to="/meus-registros">
                   Ver todos

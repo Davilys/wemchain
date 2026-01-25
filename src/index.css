@@ -2,35 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* WebMarcas Design System - Premium Dark Theme */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+/* WebMarcas Design System - Premium Visual Identity */
+/* Font: Inter for modern, clean typography matching webpatentes.com.br */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    /* Light Theme - Clean and Professional */
+    /* Light Theme - Clean White Background like webpatentes.com.br light mode */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
-    --card: 0 0% 98%;
+    --card: 210 40% 98%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Cyan/Turquoise - Main highlight */
-    --primary: 195 100% 42%;
+    /* Primary: Vibrant Blue - Main brand color #0080ff */
+    --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Deep Navy Blue */
-    --secondary: 224 76% 33%;
+    --secondary: 222 47% 11%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent: Teal */
-    --accent: 173 58% 39%;
+    /* Accent: Same as primary for consistency */
+    --accent: 210 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -44,47 +45,47 @@
 
     --whatsapp: 142 70% 49%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 195 100% 42%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 210 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - Dark even in light mode */
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 195 100% 50%;
+    /* Sidebar - Light version */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 210 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 222 40% 15%;
-    --sidebar-ring: 195 100% 50%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 210 100% 50%;
   }
 
   .dark {
-    /* Dark Theme - WebMarcas Premium - Deep Navy Background */
-    --background: 222 47% 7%;
+    /* Dark Theme - Deep Navy Background #0a0e1a like webpatentes.com.br */
+    --background: 222 47% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 222 40% 10%;
+    --card: 222 40% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 222 40% 10%;
+    --popover: 222 40% 8%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary: Vibrant Cyan - Main highlight */
-    --primary: 195 100% 50%;
-    --primary-foreground: 222 47% 7%;
+    /* Primary: Vibrant Blue #0080ff */
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary: Darker Navy for contrast */
-    --secondary: 224 50% 25%;
+    --secondary: 222 40% 15%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 222 30% 15%;
-    --muted-foreground: 220 10% 65%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 215 16% 57%;
 
-    --accent: 195 90% 55%;
-    --accent-foreground: 222 47% 7%;
+    --accent: 210 100% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -95,18 +96,18 @@
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 222 30% 20%;
-    --input: 222 30% 20%;
-    --ring: 195 100% 50%;
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 210 100% 50%;
 
-    --sidebar-background: 222 47% 5%;
+    --sidebar-background: 222 47% 4%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 195 100% 50%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 222 40% 12%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 40% 10%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 222 40% 12%;
-    --sidebar-ring: 195 100% 50%;
+    --sidebar-ring: 210 100% 50%;
   }
 }
 
@@ -121,66 +122,85 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Montserrat', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 400;
     line-height: 1.6;
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
   
   .font-body {
-    font-family: 'Montserrat', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
-  /* Text gradients - Vibrant cyan */
+  /* Text gradients - Vibrant Blue matching WebMarcas */
   .text-gradient-cyan {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(195 100% 50%) 0%, hsl(180 100% 60%) 100%);
+    background-image: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 65%) 100%);
   }
 
   .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(195 100% 50%) 0%, hsl(173 58% 50%) 100%);
+    background-image: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 60%) 100%);
   }
 
-  /* Background gradients - Premium dark theme */
+  /* Background gradients - Premium dark theme matching webpatentes.com.br */
   .bg-gradient-hero {
     background: linear-gradient(180deg, 
-      hsl(222 47% 6%) 0%, 
-      hsl(222 47% 8%) 50%, 
-      hsl(222 40% 10%) 100%
+      hsl(222 47% 5%) 0%, 
+      hsl(222 47% 6%) 50%, 
+      hsl(222 40% 8%) 100%
+    );
+  }
+
+  .dark .bg-gradient-hero {
+    background: linear-gradient(180deg, 
+      hsl(222 47% 5%) 0%, 
+      hsl(222 47% 6%) 50%, 
+      hsl(222 40% 8%) 100%
     );
   }
 
   .bg-gradient-dark {
-    background: linear-gradient(180deg, hsl(222 47% 7%) 0%, hsl(222 47% 10%) 100%);
+    background: linear-gradient(180deg, hsl(222 47% 5%) 0%, hsl(222 47% 8%) 100%);
   }
 
-  .bg-gradient-cyan {
-    background: linear-gradient(135deg, hsl(195 100% 50%) 0%, hsl(195 100% 60%) 100%);
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 60%) 100%);
   }
 
   .bg-gradient-radial {
-    background: radial-gradient(ellipse at center top, hsl(195 100% 50% / 0.12) 0%, transparent 60%);
+    background: radial-gradient(ellipse at center top, hsl(210 100% 50% / 0.08) 0%, transparent 60%);
   }
 
   .bg-gradient-radial-bottom {
-    background: radial-gradient(ellipse at center bottom, hsl(195 100% 50% / 0.08) 0%, transparent 60%);
+    background: radial-gradient(ellipse at center bottom, hsl(210 100% 50% / 0.06) 0%, transparent 60%);
   }
 
-  /* Glass effects - Premium dark */
+  /* Glass effects - Premium styling */
   .glass {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10;
+    @apply backdrop-blur-xl border;
+    background: hsl(var(--card) / 0.8);
+    border-color: hsl(var(--border) / 0.5);
+  }
+
+  .dark .glass {
+    background: hsl(222 40% 10% / 0.8);
+    border-color: hsl(var(--border) / 0.3);
   }
 
   .glass-dark {
@@ -188,19 +208,22 @@
   }
 
   .glass-card {
-    @apply backdrop-blur-lg bg-card/90 border border-border/50 shadow-2xl;
+    @apply backdrop-blur-lg bg-card/95 border border-border/50 shadow-xl;
   }
 
-  /* Premium card effects */
+  /* Premium card effects - WebMarcas style */
   .card-premium {
-    @apply relative overflow-hidden transition-all duration-500;
-    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(222 40% 8%) 100%);
+    @apply relative overflow-hidden transition-all duration-300 bg-card border border-border/50 rounded-2xl;
+  }
+
+  .dark .card-premium {
+    background: linear-gradient(145deg, hsl(222 40% 10%) 0%, hsl(222 40% 7%) 100%);
   }
 
   .card-premium::before {
     content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
-    background: linear-gradient(145deg, hsl(195 100% 50% / 0.08) 0%, transparent 100%);
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(145deg, hsl(210 100% 50% / 0.05) 0%, transparent 100%);
   }
 
   .card-premium:hover::before {
@@ -208,26 +231,26 @@
   }
 
   .card-premium:hover {
-    @apply shadow-2xl -translate-y-1;
-    box-shadow: 0 25px 50px -12px hsl(195 100% 50% / 0.2);
+    @apply shadow-xl -translate-y-1;
+    box-shadow: 0 20px 40px -12px hsl(210 100% 50% / 0.15);
   }
 
   /* Card shadow hover */
   .card-hover {
-    @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-2;
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
   }
 
   .card-hover:hover {
-    box-shadow: 0 25px 50px -12px hsl(var(--primary) / 0.25);
+    box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.2);
   }
 
-  /* Premium glow effects */
+  /* Premium glow effects - Blue */
   .glow-cyan {
-    box-shadow: 0 0 30px hsl(195 100% 50% / 0.35), 0 0 60px hsl(195 100% 50% / 0.15);
+    box-shadow: 0 0 20px hsl(210 100% 50% / 0.3), 0 0 40px hsl(210 100% 50% / 0.1);
   }
 
   .glow-primary {
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.35);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
   }
 
   /* Link underline animation */
@@ -244,28 +267,20 @@
     @apply scale-x-100 origin-bottom-left;
   }
 
-  /* Premium button effects */
+  /* Premium button effects - WebMarcas style */
   .btn-premium {
-    @apply relative overflow-hidden transition-all duration-300;
+    @apply relative overflow-hidden transition-all duration-200;
   }
 
-  .btn-premium::before {
-    content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(45deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%);
-    transform: translateX(-100%);
+  .btn-premium:hover {
+    transform: translateY(-2px);
   }
 
-  .btn-premium:hover::before {
-    @apply opacity-100;
-    animation: shimmer-btn 0.6s ease forwards;
+  .btn-premium:active {
+    transform: translateY(0);
   }
 
-  @keyframes shimmer-btn {
-    to { transform: translateX(100%); }
-  }
-
-  /* Icon containers with glow */
+  /* Icon containers */
   .icon-container {
     @apply relative flex items-center justify-center transition-all duration-300;
   }
@@ -273,16 +288,16 @@
   .icon-container::after {
     content: '';
     @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300;
-    background: radial-gradient(circle, hsl(195 100% 50% / 0.25) 0%, transparent 70%);
+    background: radial-gradient(circle, hsl(210 100% 50% / 0.2) 0%, transparent 70%);
   }
 
   .icon-container:hover::after {
     @apply opacity-100;
   }
 
-  /* Text shadow for headings */
+  /* Text shadow for headings - Blue glow */
   .text-shadow-glow {
-    text-shadow: 0 0 40px hsl(195 100% 50% / 0.4);
+    text-shadow: 0 0 30px hsl(210 100% 50% / 0.3);
   }
 
   /* Gradient border */
@@ -293,7 +308,7 @@
   .border-gradient::before {
     content: '';
     @apply absolute inset-0 rounded-xl p-px;
-    background: linear-gradient(135deg, hsl(195 100% 50% / 0.6) 0%, transparent 50%, hsl(195 100% 50% / 0.6) 100%);
+    background: linear-gradient(135deg, hsl(210 100% 50% / 0.5) 0%, transparent 50%, hsl(210 100% 50% / 0.5) 100%);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: xor;
     -webkit-mask-composite: xor;
@@ -301,13 +316,30 @@
 
   /* Subtle pattern overlay */
   .pattern-dots {
-    background-image: radial-gradient(circle at 1px 1px, hsl(195 100% 50% / 0.03) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, hsl(210 100% 50% / 0.02) 1px, transparent 0);
     background-size: 40px 40px;
   }
 
   /* Responsive container padding */
   .section-padding {
     @apply py-16 md:py-20 lg:py-24;
+  }
+
+  /* Feature card colored backgrounds - WebMarcas style */
+  .feature-icon-blue {
+    @apply bg-blue-500/10 text-blue-500;
+  }
+  .feature-icon-orange {
+    @apply bg-orange-500/10 text-orange-500;
+  }
+  .feature-icon-green {
+    @apply bg-green-500/10 text-green-500;
+  }
+  .feature-icon-yellow {
+    @apply bg-yellow-500/10 text-yellow-500;
+  }
+  .feature-icon-purple {
+    @apply bg-purple-500/10 text-purple-500;
   }
 }
 
@@ -348,8 +380,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(195 100% 50% / 0.3); }
-  50% { box-shadow: 0 0 50px hsl(195 100% 50% / 0.5); }
+  0%, 100% { box-shadow: 0 0 15px hsl(210 100% 50% / 0.2); }
+  50% { box-shadow: 0 0 30px hsl(210 100% 50% / 0.35); }
 }
 
 @keyframes shimmer {
@@ -411,22 +443,22 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(222 40% 10%);
+  background: hsl(var(--background));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(195 100% 50%);
+  background: hsl(var(--primary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(195 100% 60%);
+  background: hsl(210 100% 60%);
 }
 
 /* Selection color */
 ::selection {
-  background: hsl(195 100% 50%);
-  color: hsl(222 47% 7%);
+  background: hsl(var(--primary));
+  color: hsl(0 0% 100%);
 }
 
 /* Focus visible for accessibility */

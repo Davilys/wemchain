@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const navLinks = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Início" },
+  { href: "/vantagens", label: "Benefícios" },
   { href: "/como-funciona", label: "Como Funciona" },
-  { href: "/servicos", label: "Serviços" },
-  { href: "/vantagens", label: "Vantagens Jurídicas" },
+  { href: "/servicos", label: "Preços" },
   { href: "/verificar", label: "Verificar Certificado" },
 ];
 
@@ -27,15 +29,18 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <Shield className="h-8 w-8 text-primary group-hover:text-secondary transition-colors" />
-            <span className="font-display text-xl md:text-2xl font-bold">
-              <span className="text-primary">Web</span>
-              <span className="text-secondary">Marcas</span>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img 
+              src={webmarcasLogo} 
+              alt="WebMarcas" 
+              className="h-10 w-10 md:h-12 md:w-12 object-contain"
+            />
+            <span className="font-display text-xl md:text-2xl font-bold text-foreground">
+              WebMarcas
             </span>
           </Link>
 
@@ -45,10 +50,10 @@ export function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium font-body transition-colors link-underline ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium font-body transition-colors ${
                   isActive(link.href)
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {link.label}
@@ -56,8 +61,16 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right side buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            {/* Language selector placeholder */}
+            <Button variant="ghost" size="sm" className="font-body text-muted-foreground">
+              BR
+            </Button>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {loading ? (
               <div className="h-10 w-24 bg-muted animate-pulse rounded-lg" />
             ) : user ? (
@@ -90,23 +103,26 @@ export function Header() {
             ) : (
               <>
                 <Button variant="ghost" asChild className="font-body font-medium">
-                  <Link to="/login">Entrar</Link>
+                  <Link to="/login">Área do Cliente</Link>
                 </Button>
-                <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 font-body font-semibold shadow-sm">
-                  <Link to="/cadastro">Criar Conta</Link>
+                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold">
+                  <Link to="/verificar">Consultar Marca</Link>
                 </Button>
               </>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Menu"
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -145,12 +161,12 @@ export function Header() {
                   <>
                     <Button variant="outline" asChild className="font-body">
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                        Entrar
+                        Área do Cliente
                       </Link>
                     </Button>
-                    <Button asChild className="bg-secondary text-secondary-foreground font-body font-semibold">
-                      <Link to="/cadastro" onClick={() => setMobileMenuOpen(false)}>
-                        Criar Conta
+                    <Button asChild className="bg-primary text-primary-foreground font-body font-semibold">
+                      <Link to="/verificar" onClick={() => setMobileMenuOpen(false)}>
+                        Consultar Marca
                       </Link>
                     </Button>
                   </>

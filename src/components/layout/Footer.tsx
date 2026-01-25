@@ -1,23 +1,23 @@
 import { Link } from "react-router-dom";
-import { Shield, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const whatsappNumber = "5511911120225"; // WebMarcas: (11) 91112-0225
+  const whatsappNumber = "5511911120225";
   const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre os serviços da WebMarcas.");
 
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <Shield className="h-8 w-8 text-secondary" />
-              <span className="font-display text-2xl font-bold">
-                <span className="text-white">Web</span>
-                <span className="text-secondary">Marcas</span>
+            <Link to="/" className="flex items-center gap-3">
+              <img src={webmarcasLogo} alt="WebMarcas" className="h-10 w-10 object-contain" />
+              <span className="font-display text-xl font-bold text-foreground">
+                WebMarcas
               </span>
             </Link>
             <p className="font-body text-primary-foreground/80 text-sm leading-relaxed">

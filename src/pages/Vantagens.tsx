@@ -87,8 +87,15 @@ export default function Vantagens() {
           <h1 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
             Vantagens <span className="text-secondary">Jurídicas</span>
           </h1>
-          <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-4">
             Entenda como o registro em blockchain fortalece a proteção legal da sua marca
+          </p>
+          <p className="text-sm text-primary-foreground/60 max-w-xl mx-auto">
+            Uma solução do{" "}
+            <a href="https://www.webpatentes.com.br" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">
+              Grupo WebPatentes
+            </a>
+            {" "}— 15 anos de expertise em Propriedade Intelectual
           </p>
         </div>
       </section>
@@ -190,11 +197,29 @@ export default function Vantagens() {
             ))}
           </Card>
 
-          <p className="text-center text-muted-foreground mt-8 max-w-2xl mx-auto">
-            <strong className="text-foreground">Recomendação:</strong> Combine ambos os registros para 
-            proteção máxima. O blockchain garante a prova de anterioridade imediata, enquanto o INPI 
-            confere os direitos legais oficiais.
-          </p>
+          <div className="mt-8 max-w-2xl mx-auto space-y-4">
+            <p className="text-center text-muted-foreground">
+              <strong className="text-foreground">Recomendação:</strong> Combine ambos os registros para 
+              proteção máxima. O blockchain garante a prova de anterioridade imediata, enquanto o INPI 
+              confere os direitos legais oficiais.
+            </p>
+            
+            <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+              <p className="text-sm text-center text-muted-foreground">
+                <strong className="text-foreground">⚠️ Aviso Jurídico:</strong> Este certificado constitui prova técnica de 
+                anterioridade, <strong>não substituindo o registro de marca junto ao INPI</strong>. Para registro 
+                oficial, acesse{" "}
+                <a 
+                  href="https://www.webpatentes.com.br" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-secondary underline font-medium"
+                >
+                  WebPatentes
+                </a>.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

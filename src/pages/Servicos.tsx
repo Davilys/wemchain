@@ -92,7 +92,7 @@ const additionalServices = [
 ];
 
 export default function Servicos() {
-  const whatsappNumber = "5511999999999";
+  const whatsappNumber = "5511911120225";
   const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre os planos da WebMarcas.");
 
   return (
@@ -251,8 +251,17 @@ export default function Servicos() {
                 </CardHeader>
                 <CardContent>
                   <CardDescription>
-                    O registro em blockchain serve como prova de anterioridade e é complementar 
-                    ao registro no INPI. Recomendamos ambos para proteção completa.
+                    <strong>Sim.</strong> O registro em blockchain constitui prova técnica de anterioridade, 
+                    mas <strong>não substitui o registro de marca junto ao INPI</strong>. Recomendamos ambos 
+                    para proteção jurídica completa. Através da{" "}
+                    <a 
+                      href="https://www.webpatentes.com.br" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-secondary underline"
+                    >
+                      WebPatentes
+                    </a>, oferecemos também o serviço de registro no INPI.
                   </CardDescription>
                 </CardContent>
               </Card>

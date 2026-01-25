@@ -112,7 +112,7 @@ export default function Home() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-semibold mb-8 animate-fade-up font-body">
               <Lock className="h-4 w-4" />
-              Líder em Registro de Marcas no Brasil
+              Registro em Blockchain | WebMarcas | WebPatentes
             </div>
             
             {/* Headline */}
@@ -213,7 +213,11 @@ export default function Home() {
               Por que registrar com a <span className="text-primary">WebMarcas?</span>
             </h2>
             <p className="font-body text-muted-foreground text-lg max-w-2xl mx-auto">
-              Combinamos expertise jurídica com tecnologia para oferecer o melhor serviço de registro de marcas do Brasil.
+              Uma solução do{" "}
+              <a href="https://www.webpatentes.com.br" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline font-medium">
+                Grupo WebPatentes
+              </a>
+              . Combinamos 15 anos de expertise jurídica em propriedade intelectual com tecnologia blockchain de ponta.
             </p>
           </div>
 

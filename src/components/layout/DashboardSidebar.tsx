@@ -3,212 +3,118 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   FileText,
-  Upload,
-  CreditCard,
-  Settings,
-  LogOut,
-  Shield,
-  Users,
-  BarChart3,
-  FolderOpen,
+  Plus,
+  Coins,
+  Award,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import webmarcasLogo from "@/assets/webmarcas-logo.png";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
 interface DashboardSidebarProps {
-  collapsed?: boolean;
+  collapsed: boolean;
+  onToggle?: () => void;
 }
 
-const mainMenuItems = [
+const menuItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
-    color: "text-blue-400",
-    bgColor: "bg-blue-400/10",
+  },
+  {
+    title: "Novo Registro",
+    url: "/novo-registro",
+    icon: Plus,
   },
   {
     title: "Meus Registros",
     url: "/meus-registros",
     icon: FileText,
-    color: "text-purple-400",
-    bgColor: "bg-purple-400/10",
   },
   {
-    title: "Novo Registro",
-    url: "/novo-registro",
-    icon: Upload,
-    color: "text-green-400",
-    bgColor: "bg-green-400/10",
+    title: "Créditos",
+    url: "/creditos",
+    icon: Coins,
   },
   {
-    title: "Documentos",
-    url: "/documentos",
-    icon: FolderOpen,
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-400/10",
-  },
-  {
-    title: "Pagamentos",
-    url: "/pagamentos",
-    icon: CreditCard,
-    color: "text-orange-400",
-    bgColor: "bg-orange-400/10",
+    title: "Certificados",
+    url: "/meus-registros?status=confirmado",
+    icon: Award,
   },
 ];
 
-const secondaryMenuItems = [
-  {
-    title: "Relatórios",
-    url: "/relatorios",
-    icon: BarChart3,
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-400/10",
-  },
-  {
-    title: "Clientes",
-    url: "/clientes",
-    icon: Users,
-    color: "text-pink-400",
-    bgColor: "bg-pink-400/10",
-  },
-  {
-    title: "Configurações",
-    url: "/configuracoes",
-    icon: Settings,
-    color: "text-gray-400",
-    bgColor: "bg-gray-400/10",
-  },
-];
-
-export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
+export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const location = useLocation();
-  const { signOut } = useAuth();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (url: string) => {
+    if (url.includes("?")) {
+      return location.pathname + location.search === url;
+    }
+    return location.pathname === url;
+  };
 
   return (
-    <Sidebar
+    <aside
       className={cn(
-        "border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "hidden lg:flex flex-col border-r border-border bg-card/50 transition-all duration-300 relative",
+        collapsed ? "w-16" : "w-56"
       )}
     >
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <Link to="/" className="flex items-center gap-3">
-          <img 
-            src={webmarcasLogo} 
-            alt="WebMarcas" 
-            className="h-10 w-10 object-contain"
-          />
-          {!collapsed && (
-            <div>
-              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
-                <span>Web</span>
-                <span className="text-primary">Marcas</span>
-              </span>
-              <p className="text-xs text-sidebar-foreground/60">
-                Painel do Cliente
-              </p>
-            </div>
-          )}
-        </Link>
-      </SidebarHeader>
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggle}
+        className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-border bg-card shadow-sm z-10 hover:bg-muted"
+      >
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3" />
+        ) : (
+          <ChevronLeft className="h-3 w-3" />
+        )}
+      </Button>
 
-      <SidebarContent className="p-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
-            {!collapsed && "Principal"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    className={cn(
-                      "w-full justify-start gap-3 px-3 py-2.5 rounded-lg transition-all",
-                      isActive(item.url)
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    )}
-                  >
-                    <Link to={item.url}>
-                      <div className={cn("p-1.5 rounded-md", item.bgColor)}>
-                        <item.icon className={cn("h-4 w-4", item.color)} />
-                      </div>
-                      {!collapsed && (
-                        <span className="font-medium">{item.title}</span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* Menu Items */}
+      <nav className="flex-1 py-6 px-3">
+        <ul className="space-y-1">
+          {menuItems.map((item) => (
+            <li key={item.url}>
+              <Link
+                to={item.url}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg font-body text-sm transition-all duration-200",
+                  isActive(item.url)
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                title={collapsed ? item.title : undefined}
+              >
+                <item.icon className={cn(
+                  "h-5 w-5 flex-shrink-0",
+                  isActive(item.url) ? "text-primary" : ""
+                )} />
+                {!collapsed && (
+                  <span className="truncate">{item.title}</span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
-            {!collapsed && "Administração"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    className={cn(
-                      "w-full justify-start gap-3 px-3 py-2.5 rounded-lg transition-all",
-                      isActive(item.url)
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    )}
-                  >
-                    <Link to={item.url}>
-                      <div className={cn("p-1.5 rounded-md", item.bgColor)}>
-                        <item.icon className={cn("h-4 w-4", item.color)} />
-                      </div>
-                      {!collapsed && (
-                        <span className="font-medium">{item.title}</span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          onClick={signOut}
-          className={cn(
-            "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10",
-            collapsed && "justify-center"
-          )}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span>Sair</span>}
-        </Button>
-      </SidebarFooter>
-    </Sidebar>
+      {/* Bottom CTA - Only when expanded */}
+      {!collapsed && (
+        <div className="p-3 border-t border-border">
+          <Link
+            to="/checkout"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Comprar Créditos
+          </Link>
+        </div>
+      )}
+    </aside>
   );
 }

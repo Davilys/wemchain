@@ -1,112 +1,70 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useCallback, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { 
   Upload, 
-  FileText, 
   CheckCircle2, 
   Loader2,
   Shield,
   Hash,
-  ArrowRight,
   ArrowLeft,
   X,
   File,
-  Image,
-  FileVideo,
-  FileArchive,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Coins
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// File type categories
-const fileCategories = [
-  { 
-    id: "documento", 
-    label: "Documento", 
-    icon: FileText, 
-    description: "PDF, DOC, DOCX",
-    color: "text-blue-400",
-    bgColor: "bg-blue-400/10"
-  },
-  { 
-    id: "imagem", 
-    label: "Imagem", 
-    icon: Image, 
-    description: "JPG, PNG, SVG",
-    color: "text-green-400",
-    bgColor: "bg-green-400/10"
-  },
-  { 
-    id: "video", 
-    label: "Vídeo", 
-    icon: FileVideo, 
-    description: "MP4",
-    color: "text-purple-400",
-    bgColor: "bg-purple-400/10"
-  },
-  { 
-    id: "outro", 
-    label: "Outros", 
-    icon: FileArchive, 
-    description: "ZIP e outros",
-    color: "text-orange-400",
-    bgColor: "bg-orange-400/10"
-  },
+const acceptedTypes = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/svg+xml",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "video/mp4",
+  "application/zip",
+  "application/x-zip-compressed",
 ];
 
-const acceptedTypes = {
-  "application/pdf": ".pdf",
-  "image/jpeg": ".jpg,.jpeg",
-  "image/png": ".png",
-  "image/svg+xml": ".svg",
-  "application/msword": ".doc",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-  "video/mp4": ".mp4",
-  "application/zip": ".zip",
-  "application/x-zip-compressed": ".zip",
+const getFileCategory = (mimeType: string): string => {
+  if (mimeType.startsWith("image/")) return "imagem";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.includes("zip")) return "outro";
+  return "documento";
 };
 
-const getFileIcon = (type: string) => {
-  if (type.startsWith("image/")) return Image;
-  if (type.startsWith("video/")) return FileVideo;
-  if (type.includes("zip")) return FileArchive;
-  return FileText;
+const getTipoAtivo = (category: string): string => {
+  const map: Record<string, string> = {
+    documento: "documento",
+    imagem: "logotipo",
+    video: "obra_autoral",
+    outro: "outro",
+  };
+  return map[category] || "outro";
 };
-
-const steps = [
-  { id: 1, label: "Tipo", shortLabel: "Tipo" },
-  { id: 2, label: "Upload", shortLabel: "Upload" },
-  { id: 3, label: "Confirmação", shortLabel: "Confirmar" },
-];
 
 export default function NovoRegistro() {
   const { user, loading: authLoading } = useAuth();
+  const { credits, loading: creditsLoading } = useCredits();
   const navigate = useNavigate();
   
-  // Step management
-  const [currentStep, setCurrentStep] = useState(1);
-  
-  // Form state
-  const [fileCategory, setFileCategory] = useState<string | null>(null);
-  const [nomeAtivo, setNomeAtivo] = useState("");
-  const [descricao, setDescricao] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [nomeAtivo, setNomeAtivo] = useState("");
   const [hash, setHash] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [hashLoading, setHashLoading] = useState(false);
-  const [acceptLegalTerms, setAcceptLegalTerms] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -115,20 +73,19 @@ export default function NovoRegistro() {
     }
   }, [user, authLoading, navigate]);
 
-  // Generate SHA-256 hash from file
+  const hasCredits = (credits?.available_credits || 0) > 0;
+
   const generateHash = useCallback(async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-    return hashHex;
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
   }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Validate file size (max 10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
@@ -138,15 +95,23 @@ export default function NovoRegistro() {
       return;
     }
 
+    if (!acceptedTypes.includes(selectedFile.type)) {
+      toast({
+        title: "Tipo de arquivo não suportado",
+        description: "Envie PDF, JPG, PNG, DOC, DOCX, MP4 ou ZIP.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setFile(selectedFile);
+    setNomeAtivo(selectedFile.name.replace(/\.[^/.]+$/, ""));
     setHashLoading(true);
+    setUploadProgress(0);
     
-    // Simulate upload progress
-    let progress = 0;
+    // Simulate progress
     const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(Math.min(progress, 90));
-      if (progress >= 90) clearInterval(interval);
+      setUploadProgress(prev => Math.min(prev + 15, 90));
     }, 100);
 
     try {
@@ -154,13 +119,13 @@ export default function NovoRegistro() {
       setHash(fileHash);
       setUploadProgress(100);
     } catch (error) {
-      console.error("Erro ao gerar hash:", error);
       toast({
         title: "Erro ao processar arquivo",
-        description: "Não foi possível gerar o hash do arquivo.",
+        description: "Não foi possível gerar o hash.",
         variant: "destructive"
       });
       setUploadProgress(0);
+      setFile(null);
     } finally {
       setHashLoading(false);
       clearInterval(interval);
@@ -170,7 +135,9 @@ export default function NovoRegistro() {
   const removeFile = () => {
     setFile(null);
     setHash(null);
+    setNomeAtivo("");
     setUploadProgress(0);
+    setAcceptTerms(false);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -179,44 +146,30 @@ export default function NovoRegistro() {
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
-  const nextStep = () => {
-    if (currentStep === 1 && !fileCategory) {
-      toast({
-        title: "Selecione o tipo",
-        description: "Por favor, escolha o tipo de arquivo que deseja registrar.",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (currentStep === 2 && (!file || !hash || !nomeAtivo.trim())) {
-      toast({
-        title: "Dados incompletos",
-        description: "Por favor, faça upload do arquivo e preencha o nome do ativo.",
-        variant: "destructive"
-      });
-      return;
-    }
-    setCurrentStep(prev => Math.min(prev + 1, 3));
-  };
-
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
-
   const handleSubmit = async () => {
-    if (!file || !hash || !user || !acceptLegalTerms) {
+    if (!file || !hash || !user || !acceptTerms || !nomeAtivo.trim()) {
       toast({
         title: "Dados incompletos",
-        description: "Por favor, confirme o aviso jurídico antes de continuar.",
+        description: "Preencha todos os campos e aceite os termos.",
         variant: "destructive"
       });
+      return;
+    }
+
+    if (!hasCredits) {
+      toast({
+        title: "Sem créditos",
+        description: "Você precisa de créditos para registrar.",
+        variant: "destructive"
+      });
+      navigate("/checkout");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. Upload file to storage
+      // Upload file
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from("registros")
@@ -224,22 +177,15 @@ export default function NovoRegistro() {
 
       if (uploadError) throw uploadError;
 
-      // 2. Map file category to tipo_ativo
-      const tipoAtivoMap: Record<string, string> = {
-        "documento": "documento",
-        "imagem": "logotipo",
-        "video": "obra_autoral",
-        "outro": "outro"
-      };
+      const category = getFileCategory(file.type);
 
-      // 3. Create registro record
+      // Create registro
       const { data: registro, error: registroError } = await supabase
         .from("registros")
         .insert({
           user_id: user.id,
           nome_ativo: nomeAtivo.trim(),
-          descricao: descricao.trim() || null,
-          tipo_ativo: (tipoAtivoMap[fileCategory || "outro"] || "outro") as any,
+          tipo_ativo: getTipoAtivo(category) as any,
           arquivo_path: filePath,
           arquivo_nome: file.name,
           arquivo_tamanho: file.size,
@@ -252,14 +198,13 @@ export default function NovoRegistro() {
       if (registroError) throw registroError;
 
       toast({
-        title: "Registro criado com sucesso!",
-        description: "Prossiga para o pagamento para concluir.",
+        title: "Registro criado!",
+        description: "Seu arquivo está sendo processado.",
       });
 
-      // Navigate to processing/payment
       navigate(`/processando/${registro.id}`);
     } catch (error: any) {
-      console.error("Erro ao criar registro:", error);
+      console.error("Erro:", error);
       toast({
         title: "Erro ao criar registro",
         description: error.message || "Tente novamente.",
@@ -270,140 +215,82 @@ export default function NovoRegistro() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || creditsLoading) {
     return (
-      <Layout showFooter={false}>
-        <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center">
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Novo Registro</h1>
-          <p className="font-body text-muted-foreground">
-            Registre sua marca, logotipo ou documento em blockchain
-          </p>
+    <DashboardLayout>
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+            <Link to="/dashboard">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-foreground">
+              Novo registro em blockchain
+            </h1>
+            <p className="font-body text-sm text-muted-foreground">
+              Registre seu arquivo com prova de anterioridade
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Progress Steps */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex items-center justify-between max-w-md mx-auto">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div 
-                  className={cn(
-                    "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
-                    currentStep >= step.id 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {currentStep > step.id ? (
-                    <CheckCircle2 className="h-5 w-5" />
-                  ) : (
-                    step.id
-                  )}
+        {/* No Credits Warning */}
+        {!hasCredits && (
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-sm font-medium text-warning">
+                    Você não possui créditos
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground">
+                    Adquira créditos para continuar registrando.
+                  </p>
                 </div>
-                <span className={cn(
-                  "font-body text-xs mt-2 hidden sm:block",
-                  currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                )}>
-                  {step.label}
-                </span>
+                <Button asChild size="sm" className="bg-warning text-warning-foreground hover:bg-warning/90">
+                  <Link to="/checkout">
+                    <Coins className="h-4 w-4 mr-1" />
+                    Comprar
+                  </Link>
+                </Button>
               </div>
-              {index < steps.length - 1 && (
-                <div className={cn(
-                  "h-0.5 w-12 sm:w-20 mx-2",
-                  currentStep > step.id ? "bg-primary" : "bg-muted"
-                )} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Step 1: File Type Selection */}
-      {currentStep === 1 && (
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="font-display text-xl">Que tipo de arquivo você deseja registrar?</CardTitle>
-            <CardDescription className="font-body">
-              Escolha a categoria que melhor descreve seu arquivo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {fileCategories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setFileCategory(category.id)}
-                  className={cn(
-                    "p-6 rounded-xl border-2 transition-all text-left hover:border-primary/50",
-                    fileCategory === category.id 
-                      ? "border-primary bg-primary/5" 
-                      : "border-border bg-card hover:bg-muted/50"
-                  )}
-                >
-                  <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", category.bgColor)}>
-                    <category.icon className={cn("h-6 w-6", category.color)} />
-                  </div>
-                  <h3 className="font-body font-semibold text-foreground mb-1">{category.label}</h3>
-                  <p className="font-body text-xs text-muted-foreground">{category.description}</p>
-                </button>
-              ))}
-            </div>
-
-            {/* Security Notice */}
-            <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border flex items-start gap-3">
-              <Lock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-body text-sm font-medium text-foreground">Seu arquivo é privado</p>
-                <p className="font-body text-xs text-muted-foreground">
-                  O arquivo fica armazenado com segurança. Apenas o hash criptográfico é registrado na blockchain.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 2: Upload & Details */}
-      {currentStep === 2 && (
-        <div className="space-y-6">
-          {/* File Upload */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="font-display text-xl flex items-center gap-2">
-                <Upload className="h-5 w-5 text-primary" />
-                Upload do Arquivo
-              </CardTitle>
-              <CardDescription className="font-body">
-                Arraste ou clique para selecionar o arquivo (máx. 10MB)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* Main Card */}
+        <Card className="border-border/50">
+          <CardContent className="p-6 space-y-6">
+            {/* File Upload */}
+            <div className="space-y-3">
+              <Label className="font-body font-medium">Arquivo</Label>
+              
               {!file ? (
                 <label className="block cursor-pointer">
-                  <div className="border-2 border-dashed border-border rounded-xl p-12 text-center hover:border-primary/50 hover:bg-muted/30 transition-all">
-                    <Upload className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="font-body font-medium text-foreground mb-2">
-                      Clique para selecionar ou arraste o arquivo
+                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 hover:bg-muted/30 transition-all">
+                    <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="font-body font-medium text-foreground text-sm mb-1">
+                      Clique ou arraste o arquivo
                     </p>
-                    <p className="font-body text-sm text-muted-foreground">
-                      PDF, JPG, PNG, SVG, DOC, DOCX, MP4, ZIP
+                    <p className="font-body text-xs text-muted-foreground">
+                      PDF, JPG, PNG, DOC, DOCX, MP4, ZIP (máx. 10MB)
                     </p>
                   </div>
                   <input
                     type="file"
-                    accept={Object.values(acceptedTypes).join(",")}
+                    accept={acceptedTypes.join(",")}
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -411,253 +298,134 @@ export default function NovoRegistro() {
               ) : (
                 <div className="space-y-4">
                   {/* File Info */}
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
-                    <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                        {(() => {
-                          const Icon = getFileIcon(file.type);
-                          return <Icon className="h-7 w-7 text-primary" />;
-                        })()}
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <File className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-body font-medium text-foreground truncate max-w-[200px] sm:max-w-[300px]">
+                        <p className="font-body text-sm font-medium text-foreground truncate max-w-[200px]">
                           {file.name}
                         </p>
-                        <p className="font-body text-sm text-muted-foreground">
+                        <p className="font-body text-xs text-muted-foreground">
                           {formatFileSize(file.size)}
                         </p>
                       </div>
                     </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={removeFile}>
+                    <Button type="button" variant="ghost" size="icon" onClick={removeFile} className="h-8 w-8">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  {/* Upload Progress */}
-                  {uploadProgress > 0 && uploadProgress < 100 && (
+                  {/* Progress */}
+                  {hashLoading && (
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-body text-muted-foreground">Processando...</span>
-                        <span className="font-body text-muted-foreground">{uploadProgress}%</span>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Processando...</span>
+                        <span>{uploadProgress}%</span>
                       </div>
-                      <Progress value={uploadProgress} className="h-2" />
+                      <Progress value={uploadProgress} className="h-1.5" />
                     </div>
                   )}
 
                   {/* Hash Display */}
-                  {hashLoading ? (
-                    <div className="flex items-center gap-2 text-muted-foreground p-4 rounded-lg bg-muted/30">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="font-body text-sm">Gerando hash SHA-256...</span>
-                    </div>
-                  ) : hash && (
-                    <div className="p-4 rounded-xl border border-success/30 bg-success/5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle2 className="h-5 w-5 text-success" />
-                        <span className="font-body font-medium text-success">Hash gerado com sucesso!</span>
+                  {hash && !hashLoading && (
+                    <div className="p-3 rounded-lg border border-success/30 bg-success/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        <span className="font-body text-xs font-medium text-success">
+                          Hash SHA-256 gerado
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <Hash className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
-                        <code className="font-mono text-xs bg-muted p-3 rounded-lg flex-1 overflow-x-auto break-all">
+                        <Hash className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-1" />
+                        <code className="font-mono text-[10px] bg-muted p-2 rounded flex-1 overflow-x-auto break-all text-muted-foreground">
                           {hash}
                         </code>
                       </div>
-                      <p className="font-body text-xs text-muted-foreground mt-3">
-                        Esta é a "impressão digital" única do seu arquivo. Ela será registrada na blockchain.
-                      </p>
                     </div>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Asset Details */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="font-display text-xl flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Dados do Ativo
-              </CardTitle>
-              <CardDescription className="font-body">
-                Informe os detalhes para identificação do registro
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Asset Name */}
+            {file && hash && (
               <div className="space-y-2">
-                <Label htmlFor="nomeAtivo" className="font-body font-medium">Nome do Ativo *</Label>
+                <Label htmlFor="nome" className="font-body font-medium">
+                  Nome do ativo
+                </Label>
                 <Input
-                  id="nomeAtivo"
-                  placeholder="Ex: Logo da Minha Empresa"
+                  id="nome"
                   value={nomeAtivo}
                   onChange={(e) => setNomeAtivo(e.target.value)}
-                  className="font-body bg-background border-border"
-                  required
-                  maxLength={100}
+                  placeholder="Ex: Logo da minha empresa"
+                  className="font-body"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao" className="font-body font-medium">Descrição (opcional)</Label>
-                <Textarea
-                  id="descricao"
-                  placeholder="Descreva brevemente o ativo..."
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  className="font-body resize-none bg-background border-border"
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Step 3: Legal Confirmation */}
-      {currentStep === 3 && (
-        <div className="space-y-6">
-          {/* Summary Card */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="font-display text-xl">Resumo do Registro</CardTitle>
-              <CardDescription className="font-body">
-                Confira os dados antes de confirmar
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <p className="font-body text-sm text-muted-foreground mb-1">Nome do Ativo</p>
-                  <p className="font-body font-medium text-foreground">{nomeAtivo}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <p className="font-body text-sm text-muted-foreground mb-1">Arquivo</p>
-                  <p className="font-body font-medium text-foreground truncate">{file?.name}</p>
-                </div>
-              </div>
-              {descricao && (
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <p className="font-body text-sm text-muted-foreground mb-1">Descrição</p>
-                  <p className="font-body text-foreground">{descricao}</p>
-                </div>
-              )}
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="font-body text-sm text-muted-foreground mb-1">Hash SHA-256</p>
-                <code className="font-mono text-xs break-all text-foreground">{hash}</code>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Legal Warning */}
-          <Card className="border-warning/50 bg-warning/5">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="h-6 w-6 text-warning" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-display font-semibold text-foreground mb-2">Aviso Jurídico Importante</h4>
-                  <p className="font-body text-sm text-muted-foreground mb-4">
-                    Este registro em blockchain comprova a existência e integridade do arquivo na data indicada, 
-                    como prova técnica de anterioridade, <strong className="text-foreground">não substituindo o registro de marca junto ao INPI</strong>.
-                  </p>
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="legalTerms"
-                      checked={acceptLegalTerms}
-                      onCheckedChange={(checked) => setAcceptLegalTerms(checked === true)}
-                      className="mt-1"
-                    />
-                    <Label htmlFor="legalTerms" className="font-body text-sm leading-relaxed cursor-pointer text-foreground">
-                      Estou ciente de que este serviço não substitui o registro no INPI e compreendo que 
-                      o registro em blockchain serve como prova complementar de anterioridade.
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* What Happens Next */}
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex gap-4">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-semibold text-foreground mb-2">O que acontece a seguir?</h4>
-                  <ol className="font-body text-sm text-muted-foreground space-y-2">
-                    <li className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">1</span>
-                      Seu arquivo será processado e o hash será preparado
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">2</span>
-                      Você será direcionado para o pagamento
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">3</span>
-                      Após confirmação, o hash será registrado na blockchain Polygon
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">4</span>
-                      Você receberá o certificado digital com TXID
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-4">
-        {currentStep > 1 ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={prevStep}
-            className="font-body border-border"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        ) : (
-          <div />
-        )}
-
-        {currentStep < 3 ? (
-          <Button
-            type="button"
-            onClick={nextStep}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold"
-          >
-            Continuar
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading || !acceptLegalTerms}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              <>
-                Confirmar e Prosseguir
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </>
             )}
-          </Button>
-        )}
+
+            {/* Legal Notice */}
+            <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
+              <div className="flex items-start gap-3">
+                <Lock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="font-body text-sm text-foreground font-medium">
+                    🔒 Seu arquivo é mantido privado.
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                    Apenas o hash criptográfico é registrado em blockchain pública para gerar prova técnica de anterioridade.
+                    Este serviço não substitui o registro junto ao INPI.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms Checkbox */}
+            {file && hash && (
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="terms"
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="terms" className="font-body text-sm text-muted-foreground cursor-pointer">
+                  Estou ciente que este registro consome <strong className="text-foreground">1 crédito</strong>
+                </Label>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/dashboard")}
+                className="flex-1 font-body"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading || !hasCredits}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Registrar em blockchain
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

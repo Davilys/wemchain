@@ -116,10 +116,11 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
           />
           {!collapsed && (
             <div>
-              <span className="font-display text-lg font-bold text-sidebar-foreground">
-                WebMarcas
+              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
+                <span>Web</span>
+                <span className="text-primary">Marcas</span>
               </span>
-              <p className="text-xs text-sidebar-foreground/60 font-body">
+              <p className="text-xs text-sidebar-foreground/60">
                 Painel do Cliente
               </p>
             </div>
@@ -129,7 +130,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
 
       <SidebarContent className="p-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 font-body text-xs uppercase tracking-wider px-3 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
             {!collapsed && "Principal"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -151,7 +152,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
                         <item.icon className={cn("h-4 w-4", item.color)} />
                       </div>
                       {!collapsed && (
-                        <span className="font-body font-medium">{item.title}</span>
+                        <span className="font-medium">{item.title}</span>
                       )}
                     </Link>
                   </SidebarMenuButton>
@@ -162,7 +163,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-sidebar-foreground/50 font-body text-xs uppercase tracking-wider px-3 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
             {!collapsed && "Administração"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -184,7 +185,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
                         <item.icon className={cn("h-4 w-4", item.color)} />
                       </div>
                       {!collapsed && (
-                        <span className="font-body font-medium">{item.title}</span>
+                        <span className="font-medium">{item.title}</span>
                       )}
                     </Link>
                   </SidebarMenuButton>
@@ -205,7 +206,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
           )}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="font-body">Sair</span>}
+          {!collapsed && <span>Sair</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

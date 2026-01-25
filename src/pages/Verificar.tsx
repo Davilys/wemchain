@@ -13,7 +13,8 @@ import {
   Hash,
   FileText,
   Clock,
-  Loader2
+  Loader2,
+  Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -168,23 +169,28 @@ export default function Verificar() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="bg-gradient-hero py-20 md:py-28">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-            Verificar <span className="text-secondary">Certificado</span>
+      <section className="bg-gradient-hero py-20 md:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <Shield className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">Verificação Pública</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
+            Verificar <span className="text-primary">Certificado</span>
           </h1>
-          <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Confirme a autenticidade de um registro em blockchain
           </p>
         </div>
       </section>
 
       {/* Search Section */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
-          <Card className="max-w-2xl mx-auto border-border/50">
+          <Card className="max-w-2xl mx-auto card-premium">
             <CardHeader>
-              <CardTitle className="font-display text-2xl">Verificar Registro</CardTitle>
+              <CardTitle className="text-2xl tracking-tight">Verificar Registro</CardTitle>
               <CardDescription>
                 Insira o hash do arquivo ou o ID da transação blockchain para verificar
               </CardDescription>
@@ -238,7 +244,7 @@ export default function Verificar() {
               <Button 
                 onClick={handleSearch} 
                 disabled={loading} 
-                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
               >
                 {loading ? (
                   <>
@@ -258,15 +264,15 @@ export default function Verificar() {
           {/* Results */}
           {result && (
             <Card className={`max-w-2xl mx-auto mt-8 border-2 ${
-              result.found ? "border-success bg-success/5" : "border-destructive bg-destructive/5"
+              result.found ? "border-green-500 bg-green-500/5" : "border-destructive bg-destructive/5"
             }`}>
               <CardHeader>
                 <div className="flex items-center gap-3">
                   {result.found ? (
                     <>
-                      <CheckCircle2 className="h-8 w-8 text-success" />
+                      <CheckCircle2 className="h-8 w-8 text-green-500" />
                       <div>
-                        <CardTitle className="font-display text-xl text-success">
+                        <CardTitle className="text-xl text-green-500 tracking-tight">
                           Registro Verificado
                         </CardTitle>
                         <CardDescription>
@@ -278,7 +284,7 @@ export default function Verificar() {
                     <>
                       <XCircle className="h-8 w-8 text-destructive" />
                       <div>
-                        <CardTitle className="font-display text-xl text-destructive">
+                        <CardTitle className="text-xl text-destructive tracking-tight">
                           Registro Não Encontrado
                         </CardTitle>
                         <CardDescription>
@@ -344,7 +350,7 @@ export default function Verificar() {
                         )}
                       </div>
                       
-                      <Button variant="outline" asChild className="w-full mt-4">
+                      <Button variant="outline" asChild className="w-full mt-4 rounded-xl">
                         <a 
                           href={getPolygonScanUrl(result.transacao.tx_hash)} 
                           target="_blank" 
@@ -364,20 +370,22 @@ export default function Verificar() {
       </section>
 
       {/* How to Verify */}
-      <section className="py-20 md:py-28 bg-muted/50">
+      <section className="py-20 md:py-28 bg-card border-y border-border/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">
                 Como Verificar
               </h2>
             </div>
 
             <div className="space-y-6">
-              <Card className="border-border/50">
+              <Card className="card-premium">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Hash className="h-5 w-5 text-secondary" />
+                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <Hash className="h-4 w-4 text-blue-500" />
+                    </div>
                     Verificação por Hash
                   </CardTitle>
                 </CardHeader>
@@ -391,10 +399,12 @@ export default function Verificar() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50">
+              <Card className="card-premium">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-secondary" />
+                    <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-purple-500" />
+                    </div>
                     Verificação por TXID
                   </CardTitle>
                 </CardHeader>

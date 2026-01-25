@@ -16,10 +16,24 @@ import {
   Link2,
   Copy,
   ArrowLeft,
-  QrCode
+  QrCode,
+  Clock,
+  Info
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
+
+interface TransacaoBlockchain {
+  id: string;
+  tx_hash: string;
+  network: string;
+  timestamp_method?: string;
+  proof_data?: string;
+  confirmed_at?: string;
+  timestamp_blockchain?: string;
+  block_number?: number;
+  confirmations?: number;
+}
 
 export default function Certificado() {
   const { id } = useParams<{ id: string }>();
@@ -85,20 +99,49 @@ export default function Certificado() {
     });
   };
 
-  const getPolygonScanUrl = (txHash: string) => {
-    return `https://polygonscan.com/tx/${txHash}`;
+  const getVerificationUrl = (txHash: string, network: string) => {
+    if (network === "opentimestamps") {
+      return `https://opentimestamps.org`;
+    }
+    if (network === "polygon") {
+      return `https://polygonscan.com/tx/${txHash}`;
+    }
+    return null;
   };
 
-  // Mock data for demonstration (in production, this comes from transacoes_blockchain)
-  const mockTxData = {
-    tx_hash: "0x7f8b9c4e5d3a2b1c0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a3",
-    network: "polygon",
-    block_number: 52847291,
-    timestamp_blockchain: registro?.created_at || new Date().toISOString(),
-    confirmations: 128
+  const getMethodDisplayInfo = (method?: string) => {
+    switch (method) {
+      case "OPEN_TIMESTAMP":
+        return {
+          label: "OpenTimestamps",
+          description: "Bitcoin Blockchain",
+          color: "text-orange-400",
+          bgColor: "bg-orange-400/10",
+          borderColor: "border-orange-400/20"
+        };
+      case "BYTESTAMP":
+        return {
+          label: "ByteStamp",
+          description: "Blockchain Timestamp",
+          color: "text-blue-400",
+          bgColor: "bg-blue-400/10",
+          borderColor: "border-blue-400/20"
+        };
+      case "SMART_CONTRACT":
+      default:
+        return {
+          label: "Sistema WebMarcas",
+          description: "Timestamp Interno",
+          color: "text-primary",
+          bgColor: "bg-primary/10",
+          borderColor: "border-primary/20"
+        };
+    }
   };
 
-  const txData = registro?.transacoes_blockchain?.[0] || mockTxData;
+  // Get transaction data
+  const txData: TransacaoBlockchain | null = registro?.transacoes_blockchain?.[0] || null;
+  const methodInfo = getMethodDisplayInfo(txData?.timestamp_method);
 
   if (authLoading || loading) {
     return (
@@ -133,7 +176,7 @@ export default function Certificado() {
             Registro Confirmado!
           </h1>
           <p className="font-body text-muted-foreground">
-            Seu arquivo foi registrado com sucesso na blockchain Polygon
+            Seu arquivo foi registrado com sucesso via {methodInfo.label}
           </p>
         </div>
 
@@ -154,10 +197,16 @@ export default function Certificado() {
                     <p className="font-body text-sm text-muted-foreground">Uma empresa WebPatentes</p>
                   </div>
                 </div>
-                <Badge className="bg-success/10 text-success border-success/20 self-start md:self-auto">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Registro Verificado
-                </Badge>
+                <div className="flex flex-wrap gap-2 self-start md:self-auto">
+                  <Badge className="bg-success/10 text-success border-success/20">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Registro Verificado
+                  </Badge>
+                  <Badge className={`${methodInfo.bgColor} ${methodInfo.color} ${methodInfo.borderColor}`}>
+                    <Clock className="h-3 w-3 mr-1" />
+                    {methodInfo.label}
+                  </Badge>
+                </div>
               </div>
             </div>
 
@@ -228,53 +277,93 @@ export default function Certificado() {
                 </p>
               </div>
 
-              {/* Blockchain Transaction */}
-              <div className="bg-muted/30 rounded-xl p-6">
-                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Link2 className="h-5 w-5 text-primary" />
-                  Transação Blockchain
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <p className="font-body text-sm text-muted-foreground mb-1">ID da Transação (TXID)</p>
-                    <div className="flex items-start gap-2">
-                      <code className="font-mono text-sm bg-background p-3 rounded-lg flex-1 break-all border border-border">
-                        {txData.tx_hash}
-                      </code>
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => copyToClipboard(txData.tx_hash, "TXID")}
-                        className="flex-shrink-0"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Timestamp/Blockchain Transaction */}
+              {txData && (
+                <div className={`${methodInfo.bgColor} rounded-xl p-6 border ${methodInfo.borderColor}`}>
+                  <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Link2 className={`h-5 w-5 ${methodInfo.color}`} />
+                    Prova de Existência - {methodInfo.label}
+                  </h4>
+                  <div className="space-y-4">
                     <div>
-                      <p className="font-body text-sm text-muted-foreground">Rede</p>
-                      <p className="font-body font-medium text-foreground">Polygon</p>
+                      <p className="font-body text-sm text-muted-foreground mb-1">ID da Prova / Transação</p>
+                      <div className="flex items-start gap-2">
+                        <code className="font-mono text-sm bg-background p-3 rounded-lg flex-1 break-all border border-border">
+                          {txData.tx_hash}
+                        </code>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => copyToClipboard(txData.tx_hash, "ID da Prova")}
+                          className="flex-shrink-0"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-body text-sm text-muted-foreground">Bloco</p>
-                      <p className="font-body font-medium text-foreground">{txData.block_number?.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="font-body text-sm text-muted-foreground">Confirmações</p>
-                      <p className="font-body font-medium text-success">{txData.confirmations}+</p>
-                    </div>
-                    <div>
-                      <p className="font-body text-sm text-muted-foreground">Status</p>
-                      <Badge className="bg-success/10 text-success border-success/20">
-                        Confirmado
-                      </Badge>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="font-body text-sm text-muted-foreground">Método</p>
+                        <p className={`font-body font-medium ${methodInfo.color}`}>
+                          {methodInfo.label}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-body text-sm text-muted-foreground">Rede</p>
+                        <p className="font-body font-medium text-foreground capitalize">
+                          {txData.network === "opentimestamps" ? "Bitcoin" : txData.network}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-body text-sm text-muted-foreground">Confirmado em</p>
+                        <p className="font-body font-medium text-foreground">
+                          {txData.confirmed_at ? formatDate(txData.confirmed_at) : "Pendente"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-body text-sm text-muted-foreground">Status</p>
+                        <Badge className="bg-success/10 text-success border-success/20">
+                          Confirmado
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Method Explanation */}
+              <div className="bg-muted/30 rounded-xl p-6 border border-border">
+                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Info className="h-5 w-5 text-primary" />
+                  Sobre este Método de Prova
+                </h4>
+                {txData?.timestamp_method === "OPEN_TIMESTAMP" ? (
+                  <div className="space-y-3">
+                    <p className="font-body text-sm text-foreground">
+                      <strong>Prova de existência gerada via OpenTimestamps</strong>, utilizando timestamping 
+                      ancorado na blockchain Bitcoin. Esta prova é imutável e auditável, fornecendo 
+                      evidência técnica da existência e integridade do arquivo na data registrada.
+                    </p>
+                    <p className="font-body text-sm text-muted-foreground">
+                      A verificação pode ser feita de forma independente usando ferramentas OpenTimestamps 
+                      oficiais disponíveis em opentimestamps.org.
+                    </p>
+                  </div>
+                ) : txData?.timestamp_method === "BYTESTAMP" ? (
+                  <p className="font-body text-sm text-foreground">
+                    <strong>Prova de existência gerada via ByteStamp</strong>, utilizando timestamping 
+                    em blockchain público. Esta prova é imutável e auditável, fornecendo evidência 
+                    técnica da existência e integridade do arquivo na data registrada.
+                  </p>
+                ) : (
+                  <p className="font-body text-sm text-foreground">
+                    <strong>Timestamp registrado no sistema seguro WebMarcas</strong> com backup criptografado. 
+                    Este registro fornece prova de existência com data e hora certificadas pelo nosso sistema.
+                  </p>
+                )}
               </div>
 
-              {/* QR Code Placeholder */}
+              {/* QR Code / Verification */}
               <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-muted/30 rounded-xl">
                 <div className="h-32 w-32 bg-background border border-border rounded-xl flex items-center justify-center flex-shrink-0">
                   <QrCode className="h-20 w-20 text-muted-foreground" />
@@ -282,31 +371,39 @@ export default function Certificado() {
                 <div className="text-center md:text-left">
                   <h4 className="font-display font-semibold text-foreground mb-2">Verificação Pública</h4>
                   <p className="font-body text-sm text-muted-foreground mb-3">
-                    Escaneie o QR Code ou acesse o link abaixo para verificar este registro na blockchain.
+                    {txData?.timestamp_method === "OPEN_TIMESTAMP" 
+                      ? "Verifique este timestamp usando ferramentas OpenTimestamps oficiais."
+                      : "Verifique este registro usando o hash SHA-256 do arquivo original."}
                   </p>
-                  <Button 
-                    variant="outline" 
-                    asChild
-                    className="font-body"
-                  >
-                    <a 
-                      href={getPolygonScanUrl(txData.tx_hash)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                  {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
+                    <Button 
+                      variant="outline" 
+                      asChild
+                      className="font-body"
                     >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Ver no PolygonScan
-                    </a>
-                  </Button>
+                      <a 
+                        href={getVerificationUrl(txData.tx_hash, txData.network)!} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {txData.timestamp_method === "OPEN_TIMESTAMP" 
+                          ? "OpenTimestamps.org"
+                          : "Verificar Blockchain"}
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
 
               {/* Legal Disclaimer */}
               <div className="border-t border-border pt-6">
                 <p className="font-body text-xs text-muted-foreground text-center leading-relaxed">
-                  Este certificado comprova a existência e integridade do arquivo na data indicada, 
-                  servindo como prova técnica de anterioridade. Este registro em blockchain <strong>não substitui</strong> o 
-                  registro de marca junto ao INPI (Instituto Nacional da Propriedade Industrial).
+                  Este certificado constitui prova técnica de anterioridade, demonstrando a existência 
+                  e integridade do arquivo na data indicada. Este registro em blockchain <strong>não substitui</strong> o 
+                  registro de marca junto ao INPI (Instituto Nacional da Propriedade Industrial). 
+                  A validade jurídica desta prova pode ser utilizada como elemento complementar em 
+                  disputas ou defesa de direitos autorais, patente ou marca.
                 </p>
               </div>
             </div>
@@ -339,20 +436,22 @@ export default function Certificado() {
             <Download className="h-5 w-5 mr-2" />
             Baixar Certificado PDF
           </Button>
-          <Button
-            variant="outline"
-            className="flex-1 font-body py-6 border-border"
-            asChild
-          >
-            <a 
-              href={getPolygonScanUrl(txData.tx_hash)} 
-              target="_blank" 
-              rel="noopener noreferrer"
+          {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
+            <Button
+              variant="outline"
+              className="flex-1 font-body py-6 border-border"
+              asChild
             >
-              <ExternalLink className="h-5 w-5 mr-2" />
-              Verificar na Blockchain
-            </a>
-          </Button>
+              <a 
+                href={getVerificationUrl(txData.tx_hash, txData.network)!} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-5 w-5 mr-2" />
+                Verificar Timestamp
+              </a>
+            </Button>
+          )}
         </div>
 
         {/* Back to Dashboard */}

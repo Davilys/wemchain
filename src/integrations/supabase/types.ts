@@ -146,34 +146,49 @@ export type Database = {
         Row: {
           block_number: number | null
           confirmations: number | null
+          confirmed_at: string | null
           created_at: string
           gas_used: number | null
           id: string
           network: string
+          proof_data: string | null
           registro_id: string
           timestamp_blockchain: string | null
+          timestamp_method:
+            | Database["public"]["Enums"]["timestamp_method"]
+            | null
           tx_hash: string
         }
         Insert: {
           block_number?: number | null
           confirmations?: number | null
+          confirmed_at?: string | null
           created_at?: string
           gas_used?: number | null
           id?: string
           network?: string
+          proof_data?: string | null
           registro_id: string
           timestamp_blockchain?: string | null
+          timestamp_method?:
+            | Database["public"]["Enums"]["timestamp_method"]
+            | null
           tx_hash: string
         }
         Update: {
           block_number?: number | null
           confirmations?: number | null
+          confirmed_at?: string | null
           created_at?: string
           gas_used?: number | null
           id?: string
           network?: string
+          proof_data?: string | null
           registro_id?: string
           timestamp_blockchain?: string | null
+          timestamp_method?:
+            | Database["public"]["Enums"]["timestamp_method"]
+            | null
           tx_hash?: string
         }
         Relationships: [
@@ -220,6 +235,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       registro_status: "pendente" | "processando" | "confirmado" | "falhou"
+      timestamp_method: "OPEN_TIMESTAMP" | "BYTESTAMP" | "SMART_CONTRACT"
       tipo_ativo: "marca" | "logotipo" | "obra_autoral" | "documento" | "outro"
     }
     CompositeTypes: {
@@ -350,6 +366,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       registro_status: ["pendente", "processando", "confirmado", "falhou"],
+      timestamp_method: ["OPEN_TIMESTAMP", "BYTESTAMP", "SMART_CONTRACT"],
       tipo_ativo: ["marca", "logotipo", "obra_autoral", "documento", "outro"],
     },
   },

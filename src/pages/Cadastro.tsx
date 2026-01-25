@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2, Phone, Building2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2, Phone, Building2, Shield, Sparkles } from "lucide-react";
 import { z } from "zod";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
@@ -26,10 +26,10 @@ const cadastroSchema = z.object({
 });
 
 const benefits = [
-  "Registro em blockchain instantâneo",
-  "Certificado digital verificável",
-  "Dashboard completo",
-  "Suporte especializado"
+  { text: "Registro em blockchain instantâneo", icon: Shield },
+  { text: "Certificado digital verificável", icon: CheckCircle2 },
+  { text: "Dashboard completo", icon: Sparkles },
+  { text: "Suporte especializado", icon: User }
 ];
 
 // Format CPF/CNPJ as user types
@@ -132,42 +132,53 @@ export default function Cadastro() {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-12 px-4 bg-gradient-hero">
-        <div className="w-full max-w-4xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-12 px-4 bg-gradient-hero relative overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute inset-0 bg-gradient-radial" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
+        
+        <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-10 items-center relative z-10">
           {/* Left side - Benefits */}
-          <div className="hidden lg:block">
-            <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 font-body text-sm transition-colors">
-              <ArrowLeft className="h-4 w-4" />
+          <div className="hidden lg:block animate-fade-up">
+            <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-10 font-body text-sm transition-colors group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
               Voltar para o site
             </Link>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <Link to="/" className="flex items-center gap-3 mb-4">
-                  <img 
-                    src={webmarcasLogo} 
-                    alt="WebMarcas" 
-                    className="h-12 w-12 object-contain"
-                  />
+                <Link to="/" className="flex items-center gap-4 mb-6 group">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <img 
+                      src={webmarcasLogo} 
+                      alt="WebMarcas" 
+                      className="h-12 w-12 object-contain"
+                    />
+                  </div>
                   <span className="font-display text-3xl font-bold text-foreground">
                     WebMarcas
                   </span>
                 </Link>
-                <h1 className="font-display text-3xl font-bold text-foreground mb-2">
-                  Proteja sua marca hoje
+                <h1 className="font-display text-4xl font-bold text-foreground mb-4">
+                  Proteja sua marca <span className="text-gradient-cyan">hoje</span>
                 </h1>
-                <p className="font-body text-muted-foreground">
-                  Crie sua conta e comece a registrar suas marcas em blockchain com prova de anterioridade.
+                <p className="font-body text-lg text-muted-foreground leading-relaxed">
+                  Crie sua conta e comece a registrar suas marcas em blockchain com prova de anterioridade imutável.
                 </p>
               </div>
               
               <div className="space-y-4">
                 {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="h-5 w-5 text-success" />
+                  <div 
+                    key={index} 
+                    className="flex items-center gap-4 p-4 rounded-xl bg-background/30 border border-border/30 backdrop-blur-sm animate-fade-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center flex-shrink-0">
+                      <benefit.icon className="h-6 w-6 text-success" />
                     </div>
-                    <span className="font-body font-medium text-foreground">{benefit}</span>
+                    <span className="font-body font-semibold text-foreground">{benefit.text}</span>
                   </div>
                 ))}
               </div>
@@ -175,21 +186,23 @@ export default function Cadastro() {
           </div>
 
           {/* Right side - Form */}
-          <div>
-            <Link to="/" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 font-body text-sm transition-colors">
-              <ArrowLeft className="h-4 w-4" />
+          <div className="animate-fade-up delay-200">
+            <Link to="/" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 font-body text-sm transition-colors group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
               Voltar para o site
             </Link>
 
-            <Card className="border-border bg-card shadow-xl">
-              <CardHeader className="text-center space-y-2 pb-2">
+            <Card className="glass-card border-border/50 shadow-2xl">
+              <CardHeader className="text-center space-y-4 pb-4">
                 <div className="lg:hidden mx-auto mb-2">
-                  <Link to="/" className="flex items-center justify-center gap-3">
-                    <img 
-                      src={webmarcasLogo} 
-                      alt="WebMarcas" 
-                      className="h-10 w-10 object-contain"
-                    />
+                  <Link to="/" className="flex items-center justify-center gap-3 group">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <img 
+                        src={webmarcasLogo} 
+                        alt="WebMarcas" 
+                        className="h-8 w-8 object-contain"
+                      />
+                    </div>
                     <span className="font-display text-xl font-bold text-foreground">
                       WebMarcas
                     </span>
@@ -200,18 +213,18 @@ export default function Cadastro() {
               </CardHeader>
               
               <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4 pt-4">
+                <CardContent className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="font-body font-medium">Nome Completo *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="fullName" className="font-body font-semibold">Nome Completo *</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
                         id="fullName"
                         type="text"
                         placeholder="Seu nome completo"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10 font-body bg-background border-border"
+                        className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                         required
                       />
                     </div>
@@ -219,32 +232,32 @@ export default function Cadastro() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="cpfCnpj" className="font-body font-medium">CPF ou CNPJ *</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="cpfCnpj" className="font-body font-semibold">CPF ou CNPJ *</Label>
+                      <div className="relative group">
+                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                           id="cpfCnpj"
                           type="text"
                           placeholder="000.000.000-00"
                           value={cpfCnpj}
                           onChange={handleCpfCnpjChange}
-                          className="pl-10 font-body bg-background border-border"
+                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                           required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="font-body font-medium">Telefone *</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="phone" className="font-body font-semibold">Telefone *</Label>
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                           id="phone"
                           type="tel"
                           placeholder="(00) 00000-0000"
                           value={phone}
                           onChange={handlePhoneChange}
-                          className="pl-10 font-body bg-background border-border"
+                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                           required
                         />
                       </div>
@@ -252,16 +265,16 @@ export default function Cadastro() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="font-body font-medium">E-mail *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="email" className="font-body font-semibold">E-mail *</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="seu@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 font-body bg-background border-border"
+                        className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                         required
                       />
                     </div>
@@ -269,62 +282,62 @@ export default function Cadastro() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="font-body font-medium">Senha *</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="password" className="font-body font-semibold">Senha *</Label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                           id="password"
                           type="password"
                           placeholder="Mínimo 6 caracteres"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10 font-body bg-background border-border"
+                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                           required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="font-body font-medium">Confirmar Senha *</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="confirmPassword" className="font-body font-semibold">Confirmar Senha *</Label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                           id="confirmPassword"
                           type="password"
                           placeholder="Repita sua senha"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="pl-10 font-body bg-background border-border"
+                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2 pt-2">
+                  <div className="flex items-start gap-3 pt-2 p-4 rounded-xl bg-muted/20 border border-border/30">
                     <Checkbox
                       id="terms"
                       checked={acceptTerms}
                       onCheckedChange={(checked) => setAcceptTerms(checked === true)}
-                      className="mt-1"
+                      className="mt-0.5"
                     />
                     <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed font-body font-normal cursor-pointer">
                       Concordo com os{" "}
-                      <Link to="/termos" className="text-primary hover:underline transition-colors">
+                      <Link to="/termos" className="text-primary hover:underline transition-colors font-medium">
                         Termos de Uso
                       </Link>{" "}
                       e{" "}
-                      <Link to="/privacidade" className="text-primary hover:underline transition-colors">
+                      <Link to="/privacidade" className="text-primary hover:underline transition-colors font-medium">
                         Política de Privacidade
                       </Link>
                     </Label>
                   </div>
                 </CardContent>
                 
-                <CardFooter className="flex flex-col gap-4">
+                <CardFooter className="flex flex-col gap-5 pt-4">
                   <Button 
                     type="submit" 
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold"
+                    className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-bold rounded-xl shadow-lg btn-premium group"
                     disabled={loading || !acceptTerms}
                   >
                     {loading ? (
@@ -333,13 +346,16 @@ export default function Cadastro() {
                         Criando conta...
                       </>
                     ) : (
-                      "Criar Conta Grátis"
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                        Criar Conta Grátis
+                      </>
                     )}
                   </Button>
                   
                   <p className="text-sm text-muted-foreground text-center font-body">
                     Já tem uma conta?{" "}
-                    <Link to="/login" className="text-primary font-medium hover:underline transition-colors">
+                    <Link to="/login" className="text-primary font-semibold hover:text-primary/80 transition-colors">
                       Entrar
                     </Link>
                   </p>

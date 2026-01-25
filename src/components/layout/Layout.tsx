@@ -10,7 +10,7 @@ interface LayoutProps {
   showFooter?: boolean;
 }
 
-const dashboardRoutes = ["/dashboard", "/novo-registro", "/meus-registros"];
+const dashboardRoutes = ["/dashboard", "/novo-registro", "/meus-registros", "/documentos", "/pagamentos", "/relatorios", "/clientes", "/configuracoes"];
 
 export function Layout({ children, showFooter = true }: LayoutProps) {
   const location = useLocation();

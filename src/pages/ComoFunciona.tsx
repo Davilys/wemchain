@@ -19,46 +19,46 @@ const processSteps = [
   {
     icon: Upload,
     number: "01",
-    title: "Upload do Arquivo",
-    description: "Você envia seu arquivo (marca, logotipo, documento, obra autoral) através da nossa plataforma segura.",
+    title: "Você envia o arquivo",
+    description: "Faça upload do seu arquivo (marca, logotipo, documento, arte) através da nossa plataforma segura.",
     details: [
-      "Formatos aceitos: PDF, PNG, JPG, JPEG, SVG",
+      "Formatos aceitos: PDF, PNG, JPG, JPEG, SVG, MP4, ZIP",
       "Tamanho máximo: 10MB por arquivo",
-      "O arquivo fica armazenado de forma privada"
+      "Seu arquivo fica armazenado de forma privada e segura"
     ]
   },
   {
     icon: Hash,
     number: "02",
-    title: "Geração do Hash SHA-256",
-    description: "Nosso sistema gera uma assinatura digital única do seu arquivo usando criptografia SHA-256.",
+    title: "Geramos uma impressão digital (hash)",
+    description: "Nosso sistema cria uma assinatura única do seu arquivo usando criptografia de nível bancário.",
     details: [
-      "O hash é uma 'impressão digital' única",
+      "O hash é como uma 'impressão digital' única do arquivo",
       "Qualquer alteração no arquivo gera um hash diferente",
-      "O arquivo original nunca é exposto publicamente"
+      "Seu arquivo original nunca é exposto publicamente"
     ]
   },
   {
     icon: Link2,
     number: "03",
-    title: "Registro na Blockchain",
-    description: "O hash é registrado permanentemente na blockchain Polygon com timestamp exato.",
+    title: "O hash é registrado na blockchain",
+    description: "Registramos o hash permanentemente na blockchain Polygon, com data e hora exatas.",
     details: [
-      "Transação pública e verificável",
+      "Transação pública e verificável por qualquer pessoa",
       "Data e hora registradas de forma imutável",
-      "Custo mínimo de transação (frações de centavo)"
+      "Custo de transação mínimo (frações de centavo)"
     ]
   },
   {
     icon: FileText,
     number: "04",
-    title: "Certificado Digital",
-    description: "Você recebe um certificado profissional contendo todos os dados do registro.",
+    title: "Você recebe um certificado",
+    description: "Emitimos um certificado profissional contendo todos os dados do seu registro blockchain.",
     details: [
-      "Hash do arquivo",
-      "ID da transação (TXID)",
+      "Hash criptográfico do arquivo",
+      "ID da transação na blockchain (TXID)",
       "Link para verificação pública",
-      "QR Code para validação"
+      "QR Code para validação instantânea"
     ]
   }
 ];
@@ -67,76 +67,80 @@ const techDetails = [
   {
     icon: Shield,
     title: "SHA-256",
-    description: "Algoritmo de hash criptográfico usado por bancos e governos mundialmente. Virtualmente impossível de falsificar."
+    description: "Algoritmo de hash criptográfico usado por bancos e governos mundialmente."
   },
   {
     icon: Lock,
     title: "Blockchain Polygon",
-    description: "Rede blockchain de alta performance, econômica e ambientalmente sustentável. Compatível com Ethereum."
+    description: "Rede blockchain de alta performance, econômica e sustentável."
   },
   {
     icon: Clock,
     title: "Timestamp Imutável",
-    description: "A data e hora do registro são gravadas permanentemente, servindo como prova de anterioridade."
+    description: "Data e hora gravadas permanentemente como prova de anterioridade."
   },
   {
     icon: Eye,
     title: "Verificação Pública",
-    description: "Qualquer pessoa pode verificar a autenticidade do registro na blockchain pública."
+    description: "Qualquer pessoa pode verificar a autenticidade do registro."
   }
 ];
 
 export default function ComoFunciona() {
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-gradient-hero py-20 md:py-28">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-            Como Funciona o Registro em <span className="text-secondary">Blockchain</span>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-6">
+            Como Funciona o Registro em <span className="text-primary">Blockchain</span>
           </h1>
-          <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Entenda o processo completo de proteção da sua marca com tecnologia de ponta
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-body">
+            Processo simples e seguro para proteger sua marca com tecnologia de ponta
           </p>
         </div>
       </section>
 
-      {/* Process Steps */}
+      <section className="py-16 bg-primary/5 border-y border-border">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
+              Você não precisa entender blockchain
+            </h2>
+            <p className="font-body text-lg text-muted-foreground leading-relaxed">
+              Nossa plataforma traduz toda a complexidade técnica em um processo simples. 
+              O resultado é uma <strong className="text-foreground">prova de anterioridade</strong> que 
+              comprova que você tinha aquele arquivo em determinada data.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             {processSteps.map((step, index) => (
               <div key={index} className="relative pb-12 last:pb-0">
-                {/* Connector Line */}
                 {index < processSteps.length - 1 && (
                   <div className="absolute left-8 top-20 w-0.5 h-[calc(100%-5rem)] bg-border" />
                 )}
-                
                 <div className="flex gap-6 md:gap-10">
-                  {/* Number Circle */}
                   <div className="flex-shrink-0">
                     <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center">
-                      <span className="font-display text-xl font-bold text-primary-foreground">
-                        {step.number}
-                      </span>
+                      <span className="font-display text-xl font-bold text-primary-foreground">{step.number}</span>
                     </div>
                   </div>
-                  
-                  {/* Content */}
-                  <Card className="flex-1 border-border/50">
+                  <Card className="flex-1 border-border bg-card">
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
-                        <step.icon className="h-6 w-6 text-secondary" />
+                        <step.icon className="h-6 w-6 text-primary" />
                         <CardTitle className="font-display text-2xl">{step.title}</CardTitle>
                       </div>
-                      <CardDescription className="text-base text-muted-foreground">
-                        {step.description}
-                      </CardDescription>
+                      <CardDescription className="text-base text-muted-foreground font-body">{step.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
                         {step.details.map((detail, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground font-body">
                             <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
                             {detail}
                           </li>
@@ -151,31 +155,17 @@ export default function ComoFunciona() {
         </div>
       </section>
 
-      {/* Technical Details */}
       <section className="py-20 md:py-28 bg-muted/50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Tecnologia de <span className="text-secondary">Ponta</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Utilizamos as mesmas tecnologias de segurança usadas por grandes instituições financeiras
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {techDetails.map((tech, index) => (
-              <Card key={index} className="border-border/50">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <Card key={index} className="border-border bg-card text-center">
+                <CardContent className="pt-6">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <tech.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="font-display text-xl">{tech.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-muted-foreground">
-                    {tech.description}
-                  </CardDescription>
+                  <h3 className="font-display font-semibold text-foreground mb-2">{tech.title}</h3>
+                  <p className="text-sm text-muted-foreground font-body">{tech.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -183,61 +173,12 @@ export default function ComoFunciona() {
         </div>
       </section>
 
-      {/* Important Note */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto border-warning/50 bg-warning/5">
-            <CardHeader>
-              <CardTitle className="font-display text-2xl flex items-center gap-3">
-                <Shield className="h-6 w-6 text-warning" />
-                Importante: Blockchain × INPI
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                O registro em blockchain <strong className="text-foreground">não substitui</strong> o registro 
-                no INPI (Instituto Nacional da Propriedade Industrial). São proteções complementares.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-background border">
-                  <h4 className="font-semibold text-foreground mb-2">Registro Blockchain</h4>
-                  <ul className="space-y-1 text-sm">
-                    <li>✓ Prova de anterioridade imediata</li>
-                    <li>✓ Timestamp imutável</li>
-                    <li>✓ Verificação pública</li>
-                    <li>✓ Suporte em disputas judiciais</li>
-                  </ul>
-                </div>
-                <div className="p-4 rounded-lg bg-background border">
-                  <h4 className="font-semibold text-foreground mb-2">Registro INPI</h4>
-                  <ul className="space-y-1 text-sm">
-                    <li>✓ Proteção legal oficial</li>
-                    <li>✓ Direito exclusivo de uso</li>
-                    <li>✓ Ação contra infratores</li>
-                    <li>✓ Validade de 10 anos (renovável)</li>
-                  </ul>
-                </div>
-              </div>
-              <p className="text-sm">
-                <strong className="text-foreground">Recomendamos:</strong> Faça o registro blockchain 
-                imediatamente para garantir sua prova de anterioridade, e em paralelo solicite o 
-                registro no INPI para proteção legal completa.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 md:py-28 bg-primary text-primary-foreground">
+      <section className="py-20 md:py-28 bg-primary">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
             Pronto para começar?
           </h2>
-          <p className="text-primary-foreground/80 text-lg mb-10 max-w-xl mx-auto">
-            Faça seu primeiro registro em minutos e tenha sua prova de anterioridade garantida.
-          </p>
-          <Button size="lg" asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+          <Button size="lg" asChild className="bg-background text-foreground hover:bg-background/90 font-body">
             <Link to="/cadastro">
               Criar Conta Grátis
               <ArrowRight className="ml-2 h-5 w-5" />

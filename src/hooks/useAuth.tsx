@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, cpfCnpj?: string, phone?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -49,20 +49,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [navigate]);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, cpfCnpj?: string, phone?: string) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
         data: {
           full_name: fullName,
+          cpf_cnpj: cpfCnpj,
+          phone: phone,
         },
       },
     });
 
     if (error) {
       throw error;
+    }
+
+    // Update profile with additional data if user was created
+    if (data.user && (cpfCnpj || phone)) {
+      await supabase
+        .from("profiles")
+        .update({
+          cpf_cnpj: cpfCnpj || null,
+          phone: phone || null,
+        })
+        .eq("user_id", data.user.id);
     }
 
     toast({

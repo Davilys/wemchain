@@ -340,13 +340,14 @@ export default function Certificado() {
                 {txData?.timestamp_method === "OPEN_TIMESTAMP" ? (
                   <div className="space-y-3">
                     <p className="font-body text-sm text-foreground">
-                      <strong>Prova de existência gerada via OpenTimestamps</strong>, utilizando timestamping 
-                      ancorado na blockchain Bitcoin. Esta prova é imutável e auditável, fornecendo 
-                      evidência técnica da existência e integridade do arquivo na data registrada.
+                      <strong>A prova de existência foi registrada por meio do protocolo OpenTimestamps</strong>, 
+                      ancorado na blockchain pública do Bitcoin, garantindo imutabilidade e datação confiável, 
+                      sem custo de transação para o usuário.
                     </p>
                     <p className="font-body text-sm text-muted-foreground">
-                      A verificação pode ser feita de forma independente usando ferramentas OpenTimestamps 
-                      oficiais disponíveis em opentimestamps.org.
+                      Este método utiliza timestamping criptográfico gratuito, onde o hash do arquivo é 
+                      incluído em uma árvore merkle e ancorado em transações públicas do Bitcoin. A prova 
+                      pode ser verificada de forma independente em opentimestamps.org.
                     </p>
                   </div>
                 ) : txData?.timestamp_method === "BYTESTAMP" ? (
@@ -397,7 +398,14 @@ export default function Certificado() {
               </div>
 
               {/* Legal Disclaimer */}
-              <div className="border-t border-border pt-6">
+              <div className="border-t border-border pt-6 space-y-3">
+                {txData?.timestamp_method === "OPEN_TIMESTAMP" && (
+                  <p className="font-body text-xs text-foreground text-center leading-relaxed bg-orange-400/5 p-3 rounded-lg border border-orange-400/20">
+                    <strong>Sobre a infraestrutura:</strong> A prova de existência foi registrada por meio do 
+                    protocolo OpenTimestamps, ancorado na blockchain pública do Bitcoin, garantindo imutabilidade 
+                    e datação confiável, sem custo de transação para o usuário.
+                  </p>
+                )}
                 <p className="font-body text-xs text-muted-foreground text-center leading-relaxed">
                   Este certificado constitui prova técnica de anterioridade, demonstrando a existência 
                   e integridade do arquivo na data indicada. Este registro em blockchain <strong>não substitui</strong> o 

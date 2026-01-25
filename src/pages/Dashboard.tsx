@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { LegalNotice } from "@/components/legal/LegalNotice";
 import { 
   Plus, 
   FileText, 
@@ -131,6 +132,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Legal Notice */}
+      <LegalNotice />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>

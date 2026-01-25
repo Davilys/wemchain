@@ -69,6 +69,9 @@ export function Footer() {
               <Link to="/dashboard" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
                 Meus Registros
               </Link>
+              <Link to="/privacidade" className="font-body text-primary-foreground/80 hover:text-secondary transition-colors text-sm">
+                Privacidade e Dados (LGPD)
+              </Link>
             </nav>
           </div>
 
@@ -123,12 +126,15 @@ export function Footer() {
               Grupo WebPatentes
             </a>
           </div>
-          <div className="flex gap-6">
-            <Link to="/termos" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            <Link to="/termos-de-uso" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
               Termos de Uso
             </Link>
-            <Link to="/privacidade" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
+            <Link to="/politica-privacidade" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
               Política de Privacidade
+            </Link>
+            <Link to="/politica-blockchain" className="font-body text-primary-foreground/60 hover:text-secondary transition-colors text-sm">
+              Política de Blockchain
             </Link>
           </div>
         </div>

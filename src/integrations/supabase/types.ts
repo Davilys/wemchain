@@ -71,6 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          document_type: string | null
+          document_version: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          document_type?: string | null
+          document_version?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          document_type?: string | null
+          document_version?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       credits: {
         Row: {
           available_credits: number
@@ -101,6 +137,75 @@ export type Database = {
           updated_at?: string
           used_credits?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      data_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          request_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      legal_documents: {
+        Row: {
+          content: string
+          created_at: string
+          document_type: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          document_type: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          document_type?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
@@ -290,6 +395,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_consents: {
+        Row: {
+          accepted_at: string
+          document_type: string
+          document_version: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          document_type: string
+          document_version: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          document_type?: string
+          document_version?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

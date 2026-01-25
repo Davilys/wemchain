@@ -36,6 +36,26 @@ interface CertificateData {
   };
 }
 
+// Generate QR Code as data URL using a simple QR library approach
+async function generateQRCodeDataURL(text: string, size: number = 150): Promise<string> {
+  // Use QR Server API for simplicity
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&format=png&margin=0`;
+  
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    return "";
+  }
+}
+
 export async function generateCertificatePDF(registroId: string): Promise<Blob> {
   // Fetch certificate data from edge function
   const { data: sessionData } = await supabase.auth.getSession();
@@ -53,6 +73,10 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
 
   const { certificateData } = response.data as { certificateData: CertificateData };
 
+  // Generate QR Code for verification
+  const verificationUrl = `https://webmarcas.net/verificar/${registroId}`;
+  const qrCodeDataUrl = await generateQRCodeDataURL(verificationUrl, 120);
+
   // Generate PDF using jsPDF
   const pdf = new jsPDF({
     orientation: "portrait",
@@ -62,209 +86,345 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 20;
+  const margin = 15;
   const contentWidth = pageWidth - margin * 2;
-  let y = margin;
 
-  // Helper function to add text with word wrap
-  const addWrappedText = (
-    text: string,
-    x: number,
-    startY: number,
-    maxWidth: number,
-    lineHeight: number,
-    align: "left" | "center" | "right" = "left"
-  ): number => {
-    const lines = pdf.splitTextToSize(text, maxWidth);
-    lines.forEach((line: string, index: number) => {
-      let textX = x;
-      if (align === "center") {
-        textX = pageWidth / 2;
-      } else if (align === "right") {
-        textX = pageWidth - margin;
-      }
-      pdf.text(line, textX, startY + index * lineHeight, { align });
+  // ===== BACKGROUND & WATERMARK =====
+  // Light gray background
+  pdf.setFillColor(252, 252, 253);
+  pdf.rect(0, 0, pageWidth, pageHeight, "F");
+
+  // Watermark - diagonal text
+  pdf.setTextColor(240, 240, 245);
+  pdf.setFontSize(60);
+  pdf.setFont("helvetica", "bold");
+  
+  // Rotate and add watermark
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+  
+  // Add multiple watermarks
+  for (let i = 0; i < 3; i++) {
+    const yOffset = (i - 1) * 80;
+    pdf.text("WEBMARCAS", centerX, centerY + yOffset, {
+      align: "center",
+      angle: 45,
     });
-    return startY + lines.length * lineHeight;
-  };
-
-  // Header - Logo area (simplified without actual image)
-  pdf.setFillColor(59, 130, 246); // Primary blue
-  pdf.rect(0, 0, pageWidth, 35, "F");
-
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(24);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("WebMarcas", pageWidth / 2, 18, { align: "center" });
-  pdf.setFontSize(10);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(certificateData.subtitle, pageWidth / 2, 28, { align: "center" });
-
-  y = 50;
-
-  // Title
-  pdf.setTextColor(30, 41, 59); // Dark blue-gray
-  pdf.setFontSize(18);
-  pdf.setFont("helvetica", "bold");
-  pdf.text(certificateData.title, pageWidth / 2, y, { align: "center" });
-  y += 15;
-
-  // Emission date
-  pdf.setFontSize(10);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(100, 116, 139);
-  pdf.text(`Emitido em: ${certificateData.emissionDate}`, pageWidth / 2, y, {
-    align: "center",
-  });
-  y += 15;
-
-  // Divider
-  pdf.setDrawColor(203, 213, 225);
-  pdf.line(margin, y, pageWidth - margin, y);
-  y += 10;
-
-  // Section: Titular
-  pdf.setFontSize(12);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(30, 41, 59);
-  pdf.text("IDENTIFICAÇÃO DO TITULAR", margin, y);
-  y += 8;
-
-  pdf.setFontSize(10);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(`Nome/Razão Social: ${certificateData.holder.name}`, margin, y);
-  y += 6;
-  pdf.text(`CPF/CNPJ: ${certificateData.holder.document || "Não informado"}`, margin, y);
-  y += 12;
-
-  // Section: Ativo
-  pdf.setFontSize(12);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("ATIVO REGISTRADO", margin, y);
-  y += 8;
-
-  pdf.setFontSize(10);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(`Nome do Ativo: ${certificateData.asset.name}`, margin, y);
-  y += 6;
-  pdf.text(`Tipo: ${certificateData.asset.type}`, margin, y);
-  y += 6;
-  pdf.text(`Arquivo: ${certificateData.asset.fileName}`, margin, y);
-  y += 6;
-  pdf.text(`Data do Registro: ${certificateData.registrationDate}`, margin, y);
-  y += 12;
-
-  // Section: Dados Técnicos
-  pdf.setFontSize(12);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("DADOS TÉCNICOS DO REGISTRO", margin, y);
-  y += 8;
-
-  pdf.setFontSize(10);
-  pdf.setFont("helvetica", "normal");
-
-  // Hash SHA-256 (with box)
-  pdf.setFillColor(248, 250, 252);
-  pdf.setDrawColor(203, 213, 225);
-  pdf.roundedRect(margin, y - 4, contentWidth, 16, 2, 2, "FD");
-  pdf.setFontSize(9);
-  pdf.text("Hash SHA-256:", margin + 3, y + 2);
-  pdf.setFont("courier", "normal");
-  pdf.setFontSize(7);
-  pdf.text(certificateData.technical.hash, margin + 3, y + 9);
-  y += 20;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.text(`Método de Timestamp: ${certificateData.technical.method}`, margin, y);
-  y += 6;
-  pdf.text(`Blockchain: ${certificateData.technical.network}`, margin, y);
-  y += 6;
-  pdf.text(`Data de Confirmação: ${certificateData.confirmationDate}`, margin, y);
-  y += 6;
-  
-  // TX Hash
-  pdf.text("ID da Transação/Prova:", margin, y);
-  y += 5;
-  pdf.setFontSize(7);
-  pdf.setFont("courier", "normal");
-  pdf.text(certificateData.technical.txHash, margin, y);
-  y += 6;
-  
-  if (certificateData.technical.blockNumber) {
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    pdf.text(`Bloco: ${certificateData.technical.blockNumber}`, margin, y);
-    y += 6;
   }
 
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.text(`ID Interno: ${certificateData.technical.registroId}`, margin, y);
-  y += 15;
+  // ===== DECORATIVE BORDER =====
+  // Outer border
+  pdf.setDrawColor(0, 100, 180);
+  pdf.setLineWidth(1.5);
+  pdf.rect(8, 8, pageWidth - 16, pageHeight - 16);
+  
+  // Inner border
+  pdf.setDrawColor(0, 128, 255);
+  pdf.setLineWidth(0.5);
+  pdf.rect(11, 11, pageWidth - 22, pageHeight - 22);
 
-  // Section: Validade Técnica
-  pdf.setFontSize(12);
+  // Corner decorations
+  const cornerSize = 15;
+  pdf.setDrawColor(0, 100, 180);
+  pdf.setLineWidth(1);
+  
+  // Top-left corner
+  pdf.line(8, 8 + cornerSize, 8, 8);
+  pdf.line(8, 8, 8 + cornerSize, 8);
+  
+  // Top-right corner
+  pdf.line(pageWidth - 8 - cornerSize, 8, pageWidth - 8, 8);
+  pdf.line(pageWidth - 8, 8, pageWidth - 8, 8 + cornerSize);
+  
+  // Bottom-left corner
+  pdf.line(8, pageHeight - 8 - cornerSize, 8, pageHeight - 8);
+  pdf.line(8, pageHeight - 8, 8 + cornerSize, pageHeight - 8);
+  
+  // Bottom-right corner
+  pdf.line(pageWidth - 8 - cornerSize, pageHeight - 8, pageWidth - 8, pageHeight - 8);
+  pdf.line(pageWidth - 8, pageHeight - 8 - cornerSize, pageWidth - 8, pageHeight - 8);
+
+  // ===== HEADER / LETTERHEAD =====
+  // Header background gradient effect
+  pdf.setFillColor(0, 80, 160);
+  pdf.rect(margin, margin, contentWidth, 28, "F");
+  
+  // Gradient overlay
+  pdf.setFillColor(0, 100, 200);
+  pdf.rect(margin, margin, contentWidth * 0.7, 28, "F");
+
+  // Company name
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(22);
   pdf.setFont("helvetica", "bold");
-  pdf.text("VALIDADE TÉCNICA", margin, y);
-  y += 8;
+  pdf.text("WEBMARCAS", margin + 8, margin + 12);
 
+  // Tagline
   pdf.setFontSize(9);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(71, 85, 105);
-  y = addWrappedText(certificateData.legal.validity, margin, y, contentWidth, 5);
+  pdf.text("Uma empresa WebPatentes • Registro em Blockchain", margin + 8, margin + 19);
+
+  // Contact info on the right
+  pdf.setFontSize(8);
+  pdf.text("www.webmarcas.net", pageWidth - margin - 8, margin + 10, { align: "right" });
+  pdf.text("ola@webmarcas.net", pageWidth - margin - 8, margin + 15, { align: "right" });
+  pdf.text("(11) 91112-0225", pageWidth - margin - 8, margin + 20, { align: "right" });
+
+  let y = margin + 38;
+
+  // ===== CERTIFICATE TITLE =====
+  pdf.setFillColor(245, 248, 255);
+  pdf.roundedRect(margin, y - 4, contentWidth, 22, 3, 3, "F");
+  
+  pdf.setTextColor(0, 60, 120);
+  pdf.setFontSize(16);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("CERTIFICADO DE PROVA DE ANTERIORIDADE", pageWidth / 2, y + 6, { align: "center" });
+  
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(60, 80, 120);
+  pdf.text("Registro Imutável em Blockchain", pageWidth / 2, y + 14, { align: "center" });
+
+  y += 30;
+
+  // ===== EMISSION INFO =====
+  pdf.setFontSize(9);
+  pdf.setTextColor(100, 110, 130);
+  pdf.text(`Emitido em: ${certificateData.emissionDate}`, pageWidth / 2, y, { align: "center" });
+  
   y += 10;
 
-  // Section: Aviso Legal (highlighted box)
-  pdf.setFillColor(254, 249, 195); // Yellow background
-  pdf.setDrawColor(234, 179, 8);
-  const disclaimerLines = pdf.splitTextToSize(certificateData.legal.disclaimer, contentWidth - 6);
-  const disclaimerHeight = disclaimerLines.length * 4.5 + 12;
-  pdf.roundedRect(margin, y - 4, contentWidth, disclaimerHeight, 2, 2, "FD");
-
+  // ===== HOLDER SECTION =====
+  pdf.setFillColor(0, 80, 160);
+  pdf.rect(margin, y, contentWidth, 7, "F");
+  pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(10);
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(133, 77, 14);
-  pdf.text("AVISO LEGAL IMPORTANTE", margin + 3, y + 2);
-  y += 8;
-
-  pdf.setFontSize(8);
+  pdf.text("IDENTIFICAÇÃO DO TITULAR", margin + 4, y + 5);
+  
+  y += 12;
+  
+  pdf.setFillColor(250, 251, 255);
+  pdf.rect(margin, y - 3, contentWidth, 16, "F");
+  
+  pdf.setTextColor(30, 40, 60);
+  pdf.setFontSize(10);
   pdf.setFont("helvetica", "normal");
-  y = addWrappedText(certificateData.legal.disclaimer, margin + 3, y, contentWidth - 6, 4.5);
-  y += 10;
-
-  // Section: Verificação Independente
-  pdf.setTextColor(30, 41, 59);
-  pdf.setFontSize(12);
+  pdf.text(`Nome / Razão Social:`, margin + 4, y + 2);
   pdf.setFont("helvetica", "bold");
-  pdf.text("VERIFICAÇÃO INDEPENDENTE", margin, y);
-  y += 8;
-
-  pdf.setFontSize(9);
+  pdf.text(certificateData.holder.name || "Não informado", margin + 50, y + 2);
+  
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(71, 85, 105);
-  y = addWrappedText(certificateData.legal.verification, margin, y, contentWidth, 5);
-  y += 5;
+  pdf.text(`CPF / CNPJ:`, margin + 4, y + 9);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.holder.document || "Não informado", margin + 50, y + 9);
 
-  // Footer
-  const footerY = pageHeight - 25;
-  pdf.setDrawColor(203, 213, 225);
-  pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+  y += 20;
 
-  pdf.setFontSize(9);
+  // ===== ASSET SECTION =====
+  pdf.setFillColor(0, 80, 160);
+  pdf.rect(margin, y, contentWidth, 7, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("ATIVO REGISTRADO", margin + 4, y + 5);
+  
+  y += 12;
+  
+  pdf.setFillColor(250, 251, 255);
+  pdf.rect(margin, y - 3, contentWidth, 23, "F");
+  
+  pdf.setTextColor(30, 40, 60);
+  pdf.setFontSize(10);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(100, 116, 139);
-  pdf.text(certificateData.footer.company, pageWidth / 2, footerY, {
-    align: "center",
-  });
-  pdf.text(certificateData.footer.contact, pageWidth / 2, footerY + 5, {
-    align: "center",
-  });
+  
+  pdf.text(`Nome do Ativo:`, margin + 4, y + 2);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.asset.name, margin + 40, y + 2);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`Tipo:`, margin + 4, y + 9);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.asset.type, margin + 40, y + 9);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`Data do Registro:`, margin + 4, y + 16);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.registrationDate, margin + 40, y + 16);
 
+  y += 28;
+
+  // ===== TECHNICAL DATA SECTION =====
+  pdf.setFillColor(0, 80, 160);
+  pdf.rect(margin, y, contentWidth, 7, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("DADOS TÉCNICOS DO REGISTRO", margin + 4, y + 5);
+  
+  y += 12;
+
+  // Hash box
+  pdf.setFillColor(240, 245, 255);
+  pdf.setDrawColor(0, 100, 180);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(margin, y - 3, contentWidth, 18, 2, 2, "FD");
+  
+  pdf.setTextColor(60, 80, 120);
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Hash SHA-256 (Impressão Digital do Arquivo)", margin + 4, y + 2);
+  
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(0, 60, 120);
+  pdf.text(certificateData.technical.hash, margin + 4, y + 10);
+
+  y += 22;
+
+  // Technical details grid
+  pdf.setFillColor(250, 251, 255);
+  pdf.rect(margin, y - 3, contentWidth / 2 - 2, 20, "F");
+  pdf.rect(margin + contentWidth / 2 + 2, y - 3, contentWidth / 2 - 2, 20, "F");
+  
+  pdf.setTextColor(30, 40, 60);
+  pdf.setFontSize(9);
+  
+  // Left column
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Método:", margin + 4, y + 3);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.technical.method, margin + 4, y + 9);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Confirmação:", margin + 4, y + 15);
+  
+  // Right column
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Blockchain:", margin + contentWidth / 2 + 6, y + 3);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(certificateData.technical.network, margin + contentWidth / 2 + 6, y + 9);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Data:", margin + contentWidth / 2 + 6, y + 15);
+  
+  y += 22;
+
+  // Confirmation date spanning full width
+  pdf.setFillColor(245, 250, 255);
+  pdf.rect(margin, y - 3, contentWidth, 10, "F");
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.text(`Data de Confirmação: ${certificateData.confirmationDate}`, margin + 4, y + 3);
+
+  y += 14;
+
+  // TX Hash
+  pdf.setFillColor(240, 245, 255);
+  pdf.setDrawColor(0, 100, 180);
+  pdf.roundedRect(margin, y - 3, contentWidth, 14, 2, 2, "FD");
+  
+  pdf.setTextColor(60, 80, 120);
   pdf.setFontSize(8);
-  pdf.text(`ID: ${certificateData.footer.certificateId}`, pageWidth / 2, footerY + 10, {
-    align: "center",
+  pdf.setFont("helvetica", "bold");
+  pdf.text("ID da Transação / Prova:", margin + 4, y + 2);
+  
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(6);
+  pdf.setTextColor(0, 60, 120);
+  
+  const txHashDisplay = certificateData.technical.txHash.length > 80 
+    ? certificateData.technical.txHash.substring(0, 80) + "..."
+    : certificateData.technical.txHash;
+  pdf.text(txHashDisplay, margin + 4, y + 8);
+
+  y += 18;
+
+  // ===== LEGAL DISCLAIMER =====
+  pdf.setFillColor(255, 250, 230);
+  pdf.setDrawColor(200, 160, 50);
+  pdf.setLineWidth(0.5);
+  pdf.roundedRect(margin, y - 2, contentWidth, 28, 2, 2, "FD");
+  
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(150, 100, 0);
+  pdf.text("AVISO LEGAL IMPORTANTE", margin + 4, y + 4);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(100, 80, 30);
+  
+  const disclaimerLines = pdf.splitTextToSize(certificateData.legal.disclaimer, contentWidth - 8);
+  disclaimerLines.forEach((line: string, index: number) => {
+    if (index < 3) { // Limit to 3 lines
+      pdf.text(line, margin + 4, y + 10 + (index * 5));
+    }
   });
+
+  y += 32;
+
+  // ===== VERIFICATION SECTION WITH QR CODE =====
+  pdf.setFillColor(235, 245, 255);
+  pdf.setDrawColor(0, 100, 180);
+  pdf.roundedRect(margin, y - 2, contentWidth, 35, 2, 2, "FD");
+  
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(0, 60, 120);
+  pdf.text("VERIFICAÇÃO INDEPENDENTE", margin + 4, y + 5);
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(40, 60, 100);
+  
+  const verificationText = "Este certificado pode ser verificado de forma independente através do protocolo OpenTimestamps ou em nosso portal de verificação pública.";
+  const verifyLines = pdf.splitTextToSize(verificationText, contentWidth - 50);
+  verifyLines.forEach((line: string, index: number) => {
+    pdf.text(line, margin + 4, y + 12 + (index * 4));
+  });
+  
+  pdf.setFontSize(7);
+  pdf.setTextColor(0, 80, 160);
+  pdf.text(`ID: ${certificateData.technical.registroId}`, margin + 4, y + 28);
+  
+  // Add QR Code
+  if (qrCodeDataUrl) {
+    try {
+      pdf.addImage(qrCodeDataUrl, "PNG", pageWidth - margin - 32, y + 2, 28, 28);
+    } catch (e) {
+      console.error("Error adding QR code:", e);
+    }
+  }
+
+  y += 40;
+
+  // ===== FOOTER =====
+  const footerY = pageHeight - 20;
+  
+  // Footer line
+  pdf.setDrawColor(0, 80, 160);
+  pdf.setLineWidth(0.5);
+  pdf.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+  
+  // Seal/badge area
+  pdf.setFillColor(0, 80, 160);
+  pdf.circle(pageWidth / 2, footerY - 2, 8, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(6);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("✓", pageWidth / 2, footerY, { align: "center" });
+  
+  // Footer text
+  pdf.setTextColor(80, 90, 110);
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("WebMarcas • Uma empresa WebPatentes • www.webmarcas.net • ola@webmarcas.net • (11) 91112-0225", pageWidth / 2, footerY + 8, { align: "center" });
+  
+  pdf.setFontSize(6);
+  pdf.setTextColor(120, 130, 150);
+  pdf.text(`Documento gerado automaticamente • ID: ${certificateData.footer.certificateId}`, pageWidth / 2, footerY + 12, { align: "center" });
 
   // Generate blob
   return pdf.output("blob");

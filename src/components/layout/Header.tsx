@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, ChevronDown, Shield } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, Shield, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import {
@@ -26,6 +27,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
+  const { credits, loading: creditsLoading } = useCredits();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -102,32 +104,54 @@ export function Header() {
             {loading ? (
               <div className="h-10 w-24 bg-muted/50 animate-pulse rounded-xl" />
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-                    <User className="h-4 w-4" />
-                    <span className="hidden lg:inline">Área do Cliente</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/meus-registros" className="cursor-pointer">
-                      Meus Registros
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sair
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                {/* Credits Display for Logged-in Users */}
+                <Link 
+                  to="/creditos"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors"
+                >
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="font-body font-bold text-primary text-sm">
+                    {creditsLoading ? "..." : credits?.available_credits || 0}
+                  </span>
+                  <span className="hidden lg:inline text-xs text-muted-foreground">
+                    créditos
+                  </span>
+                </Link>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                      <User className="h-4 w-4" />
+                      <span className="hidden lg:inline">Área do Cliente</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/creditos" className="cursor-pointer">
+                        <Coins className="h-4 w-4 mr-2" />
+                        Meus Créditos
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/meus-registros" className="cursor-pointer">
+                        Meus Registros
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild className="font-medium text-muted-foreground hover:text-foreground">
@@ -175,6 +199,25 @@ export function Header() {
               <div className="border-t border-border pt-4 mt-3 flex flex-col gap-2">
                 {user ? (
                   <>
+                    {/* Mobile Credits Display */}
+                    <Link 
+                      to="/creditos"
+                      className="flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 border border-primary/20"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Coins className="h-4 w-4 text-primary" />
+                        <span className="font-body font-medium text-foreground">Créditos disponíveis</span>
+                      </div>
+                      <span className="font-display font-bold text-primary text-lg">
+                        {creditsLoading ? "..." : credits?.available_credits || 0}
+                      </span>
+                    </Link>
+                    <Button asChild className="justify-start bg-primary text-primary-foreground font-body rounded-xl">
+                      <Link to="/checkout">
+                        <Coins className="h-4 w-4 mr-2" />
+                        Comprar créditos
+                      </Link>
+                    </Button>
                     <Button variant="outline" asChild className="justify-start font-body rounded-xl">
                       <Link to="/dashboard">
                         <User className="h-4 w-4 mr-2" />

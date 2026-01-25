@@ -71,6 +71,93 @@ export type Database = {
         }
         Relationships: []
       }
+      asaas_subscriptions: {
+        Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string
+          created_at: string
+          credits_per_cycle: number
+          current_cycle: number
+          id: string
+          last_credit_reset_at: string | null
+          next_billing_date: string | null
+          plan_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id: string
+          created_at?: string
+          credits_per_cycle?: number
+          current_cycle?: number
+          id?: string
+          last_credit_reset_at?: string | null
+          next_billing_date?: string | null
+          plan_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string
+          created_at?: string
+          credits_per_cycle?: number
+          current_cycle?: number
+          id?: string
+          last_credit_reset_at?: string | null
+          next_billing_date?: string | null
+          plan_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      asaas_webhook_logs: {
+        Row: {
+          action_taken: string | null
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          created_at: string
+          credits_released: number | null
+          error_message: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          processed: boolean
+          raw_payload: Json
+        }
+        Insert: {
+          action_taken?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          credits_released?: number | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          processed?: boolean
+          raw_payload: Json
+        }
+        Update: {
+          action_taken?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          credits_released?: number | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          processed?: boolean
+          raw_payload?: Json
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_type: string
@@ -505,10 +592,36 @@ export type Database = {
         Args: { p_registro_id: string; p_user_id: string }
         Returns: Json
       }
+      get_payment_user_id: {
+        Args: { p_asaas_payment_id: string }
+        Returns: string
+      }
+      get_subscription_user_id: {
+        Args: { p_asaas_subscription_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      release_credits_from_payment: {
+        Args: {
+          p_asaas_payment_id: string
+          p_credits: number
+          p_is_subscription?: boolean
+          p_plan_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      update_subscription_status: {
+        Args: {
+          p_asaas_subscription_id: string
+          p_next_billing_date?: string
+          p_status: string
         }
         Returns: boolean
       }

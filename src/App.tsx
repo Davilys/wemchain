@@ -14,6 +14,8 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
 import NovoRegistro from "./pages/NovoRegistro";
+import MeusRegistros from "./pages/MeusRegistros";
+import Checkout from "./pages/Checkout";
 import Processando from "./pages/Processando";
 import Certificado from "./pages/Certificado";
 import VerificarRegistro from "./pages/VerificarRegistro";
@@ -48,6 +50,8 @@ const App = () => (
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/novo-registro" element={<NovoRegistro />} />
+              <Route path="/meus-registros" element={<MeusRegistros />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/processando/:id" element={<Processando />} />
               <Route path="/certificado/:id" element={<Certificado />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

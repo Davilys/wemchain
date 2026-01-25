@@ -524,6 +524,50 @@ export type Database = {
         }
         Relationships: []
       }
+      record_authors: {
+        Row: {
+          created_at: string
+          display_order: number
+          document_number: string
+          document_type: string
+          email: string
+          id: string
+          name: string
+          registro_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          document_number: string
+          document_type: string
+          email: string
+          id?: string
+          name: string
+          registro_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          document_number?: string
+          document_type?: string
+          email?: string
+          id?: string
+          name?: string
+          registro_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "record_authors_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registros: {
         Row: {
           arquivo_nome: string

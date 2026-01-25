@@ -131,6 +131,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Formulário
   const [customerName, setCustomerName] = useState("");
@@ -142,6 +143,46 @@ export default function Checkout() {
       navigate("/login");
     }
   }, [user, authLoading, navigate]);
+
+  // Auto-preencher dados do perfil do usuário
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setProfileLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name, cpf_cnpj, phone")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!error && data) {
+          if (data.full_name) setCustomerName(data.full_name);
+          if (data.cpf_cnpj) {
+            // Formatar CPF/CNPJ
+            const numbers = data.cpf_cnpj.replace(/\D/g, "");
+            if (numbers.length <= 11) {
+              setCustomerCpfCnpj(formatCpfCnpj(numbers));
+            } else {
+              setCustomerCpfCnpj(formatCpfCnpj(numbers));
+            }
+          }
+          if (data.phone) {
+            setCustomerPhone(formatPhone(data.phone.replace(/\D/g, "")));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Verificar plano na URL
   useEffect(() => {
@@ -272,7 +313,7 @@ export default function Checkout() {
     }
   };
 
-  if (authLoading || creditsLoading) {
+  if (authLoading || creditsLoading || profileLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

@@ -199,30 +199,81 @@ export type Database = {
           available_credits: number
           created_at: string
           id: string
+          last_ledger_id: string | null
           plan_type: string
           total_credits: number
           updated_at: string
           used_credits: number
           user_id: string
+          version: number
         }
         Insert: {
           available_credits?: number
           created_at?: string
           id?: string
+          last_ledger_id?: string | null
           plan_type?: string
           total_credits?: number
           updated_at?: string
           used_credits?: number
           user_id: string
+          version?: number
         }
         Update: {
           available_credits?: number
           created_at?: string
           id?: string
+          last_ledger_id?: string | null
           plan_type?: string
           total_credits?: number
           updated_at?: string
           used_credits?: number
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      credits_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          operation: Database["public"]["Enums"]["credit_operation"]
+          reason: string
+          reference_id: string | null
+          reference_type: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          operation: Database["public"]["Enums"]["credit_operation"]
+          reason: string
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          operation?: Database["public"]["Enums"]["credit_operation"]
+          reason?: string
+          reference_id?: string | null
+          reference_type?: string | null
           user_id?: string
         }
         Relationships: []
@@ -587,11 +638,41 @@ export type Database = {
         Args: { p_credits: number; p_plan_type: string; p_user_id: string }
         Returns: boolean
       }
+      add_credits_atomic: {
+        Args: {
+          p_amount: number
+          p_is_subscription?: boolean
+          p_metadata?: Json
+          p_reason: string
+          p_reference_id: string
+          p_reference_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      adjust_credit_atomic: {
+        Args: {
+          p_admin_id: string
+          p_new_balance: number
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      check_duplicate_hash: {
+        Args: { p_hash: string; p_user_id: string }
+        Returns: Json
+      }
       consume_credit: { Args: { p_user_id: string }; Returns: boolean }
+      consume_credit_atomic: {
+        Args: { p_reason?: string; p_registro_id: string; p_user_id: string }
+        Returns: Json
+      }
       consume_credit_safe: {
         Args: { p_registro_id: string; p_user_id: string }
         Returns: Json
       }
+      get_ledger_balance: { Args: { p_user_id: string }; Returns: number }
       get_payment_user_id: {
         Args: { p_asaas_payment_id: string }
         Returns: string
@@ -600,12 +681,27 @@ export type Database = {
         Args: { p_asaas_subscription_id: string }
         Returns: string
       }
+      handle_payment_refund: {
+        Args: { p_asaas_payment_id: string; p_refund_amount?: number }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      reconcile_credit_balance: { Args: { p_user_id: string }; Returns: Json }
+      refund_credit_atomic: {
+        Args: {
+          p_admin_id: string
+          p_amount: number
+          p_reason: string
+          p_reference_id: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       release_credits_from_payment: {
         Args: {
@@ -628,6 +724,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      credit_operation: "ADD" | "CONSUME" | "REFUND" | "ADJUST" | "EXPIRE"
       registro_status: "pendente" | "processando" | "confirmado" | "falhou"
       timestamp_method: "OPEN_TIMESTAMP" | "BYTESTAMP" | "SMART_CONTRACT"
       tipo_ativo: "marca" | "logotipo" | "obra_autoral" | "documento" | "outro"
@@ -759,6 +856,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      credit_operation: ["ADD", "CONSUME", "REFUND", "ADJUST", "EXPIRE"],
       registro_status: ["pendente", "processando", "confirmado", "falhou"],
       timestamp_method: ["OPEN_TIMESTAMP", "BYTESTAMP", "SMART_CONTRACT"],
       tipo_ativo: ["marca", "logotipo", "obra_autoral", "documento", "outro"],

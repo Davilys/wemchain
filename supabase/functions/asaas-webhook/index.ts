@@ -18,6 +18,12 @@ const CREDIT_RELEASE_EVENTS = [
   "PAYMENT_RECEIVED_IN_CASH",
 ];
 
+// Eventos de estorno
+const REFUND_EVENTS = [
+  "PAYMENT_REFUNDED",
+  "PAYMENT_CHARGEBACK",
+];
+
 // Eventos de falha
 const FAILURE_EVENTS = [
   "PAYMENT_FAILED",
@@ -110,7 +116,7 @@ Deno.serve(async (req) => {
 
     console.log(`[ASAAS Webhook] Event: ${eventType}, Payment: ${paymentId}, Subscription: ${subscriptionId}`);
 
-    // Verificar idempotência - se já processamos este evento
+    // Verificar idempotência - se já processamos este evento exato
     if (paymentId) {
       const { data: existingLog } = await supabase
         .from("asaas_webhook_logs")
@@ -136,7 +142,7 @@ Deno.serve(async (req) => {
 
     // Processar evento
     if (CREDIT_RELEASE_EVENTS.includes(eventType)) {
-      // PAGAMENTO CONFIRMADO - Liberar créditos
+      // PAGAMENTO CONFIRMADO - Liberar créditos via ledger atômico
       const result = await handlePaymentConfirmed(supabase, payload, externalReference);
       actionTaken = result.action;
       creditsReleased = result.credits;
@@ -156,13 +162,20 @@ Deno.serve(async (req) => {
       errorMessage = result.error;
 
     } else if (eventType === "SUBSCRIPTION_CANCELED") {
-      // ASSINATURA CANCELADA - Bloquear novos créditos
+      // ASSINATURA CANCELADA - Bloquear novos créditos (manter existentes)
       const result = await handleSubscriptionCanceled(supabase, payload);
       actionTaken = result.action;
       errorMessage = result.error;
 
+    } else if (REFUND_EVENTS.includes(eventType)) {
+      // ESTORNO / CHARGEBACK - Processar via ledger
+      const result = await handlePaymentRefund(supabase, payload);
+      actionTaken = result.action;
+      creditsReleased = result.credits;
+      errorMessage = result.error;
+
     } else if (FAILURE_EVENTS.includes(eventType)) {
-      // PAGAMENTO FALHOU - Registrar falha
+      // PAGAMENTO FALHOU - Registrar falha, NÃO consumir crédito
       const result = await handlePaymentFailed(supabase, payload);
       actionTaken = result.action;
       errorMessage = result.error;
@@ -216,7 +229,7 @@ Deno.serve(async (req) => {
   }
 });
 
-// Handler para pagamento confirmado (avulso)
+// Handler para pagamento confirmado (avulso) - USA LEDGER ATÔMICO
 async function handlePaymentConfirmed(
   supabase: AnySupabaseClient,
   payload: AsaasWebhookPayload,
@@ -231,74 +244,70 @@ async function handlePaymentConfirmed(
   // Buscar pagamento no banco
   const { data: payment } = await supabase
     .from("asaas_payments")
-    .select("user_id, plan_type, status")
+    .select("user_id, plan_type, status, credits_amount")
     .eq("asaas_payment_id", paymentId)
     .maybeSingle();
+
+  let userId: string;
+  let planType: string;
+  let credits: number;
 
   if (!payment) {
     // Tentar encontrar pelo external reference (user_id)
     if (externalReference) {
-      const planType = determinePlanType(payload.payment?.value || 0);
+      userId = externalReference;
+      planType = determinePlanType(payload.payment?.value || 0);
       const planConfig = PLAN_CONFIG[planType];
-      const credits = planConfig?.credits || 1;
-      
-      const { data: result, error } = await supabase.rpc("release_credits_from_payment", {
-        p_user_id: externalReference,
-        p_credits: credits,
-        p_plan_type: planType,
-        p_asaas_payment_id: paymentId,
-        p_is_subscription: false,
-      });
-
-      if (error) {
-        return { action: "ERROR - RPC failed", credits: 0, error: error.message };
-      }
-
-      const rpcResult = result as { idempotent?: boolean; credits_released?: number } | null;
-
-      if (rpcResult?.idempotent) {
-        return { action: "SKIPPED - Already processed", credits: 0, error: null };
-      }
-
-      return { 
-        action: "CREDITS_RELEASED", 
-        credits: rpcResult?.credits_released || credits, 
-        error: null 
-      };
+      credits = planConfig?.credits || 1;
+    } else {
+      return { action: "SKIPPED - Payment not found", credits: 0, error: "Pagamento não encontrado no banco" };
     }
-    return { action: "SKIPPED - Payment not found", credits: 0, error: "Pagamento não encontrado no banco" };
+  } else {
+    if (payment.status === "CONFIRMED") {
+      return { action: "SKIPPED - Already confirmed", credits: 0, error: null };
+    }
+    userId = payment.user_id;
+    planType = payment.plan_type;
+    credits = payment.credits_amount || PLAN_CONFIG[planType]?.credits || 1;
   }
 
-  if (payment.status === "CONFIRMED") {
-    return { action: "SKIPPED - Already confirmed", credits: 0, error: null };
-  }
-
-  const planType = payment.plan_type as string;
-  const planConfig = PLAN_CONFIG[planType];
-  const credits = planConfig?.credits || 1;
-
-  // Liberar créditos via função do banco
-  const { data: result, error } = await supabase.rpc("release_credits_from_payment", {
-    p_user_id: payment.user_id,
-    p_credits: credits,
-    p_plan_type: planType,
-    p_asaas_payment_id: paymentId,
+  // Usar função atômica do ledger
+  const { data: result, error } = await supabase.rpc("add_credits_atomic", {
+    p_user_id: userId,
+    p_amount: credits,
+    p_reason: `Pagamento confirmado - Plano ${planType}`,
+    p_reference_type: "payment",
+    p_reference_id: paymentId,
     p_is_subscription: false,
+    p_metadata: { 
+      payment_value: payload.payment?.value,
+      event: payload.event 
+    },
   });
 
   if (error) {
+    console.error("Error in add_credits_atomic:", error);
     return { action: "ERROR - RPC failed", credits: 0, error: error.message };
   }
 
-  const rpcResult = result as { idempotent?: boolean; credits_released?: number } | null;
+  const rpcResult = result as { success: boolean; idempotent?: boolean; amount_added?: number; error?: string } | null;
 
-  if (rpcResult?.idempotent) {
-    return { action: "SKIPPED - Already processed", credits: 0, error: null };
+  if (!rpcResult?.success) {
+    if (rpcResult?.idempotent) {
+      return { action: "SKIPPED - Already processed (idempotent)", credits: 0, error: null };
+    }
+    return { action: "ERROR - " + (rpcResult?.error || "Unknown"), credits: 0, error: rpcResult?.error || null };
   }
 
+  // Atualizar status do pagamento
+  await supabase
+    .from("asaas_payments")
+    .update({ status: "CONFIRMED", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("asaas_payment_id", paymentId);
+
   return { 
-    action: "CREDITS_RELEASED", 
-    credits: rpcResult?.credits_released || credits, 
+    action: "CREDITS_RELEASED_ATOMIC", 
+    credits: rpcResult.amount_added || credits, 
     error: null 
   };
 }
@@ -328,20 +337,25 @@ async function handleSubscriptionPaymentConfirmed(
 
   const credits = subscription.credits_per_cycle || 5;
 
-  // Liberar créditos (resetar para assinatura)
-  const { data: result, error } = await supabase.rpc("release_credits_from_payment", {
+  // Usar função atômica do ledger com reset (assinatura)
+  const { data: result, error } = await supabase.rpc("add_credits_atomic", {
     p_user_id: subscription.user_id,
-    p_credits: credits,
-    p_plan_type: subscription.plan_type,
-    p_asaas_payment_id: paymentId,
+    p_amount: credits,
+    p_reason: `Renovação de assinatura mensal - ${subscription.plan_type}`,
+    p_reference_type: "subscription",
+    p_reference_id: paymentId,
     p_is_subscription: true,
+    p_metadata: { 
+      subscription_id: subscriptionId,
+      event: payload.event 
+    },
   });
 
   if (error) {
     return { action: "ERROR - RPC failed", credits: 0, error: error.message };
   }
 
-  const rpcResult = result as { credits_released?: number } | null;
+  const rpcResult = result as { success: boolean; amount_added?: number; was_subscription_reset?: boolean } | null;
 
   // Atualizar status da assinatura
   await supabase.rpc("update_subscription_status", {
@@ -350,8 +364,8 @@ async function handleSubscriptionPaymentConfirmed(
   });
 
   return { 
-    action: "SUBSCRIPTION_CREDITS_RELEASED", 
-    credits: rpcResult?.credits_released || credits, 
+    action: rpcResult?.was_subscription_reset ? "SUBSCRIPTION_CREDITS_RESET" : "SUBSCRIPTION_CREDITS_RELEASED", 
+    credits: rpcResult?.amount_added || credits, 
     error: null 
   };
 }
@@ -408,13 +422,58 @@ async function handleSubscriptionCanceled(
     return { action: "SKIPPED - No subscription ID", error: null };
   }
 
-  // Atualizar status
+  // Atualizar status - NÃO remove créditos existentes
   await supabase
     .from("asaas_subscriptions")
     .update({ status: "CANCELED", updated_at: new Date().toISOString() })
     .eq("asaas_subscription_id", subscriptionId);
 
-  return { action: "SUBSCRIPTION_CANCELED", error: null };
+  return { action: "SUBSCRIPTION_CANCELED - Credits preserved", error: null };
+}
+
+// Handler para estorno/chargeback - USA LEDGER
+async function handlePaymentRefund(
+  supabase: AnySupabaseClient,
+  payload: AsaasWebhookPayload
+): Promise<HandlerResult> {
+  const paymentId = payload.payment?.id;
+
+  if (!paymentId) {
+    return { action: "SKIPPED - No payment ID", credits: 0, error: null };
+  }
+
+  // Usar função específica de estorno
+  const { data: result, error } = await supabase.rpc("handle_payment_refund", {
+    p_asaas_payment_id: paymentId,
+  });
+
+  if (error) {
+    return { action: "ERROR - Refund RPC failed", credits: 0, error: error.message };
+  }
+
+  const refundResult = result as { 
+    success: boolean; 
+    credits_refunded?: number; 
+    admin_action_required?: boolean;
+    error?: string;
+  } | null;
+
+  if (!refundResult?.success) {
+    if (refundResult?.admin_action_required) {
+      return { 
+        action: "REFUND_PENDING_ADMIN", 
+        credits: 0, 
+        error: refundResult.error || "Pendência administrativa criada"
+      };
+    }
+    return { action: "ERROR - " + (refundResult?.error || "Unknown"), credits: 0, error: refundResult?.error || null };
+  }
+
+  return { 
+    action: "PAYMENT_REFUNDED", 
+    credits: -(refundResult.credits_refunded || 0), 
+    error: null 
+  };
 }
 
 // Handler para pagamento falhou
@@ -425,13 +484,14 @@ async function handlePaymentFailed(
   const paymentId = payload.payment?.id;
 
   if (paymentId) {
+    // NÃO liberar créditos, apenas marcar como falhou
     await supabase
       .from("asaas_payments")
       .update({ status: "FAILED", updated_at: new Date().toISOString() })
       .eq("asaas_payment_id", paymentId);
   }
 
-  return { action: "PAYMENT_FAILED_LOGGED", error: null };
+  return { action: "PAYMENT_FAILED_LOGGED - No credits released", error: null };
 }
 
 // Determinar tipo de plano pelo valor

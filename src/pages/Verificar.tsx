@@ -162,7 +162,10 @@ export default function Verificar() {
     });
   };
 
-  const getPolygonScanUrl = (txHash: string) => {
+  const getVerificationUrl = (txHash: string, network: string) => {
+    if (network === "opentimestamps") {
+      return "https://opentimestamps.org";
+    }
     return `https://polygonscan.com/tx/${txHash}`;
   };
 
@@ -350,16 +353,23 @@ export default function Verificar() {
                         )}
                       </div>
                       
-                      <Button variant="outline" asChild className="w-full mt-4 rounded-xl">
-                        <a 
-                          href={getPolygonScanUrl(result.transacao.tx_hash)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          Ver na Blockchain (PolygonScan)
-                          <ExternalLink className="ml-2 h-4 w-4" />
-                        </a>
-                      </Button>
+                      {result.transacao.network === "polygon" ? (
+                        <Button variant="outline" asChild className="w-full mt-4 rounded-xl">
+                          <a 
+                            href={getVerificationUrl(result.transacao.tx_hash, result.transacao.network)} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            Ver na Blockchain (PolygonScan)
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <div className="w-full mt-4 p-3 bg-muted rounded-xl text-center text-sm text-muted-foreground">
+                          <Shield className="h-4 w-4 inline-block mr-2" />
+                          Verificado via OpenTimestamps (ancorado no Bitcoin)
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

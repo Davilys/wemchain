@@ -20,6 +20,7 @@ import {
   Loader2,
   Eye
 } from "lucide-react";
+import { getBlockchainVerificationUrl } from "@/lib/blockchainUtils";
 
 interface Registro {
   id: string;
@@ -272,11 +273,11 @@ export default function MeusRegistros() {
                         {/* Blockchain Link */}
                         {registro.status === "confirmado" && registro.transacoes_blockchain && (
                           <a
-                            href={`https://polygonscan.com/tx/${registro.transacoes_blockchain.tx_hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href={getBlockchainVerificationUrl(registro.transacoes_blockchain, registro.hash_sha256) || "#"}
+                            target={registro.transacoes_blockchain.network === "polygon" ? "_blank" : undefined}
+                            rel={registro.transacoes_blockchain.network === "polygon" ? "noopener noreferrer" : undefined}
                             className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 transition-colors"
-                            title="Ver na blockchain"
+                            title="Ver verificação"
                           >
                             <ExternalLink className="h-4 w-4 text-muted-foreground" />
                           </a>

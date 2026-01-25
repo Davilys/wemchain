@@ -28,6 +28,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Eye, RefreshCw, ExternalLink, Loader2, FileText, Copy } from "lucide-react";
 import { format } from "date-fns";
+import { getBlockchainVerificationUrl } from "@/lib/blockchainUtils";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 
@@ -293,9 +294,9 @@ export default function AdminRegistros() {
                                 asChild
                               >
                                 <a
-                                  href={`https://polygonscan.com/tx/${registro.transacao.tx_hash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                  href={getBlockchainVerificationUrl(registro.transacao, registro.hash_sha256) || "#"}
+                                  target={registro.transacao.network === "polygon" ? "_blank" : "_self"}
+                                  rel={registro.transacao.network === "polygon" ? "noopener noreferrer" : undefined}
                                 >
                                   <ExternalLink className="h-4 w-4" />
                                 </a>

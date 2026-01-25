@@ -24,6 +24,15 @@ import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import PoliticaBlockchain from "./pages/PoliticaBlockchain";
 import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
+// Admin pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
+import AdminCreditos from "./pages/admin/AdminCreditos";
+import AdminRegistros from "./pages/admin/AdminRegistros";
+import AdminPagamentos from "./pages/admin/AdminPagamentos";
+import AdminAssinaturas from "./pages/admin/AdminAssinaturas";
+import AdminLogs from "./pages/admin/AdminLogs";
+import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +63,15 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/processando/:id" element={<Processando />} />
               <Route path="/certificado/:id" element={<Certificado />} />
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+              <Route path="/admin/creditos" element={<AdminCreditos />} />
+              <Route path="/admin/registros" element={<AdminRegistros />} />
+              <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
+              <Route path="/admin/assinaturas" element={<AdminAssinaturas />} />
+              <Route path="/admin/logs" element={<AdminLogs />} />
+              <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -31,8 +31,8 @@ const PLANS: Record<string, {
   BUSINESS: {
     name: "Business",
     value: 99.00,
-    credits: 3, // CORRIGIDO: 3 créditos inclusos por mês
-    description: "Plano Business - Gestão de Propriedade Intelectual (3 créditos/mês)",
+    credits: 3, // 3 créditos inclusos por mês
+    description: "Plano Business - Registro de Propriedade Intelectual (3 créditos/mês)",
     isSubscription: true,
     cycle: "MONTHLY",
   },

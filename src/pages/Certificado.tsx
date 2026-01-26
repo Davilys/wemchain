@@ -19,11 +19,13 @@ import {
   QrCode,
   Clock,
   Info,
-  Search
+  Search,
+  Eye
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import { downloadCertificate } from "@/services/certificateService";
+import { CertificatePreviewModal } from "@/components/certificates/CertificatePreviewModal";
 
 interface TransacaoBlockchain {
   id: string;
@@ -46,6 +48,8 @@ export default function Certificado() {
   const [registro, setRegistro] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [profile, setProfile] = useState<{ full_name?: string; cpf_cnpj?: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -76,6 +80,17 @@ export default function Certificado() {
       }
 
       setRegistro(data);
+      
+      // Fetch user profile for holder info
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, cpf_cnpj")
+        .eq("user_id", user?.id)
+        .single();
+        
+      if (profileData) {
+        setProfile(profileData);
+      }
     } catch (error) {
       console.error("Erro ao buscar registro:", error);
       navigate("/dashboard");
@@ -102,6 +117,18 @@ export default function Certificado() {
     });
   };
 
+  const handleOpenPreview = () => {
+    if (!id || registro.status !== 'confirmado') {
+      toast({
+        title: "Não disponível",
+        description: "Preview só está disponível para registros confirmados.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowPreview(true);
+  };
+
   const handleDownloadPDF = async () => {
     if (!id || registro.status !== 'confirmado') {
       toast({
@@ -119,6 +146,7 @@ export default function Certificado() {
         title: "Download iniciado!",
         description: "Seu certificado PDF foi gerado com sucesso.",
       });
+      setShowPreview(false);
     } catch (error) {
       console.error("Error downloading PDF:", error);
       toast({
@@ -494,6 +522,15 @@ export default function Certificado() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
+            variant="outline"
+            className="flex-1 font-body py-6 border-border"
+            onClick={handleOpenPreview}
+            disabled={registro.status !== 'confirmado'}
+          >
+            <Eye className="h-5 w-5 mr-2" />
+            Visualizar Certificado
+          </Button>
+          <Button
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-semibold py-6"
             onClick={handleDownloadPDF}
             disabled={downloadingPDF || registro.status !== 'confirmado'}
@@ -515,10 +552,14 @@ export default function Certificado() {
               </>
             )}
           </Button>
-          {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
+        </div>
+
+        {/* External Verification */}
+        {txData && getVerificationUrl(txData.tx_hash, txData.network) && (
+          <div className="flex justify-center">
             <Button
-              variant="outline"
-              className="flex-1 font-body py-6 border-border"
+              variant="ghost"
+              className="font-body"
               asChild
             >
               <a 
@@ -526,15 +567,15 @@ export default function Certificado() {
                 target="_blank" 
                 rel="noopener noreferrer"
               >
-                <ExternalLink className="h-5 w-5 mr-2" />
-                Verificar Timestamp
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Verificar na Blockchain
               </a>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Back to Dashboard */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-4">
           <Button
             variant="ghost"
             asChild
@@ -547,6 +588,27 @@ export default function Certificado() {
           </Button>
         </div>
       </div>
+
+      {/* Certificate Preview Modal */}
+      <CertificatePreviewModal
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        onDownload={handleDownloadPDF}
+        isDownloading={downloadingPDF}
+        data={registro ? {
+          id: registro.id,
+          nome_ativo: registro.nome_ativo,
+          tipo_ativo: registro.tipo_ativo,
+          arquivo_nome: registro.arquivo_nome,
+          hash_sha256: registro.hash_sha256,
+          created_at: registro.created_at,
+          holder_name: profile?.full_name,
+          holder_document: profile?.cpf_cnpj,
+          timestamp_method: txData?.timestamp_method,
+          network: txData?.network,
+          confirmed_at: txData?.confirmed_at,
+        } : null}
+      />
     </div>
   );
 }

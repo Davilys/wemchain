@@ -73,7 +73,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Assinar Plano Business
+                  Criar Conta Grátis
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -234,7 +234,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg px-10 py-7 rounded-xl shadow-lg btn-premium group"
               >
                 <Link to="/cadastro">
-                  Assinar Plano Business agora
+                  Criar Conta Grátis
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -459,7 +459,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Assinar Plano Business por R$ 99,00/mês
+                  Criar Conta Grátis
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>

@@ -332,7 +332,7 @@ export default function NovoRegistro() {
               Novo Registro de Propriedade
             </h1>
             <p className="font-body text-sm text-muted-foreground">
-              Registre seu arquivo em blockchain com prova de anterioridade
+              Registre seu arquivo em blockchain com prova de anterioridade. <span className="font-medium text-primary">Este registro consumirá 1 crédito.</span>
             </p>
           </div>
         </div>

@@ -215,7 +215,7 @@ export default function Dashboard() {
           >
             <Link to="/checkout">
               <Coins className="h-5 w-5 mr-2" />
-              Registros de Propriedade
+              Comprar Créditos
             </Link>
           </Button>
         </div>

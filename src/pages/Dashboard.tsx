@@ -293,6 +293,9 @@ export default function Dashboard() {
               <p className="font-body text-xs text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">Plano Business:</strong> Os créditos do plano são renovados mensalmente e não acumulam. Registros adicionais podem ser adquiridos a qualquer momento enquanto a assinatura estiver ativa.
               </p>
+              <p className="font-body text-xs text-muted-foreground leading-relaxed italic">
+                Novas funcionalidades de gestão poderão ser adicionadas futuramente. No momento, o plano Business contempla exclusivamente os recursos descritos acima.
+              </p>
             </div>
           </div>
         </div>

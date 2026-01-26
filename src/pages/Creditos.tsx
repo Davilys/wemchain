@@ -181,7 +181,7 @@ export default function Creditos() {
                   R$ 99
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
-                <p className="font-body text-xs text-muted-foreground mb-4">3 créditos inclusos + gestão completa</p>
+                <p className="font-body text-xs text-muted-foreground mb-4">3 créditos inclusos por mês</p>
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
@@ -193,7 +193,7 @@ export default function Creditos() {
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Gestão de projetos
+                    Certificados digitais em PDF
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />

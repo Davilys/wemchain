@@ -12,6 +12,7 @@ import {
   LogOut,
   ShieldCheck,
   Activity,
+  Award,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
@@ -58,6 +59,13 @@ const mainMenuItems = [
     color: "text-green-400",
     bgColor: "bg-green-400/10",
   },
+  {
+    title: "Certificados",
+    url: "/admin/certificados",
+    icon: Award,
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-400/10",
+  },
 ];
 
 const financeMenuItems = [
@@ -72,8 +80,8 @@ const financeMenuItems = [
     title: "Assinaturas",
     url: "/admin/assinaturas",
     icon: CalendarSync,
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-400/10",
+    color: "text-pink-400",
+    bgColor: "bg-pink-400/10",
   },
 ];
 

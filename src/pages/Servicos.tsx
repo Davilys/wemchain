@@ -55,25 +55,25 @@ const plans = [
     bg: "bg-primary/10"
   },
   {
-    name: "Empresarial",
+    name: "Business",
     icon: Crown,
-    price: "R$ 399",
-    period: "pacote com 20 registros",
-    description: "Para empresas com múltiplas marcas e ativos",
+    price: "R$ 99",
+    period: "/mês",
+    description: "Gestão de Propriedade Intelectual",
     features: [
-      "20 registros em blockchain",
-      "Hash SHA-256",
-      "Timestamp imutável",
-      "Certificados digitais PDF",
-      "Verificação pública",
-      "Suporte VIP dedicado",
-      "Dashboard avançado",
-      "Relatórios personalizados",
-      "API de integração",
-      "Economia de 60%"
+      "3 créditos de registro inclusos por mês",
+      "Registros adicionais por R$ 39,00 cada",
+      "Gestão de projetos e registros de propriedade",
+      "Organização por linha do tempo",
+      "Cadastro e gestão de clientes",
+      "Definição de funções para equipe",
+      "Transferência de propriedade de registros",
+      "Dashboard completo",
+      "Certificados digitais em PDF",
+      "Verificação pública em blockchain"
     ],
     highlighted: false,
-    cta: "Falar com Especialista",
+    cta: "Assinar Plano",
     color: "text-yellow-500",
     bg: "bg-yellow-500/10"
   }

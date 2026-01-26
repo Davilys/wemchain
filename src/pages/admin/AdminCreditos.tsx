@@ -68,6 +68,12 @@ export default function AdminCreditos() {
   const [adjustReason, setAdjustReason] = useState("");
   const [adjusting, setAdjusting] = useState(false);
 
+  // Add credits dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addAmount, setAddAmount] = useState("");
+  const [addReason, setAddReason] = useState("");
+  const [adding, setAdding] = useState(false);
+
   // Ledger dialog state
   const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
@@ -113,6 +119,13 @@ export default function AdminCreditos() {
     setNewBalance(credit.available_credits.toString());
     setAdjustReason("");
     setAdjustDialogOpen(true);
+  }
+
+  async function openAddDialog(credit: UserCredits) {
+    setSelectedCredits(credit);
+    setAddAmount("");
+    setAddReason("");
+    setAddDialogOpen(true);
   }
 
   async function openLedgerDialog(credit: UserCredits) {
@@ -180,6 +193,62 @@ export default function AdminCreditos() {
       });
     } finally {
       setAdjusting(false);
+    }
+  }
+
+  async function handleAddCredits() {
+    if (!selectedCredits || !user || !addReason.trim() || !addAmount) {
+      toast({
+        title: "Erro",
+        description: "Quantidade e motivo são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amount = parseInt(addAmount);
+    if (amount <= 0) {
+      toast({
+        title: "Erro",
+        description: "Quantidade deve ser maior que zero.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAdding(true);
+
+    try {
+      const { data, error } = await supabase.rpc("add_credits_admin", {
+        p_user_id: selectedCredits.user_id,
+        p_amount: amount,
+        p_reason: addReason,
+        p_admin_id: user.id,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; new_balance?: number };
+
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao adicionar créditos");
+      }
+
+      toast({
+        title: "Sucesso",
+        description: `${amount} créditos adicionados com sucesso.`,
+      });
+
+      setAddDialogOpen(false);
+      fetchCredits();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao adicionar créditos",
+        variant: "destructive",
+      });
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -283,9 +352,21 @@ export default function AdminCreditos() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openLedgerDialog(credit)}
+                            title="Histórico"
                           >
                             <History className="h-4 w-4" />
                           </Button>
+                          <PermissionGate permission="credits.add">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openAddDialog(credit)}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Adicionar
+                            </Button>
+                          </PermissionGate>
                           <PermissionGate permission="credits.adjust">
                             <Button
                               variant="outline"
@@ -431,6 +512,103 @@ export default function AdminCreditos() {
                 </TableBody>
               </Table>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Credits Dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-green-500" />
+                Adicionar Créditos
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedCredits && (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">Usuário</p>
+                  <p className="font-medium">{selectedCredits.profile?.full_name || "—"}</p>
+                  <p className="text-sm text-muted-foreground mt-2">Saldo Atual</p>
+                  <p className="text-2xl font-bold text-green-500">
+                    {selectedCredits.available_credits} créditos
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="addAmount">Quantidade a Adicionar</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setAddAmount(String(Math.max(1, parseInt(addAmount || "1") - 1)))}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      id="addAmount"
+                      type="number"
+                      min="1"
+                      value={addAmount}
+                      onChange={(e) => setAddAmount(e.target.value)}
+                      placeholder="10"
+                      className="text-center text-lg font-bold"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setAddAmount(String(parseInt(addAmount || "0") + 1))}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    {[5, 10, 20, 50].map((qty) => (
+                      <Button
+                        key={qty}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAddAmount(String(qty))}
+                      >
+                        +{qty}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="addReason">Motivo *</Label>
+                  <Textarea
+                    id="addReason"
+                    placeholder="Ex: Bônus promocional, compensação..."
+                    value={addReason}
+                    onChange={(e) => setAddReason(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta adição será registrada no histórico de auditoria.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleAddCredits}
+                disabled={adding || !addReason.trim() || !addAmount}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {adding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Adicionar Créditos
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

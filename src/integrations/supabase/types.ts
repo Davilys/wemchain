@@ -768,6 +768,15 @@ export type Database = {
         Args: { p_credits: number; p_plan_type: string; p_user_id: string }
         Returns: boolean
       }
+      add_credits_admin: {
+        Args: {
+          p_admin_id: string
+          p_amount: number
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       add_credits_atomic: {
         Args: {
           p_amount: number
@@ -824,6 +833,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       reconcile_credit_balance: { Args: { p_user_id: string }; Returns: Json }
       refund_credit_atomic: {
         Args: {

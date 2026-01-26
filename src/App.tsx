@@ -21,6 +21,7 @@ import Checkout from "./pages/Checkout";
 import Processando from "./pages/Processando";
 import Certificado from "./pages/Certificado";
 import VerificarRegistro from "./pages/VerificarRegistro";
+import VerificacaoPublica from "./pages/VerificacaoPublica";
 import TermosDeUso from "./pages/TermosDeUso";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import PoliticaBlockchain from "./pages/PoliticaBlockchain";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/vantagens" element={<Vantagens />} />
               <Route path="/verificar" element={<Verificar />} />
               <Route path="/verificar-registro" element={<VerificarRegistro />} />
+              <Route path="/verificar/registro/:hash" element={<VerificacaoPublica />} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/politica-blockchain" element={<PoliticaBlockchain />} />

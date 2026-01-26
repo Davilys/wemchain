@@ -41,6 +41,31 @@ export function useBusinessPlan(): UseBusinessPlanReturn {
       setLoading(true);
       setError(null);
 
+      // Super admin sempre tem acesso a recursos Business
+      const { data: isSuperAdmin, error: superAdminError } = await supabase.rpc(
+        "is_super_admin",
+        { _user_id: user.id }
+      );
+
+      if (superAdminError) {
+        console.error("Error checking super admin:", superAdminError);
+      }
+
+      // Se for super_admin, conceder acesso automaticamente
+      if (isSuperAdmin === true) {
+        setIsBusinessPlan(true);
+        setSubscription({
+          id: "super_admin",
+          plan_type: "BUSINESS",
+          status: "ACTIVE",
+          credits_per_cycle: -1, // Ilimitado
+          current_cycle: 0,
+          next_billing_date: null,
+        });
+        setLoading(false);
+        return;
+      }
+
       // Verificar via RPC se tem plano business ativo
       const { data: hasActive, error: rpcError } = await supabase.rpc(
         "has_active_business_plan",

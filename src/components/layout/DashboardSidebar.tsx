@@ -9,8 +9,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  FolderOpen,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface DashboardSidebarProps {
@@ -58,13 +61,30 @@ const menuItems = [
 
 export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const location = useLocation();
+  const { isBusinessPlan } = useBusinessPlan();
 
   const isActive = (url: string) => {
     if (url.includes("?")) {
       return location.pathname + location.search === url;
     }
-    return location.pathname === url;
+    return location.pathname === url || location.pathname.startsWith(url + "/");
   };
+
+  // Add Projetos item for Business plan users
+  const allMenuItems = isBusinessPlan
+    ? [
+        ...menuItems.slice(0, 3), // Dashboard, Novo Registro, Meus Registros
+        {
+          title: "Projetos",
+          url: "/projetos",
+          icon: FolderOpen,
+          color: "text-amber-500",
+          bgColor: "bg-amber-500/10",
+          isBusiness: true,
+        },
+        ...menuItems.slice(3), // Créditos, Certificados
+      ]
+    : menuItems;
 
   return (
     <aside
@@ -114,7 +134,7 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
       {/* Menu Items */}
       <nav className="flex-1 py-4 px-2">
         <ul className="space-y-1">
-          {menuItems.map((item) => (
+          {allMenuItems.map((item) => (
             <li key={item.url}>
               <Link
                 to={item.url}
@@ -127,13 +147,16 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
                 title={collapsed ? item.title : undefined}
               >
                 <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
+                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all relative",
                   isActive(item.url) ? item.bgColor : "bg-muted"
                 )}>
                   <item.icon className={cn(
                     "h-4 w-4",
                     isActive(item.url) ? item.color : "text-muted-foreground"
                   )} />
+                  {"isBusiness" in item && item.isBusiness && (
+                    <Crown className="absolute -top-1 -right-1 h-3 w-3 text-amber-500" />
+                  )}
                 </div>
                 {!collapsed && (
                   <span className={cn(

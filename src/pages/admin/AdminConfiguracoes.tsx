@@ -1,8 +1,16 @@
+import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuditLog } from "@/hooks/useAdminAuditLog";
+import { toast } from "sonner";
 import { 
   Settings, 
   Database, 
@@ -10,18 +18,86 @@ import {
   Shield, 
   Zap,
   CheckCircle,
-  Clock
+  Save,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 
+interface SystemConfig {
+  registrosEnabled: boolean;
+  comprasEnabled: boolean;
+  maxUploadSize: number;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+}
+
 export default function AdminConfiguracoes() {
+  const { user } = useAuth();
+  const { logAdminAction } = useAdminAuditLog();
+  
+  const [config, setConfig] = useState<SystemConfig>({
+    registrosEnabled: true,
+    comprasEnabled: true,
+    maxUploadSize: 50,
+    maintenanceMode: false,
+    maintenanceMessage: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    // In production, load from database or edge function
+    const savedConfig = localStorage.getItem("webmarcas_admin_config");
+    if (savedConfig) {
+      setConfig(JSON.parse(savedConfig));
+    }
+  }, []);
+
+  function updateConfig(key: keyof SystemConfig, value: any) {
+    setConfig(prev => ({ ...prev, [key]: value }));
+    setHasChanges(true);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      // Save to localStorage (in production, save to database)
+      localStorage.setItem("webmarcas_admin_config", JSON.stringify(config));
+      
+      await logAdminAction({
+        actionType: "admin_config_changed",
+        metadata: { config },
+      });
+
+      toast.success("Configurações salvas com sucesso");
+      setHasChanges(false);
+    } catch (error) {
+      toast.error("Erro ao salvar configurações");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground">
-            Configurações do sistema e status dos serviços
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold font-display">Configurações</h1>
+            <p className="text-muted-foreground font-body">
+              Configurações do sistema e status dos serviços
+            </p>
+          </div>
+          {hasChanges && (
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar Alterações
+            </Button>
+          )}
         </div>
 
         {/* System Status */}
@@ -72,6 +148,101 @@ export default function AdminConfiguracoes() {
           </Card>
         </div>
 
+        {/* System Controls */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Controles do Sistema
+            </CardTitle>
+            <CardDescription>
+              Ative ou desative funcionalidades da plataforma
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div>
+                <p className="font-medium">Registros em Blockchain</p>
+                <p className="text-sm text-muted-foreground">
+                  Permite que usuários criem novos registros
+                </p>
+              </div>
+              <Switch 
+                checked={config.registrosEnabled}
+                onCheckedChange={(v) => updateConfig("registrosEnabled", v)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div>
+                <p className="font-medium">Compras e Pagamentos</p>
+                <p className="text-sm text-muted-foreground">
+                  Permite que usuários comprem créditos
+                </p>
+              </div>
+              <Switch 
+                checked={config.comprasEnabled}
+                onCheckedChange={(v) => updateConfig("comprasEnabled", v)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div>
+                <p className="font-medium">Tamanho Máximo de Upload</p>
+                <p className="text-sm text-muted-foreground">
+                  Limite em MB para arquivos enviados
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="number"
+                  className="w-24 text-right"
+                  value={config.maxUploadSize}
+                  onChange={(e) => updateConfig("maxUploadSize", parseInt(e.target.value) || 50)}
+                  min={1}
+                  max={100}
+                />
+                <span className="text-muted-foreground">MB</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Maintenance Mode */}
+        <Card className={config.maintenanceMode ? "border-yellow-500/50" : ""}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className={config.maintenanceMode ? "h-5 w-5 text-yellow-500" : "h-5 w-5"} />
+              Modo Manutenção
+            </CardTitle>
+            <CardDescription>
+              Quando ativo, exibe mensagem de manutenção para todos os usuários
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="maintenance">Ativar Modo Manutenção</Label>
+              <Switch 
+                id="maintenance"
+                checked={config.maintenanceMode}
+                onCheckedChange={(v) => updateConfig("maintenanceMode", v)}
+              />
+            </div>
+            
+            {config.maintenanceMode && (
+              <div className="space-y-2">
+                <Label htmlFor="maintenanceMsg">Mensagem para Usuários</Label>
+                <Textarea
+                  id="maintenanceMsg"
+                  placeholder="Ex: Estamos em manutenção programada. Retornaremos em breve."
+                  value={config.maintenanceMessage}
+                  onChange={(e) => updateConfig("maintenanceMessage", e.target.value)}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Plans Configuration */}
         <Card>
           <CardHeader>
@@ -80,7 +251,7 @@ export default function AdminConfiguracoes() {
               Planos Disponíveis
             </CardTitle>
             <CardDescription>
-              Gerencie os planos disponíveis para compra
+              Configuração dos planos de créditos
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -113,8 +284,8 @@ export default function AdminConfiguracoes() {
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-4">
                 <div>
-                  <p className="font-medium">Plano Business</p>
-                  <p className="text-sm text-muted-foreground">R$ 99,00/mês - 3 créditos/ciclo + adicional R$ 39</p>
+                  <p className="font-medium">Plano Business (Assinatura)</p>
+                  <p className="text-sm text-muted-foreground">R$ 99,00/mês - 3 créditos/ciclo</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -158,7 +329,7 @@ export default function AdminConfiguracoes() {
                 <div>
                   <p className="font-medium">Logs Imutáveis</p>
                   <p className="text-sm text-muted-foreground">
-                    Todos os eventos financeiros são registrados de forma imutável
+                    Todos os eventos financeiros e administrativos são registrados
                   </p>
                 </div>
               </div>
@@ -174,6 +345,8 @@ export default function AdminConfiguracoes() {
             </div>
           </CardContent>
         </Card>
+
+        <Separator />
 
         {/* Admin Guidelines */}
         <Card>

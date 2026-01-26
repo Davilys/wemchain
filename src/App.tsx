@@ -34,6 +34,7 @@ import AdminCreditos from "./pages/admin/AdminCreditos";
 import AdminRegistros from "./pages/admin/AdminRegistros";
 import AdminPagamentos from "./pages/admin/AdminPagamentos";
 import AdminAssinaturas from "./pages/admin/AdminAssinaturas";
+import AdminCertificados from "./pages/admin/AdminCertificados";
 import AdminLogs from "./pages/admin/AdminLogs";
 import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import AdminMonitoramento from "./pages/admin/AdminMonitoramento";
@@ -76,9 +77,11 @@ const App = () => (
               <Route path="/admin/registros" element={<AdminRegistros />} />
               <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
               <Route path="/admin/assinaturas" element={<AdminAssinaturas />} />
+              <Route path="/admin/certificados" element={<AdminCertificados />} />
               <Route path="/admin/logs" element={<AdminLogs />} />
               <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="/admin/monitoramento" element={<AdminMonitoramento />} />
+              <Route path="/admin/homologacao" element={<AdminHomologacao />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,20 +1,22 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Plus, TrendingUp, AlertCircle } from "lucide-react";
+import { Sparkles, Plus, TrendingUp, AlertCircle, Crown } from "lucide-react";
 
 interface CreditBalanceCardProps {
   availableCredits: number;
   totalCredits: number;
   usedCredits: number;
   loading?: boolean;
+  isUnlimited?: boolean;
 }
 
 export function CreditBalanceCard({ 
   availableCredits, 
   totalCredits, 
   usedCredits,
-  loading 
+  loading,
+  isUnlimited 
 }: CreditBalanceCardProps) {
   const usagePercentage = totalCredits > 0 ? (usedCredits / totalCredits) * 100 : 0;
 
@@ -26,6 +28,30 @@ export function CreditBalanceCard({
             <div className="h-6 w-32 bg-muted rounded" />
             <div className="h-12 w-20 bg-muted rounded" />
             <div className="h-2 w-full bg-muted rounded" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Versão especial para créditos ilimitados (admin)
+  if (isUnlimited) {
+    return (
+      <Card className="relative overflow-hidden border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-500/5">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+        
+        <CardContent className="pt-6 relative">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center">
+              <Crown className="h-7 w-7 text-amber-500" />
+            </div>
+            <div>
+              <p className="font-body text-sm text-muted-foreground">Créditos Disponíveis</p>
+              <p className="font-display text-4xl font-bold text-amber-500">∞</p>
+              <p className="font-body text-xs text-amber-600/80 mt-1">
+                Acesso ilimitado como administrador
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

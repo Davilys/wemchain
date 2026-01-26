@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Menu, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { LogOut, User, Settings, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,28 +14,15 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
-interface DashboardHeaderProps {
-  onToggleSidebar: () => void;
-}
-
-export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
+export function DashboardHeader() {
   const { user, signOut } = useAuth();
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
   return (
     <header className="h-16 border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-40 flex items-center justify-between px-4 md:px-6">
-      {/* Left: Menu + Logo */}
+      {/* Left: Logo */}
       <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleSidebar}
-          className="lg:hidden h-9 w-9"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
         <Link to="/dashboard" className="flex items-center gap-3 lg:hidden">
           <img 
             src={webmarcasLogo} 

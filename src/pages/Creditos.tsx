@@ -181,15 +181,15 @@ export default function Creditos() {
                   R$ 99
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
-                <p className="font-body text-xs text-muted-foreground mb-4">1 crédito incluso + gestão completa</p>
+                <p className="font-body text-xs text-muted-foreground mb-4">3 créditos inclusos + gestão completa</p>
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    1 crédito incluso por mês
+                    <strong className="text-foreground">3 créditos</strong> inclusos por mês
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Registros adicionais R$ 49
+                    Registros adicionais R$ 39
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
@@ -197,7 +197,7 @@ export default function Creditos() {
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Dashboard completo
+                    Créditos renovam mensalmente
                   </li>
                 </ul>
                 <Button asChild variant="outline" className="w-full font-body font-medium border-primary/30 hover:bg-primary/5">
@@ -224,7 +224,7 @@ export default function Creditos() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-display text-2xl font-bold text-primary">R$ 49</p>
+                <p className="font-display text-2xl font-bold text-primary">R$ 39</p>
                 <Button asChild size="sm" variant="outline" className="mt-2 font-body">
                   <Link to="/checkout?plan=adicional">
                     <Plus className="h-4 w-4 mr-1" />

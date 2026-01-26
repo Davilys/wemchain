@@ -113,13 +113,13 @@ export default function AdminConfiguracoes() {
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-4">
                 <div>
-                  <p className="font-medium">Plano Mensal</p>
-                  <p className="text-sm text-muted-foreground">R$ 99,00/mês - 5 créditos/ciclo</p>
+                  <p className="font-medium">Plano Business</p>
+                  <p className="text-sm text-muted-foreground">R$ 99,00/mês - 3 créditos/ciclo + adicional R$ 39</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Switch id="plan-mensal" defaultChecked />
-                <Label htmlFor="plan-mensal">Ativo</Label>
+                <Switch id="plan-business" defaultChecked />
+                <Label htmlFor="plan-business">Ativo</Label>
               </div>
             </div>
           </CardContent>

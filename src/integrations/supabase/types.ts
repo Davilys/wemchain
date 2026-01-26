@@ -563,6 +563,80 @@ export type Database = {
         }
         Relationships: []
       }
+      project_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          document_number: string
+          document_type: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          owner_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_number: string
+          document_type: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          owner_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_number?: string
+          document_type?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       record_authors: {
         Row: {
           created_at: string
@@ -618,8 +692,12 @@ export type Database = {
           hash_sha256: string | null
           id: string
           nome_ativo: string
+          project_id: string | null
           status: Database["public"]["Enums"]["registro_status"]
           tipo_ativo: Database["public"]["Enums"]["tipo_ativo"]
+          titular_document: string | null
+          titular_name: string | null
+          titular_type: string | null
           updated_at: string
           user_id: string
         }
@@ -633,8 +711,12 @@ export type Database = {
           hash_sha256?: string | null
           id?: string
           nome_ativo: string
+          project_id?: string | null
           status?: Database["public"]["Enums"]["registro_status"]
           tipo_ativo?: Database["public"]["Enums"]["tipo_ativo"]
+          titular_document?: string | null
+          titular_name?: string | null
+          titular_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -648,12 +730,24 @@ export type Database = {
           hash_sha256?: string | null
           id?: string
           nome_ativo?: string
+          project_id?: string | null
           status?: Database["public"]["Enums"]["registro_status"]
           tipo_ativo?: Database["public"]["Enums"]["tipo_ativo"]
+          titular_document?: string | null
+          titular_name?: string | null
+          titular_type?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "registros_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transacoes_blockchain: {
         Row: {
@@ -816,6 +910,10 @@ export type Database = {
         Args: { p_asaas_payment_id: string }
         Returns: string
       }
+      get_project_registros_count: {
+        Args: { _project_id: string }
+        Returns: number
+      }
       get_subscription_user_id: {
         Args: { p_asaas_subscription_id: string }
         Returns: string
@@ -825,6 +923,7 @@ export type Database = {
         Args: { p_asaas_payment_id: string; p_refund_amount?: number }
         Returns: Json
       }
+      has_active_business_plan: { Args: { _user_id: string }; Returns: boolean }
       has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

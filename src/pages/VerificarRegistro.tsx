@@ -18,15 +18,26 @@ import {
   Upload,
   Shield,
   AlertTriangle,
-  Info
+  Info,
+  HelpCircle
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+/**
+ * Status de verificação possíveis
+ */
+type VerificationStatus = 
+  | 'VERIFICADO'        // ✔ Hash confirmado em blockchain
+  | 'EM_PROCESSAMENTO'  // ⏳ Registro existe mas ainda não confirmado
+  | 'NAO_ENCONTRADO'    // ❌ Hash não existe no sistema
+  | 'FORMATO_INVALIDO'; // ❌ Hash com formato incorreto
+
 interface VerificationResult {
+  status?: VerificationStatus;
   verified: boolean;
   message?: string;
   error?: string;
+  hash?: string;
   details?: {
     hashAlgorithm: string;
     fileHash: string;
@@ -35,12 +46,13 @@ interface VerificationResult {
     status: string;
     instructions: string;
   };
-  // Database lookup results
   registro?: {
+    id?: string;
     nome_ativo: string;
     tipo_ativo: string;
     hash_sha256: string;
     created_at: string;
+    status?: string;
   };
   transacao?: {
     tx_hash: string;
@@ -49,6 +61,25 @@ interface VerificationResult {
     timestamp_blockchain: string;
     timestamp_method?: string;
   };
+  blockchain?: {
+    network: string;
+    method: string;
+    methodDescription?: string;
+    tx_hash: string;
+    confirmed_at?: string;
+    timestamp_blockchain?: string;
+    bitcoin_anchored?: boolean;
+  };
+  proof?: {
+    exists: boolean;
+    type: string;
+    bitcoin_anchored: boolean;
+    note: string;
+    valid_ots_format?: boolean;
+    proof_size_bytes?: number;
+  };
+  verificationInstructions?: string;
+  legal_notice?: string;
 }
 
 export default function VerificarRegistro() {
@@ -143,56 +174,46 @@ export default function VerificarRegistro() {
         }
       );
 
-      const otsResult = await response.json();
+      const data = await response.json();
 
-      // Also get registro info from database via edge function
-      const registroResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-ots-proof`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-          },
-          body: JSON.stringify({ hash: fileHash })
-        }
-      );
-
-      const registroData = await registroResponse.json();
-
-      if (registroData.verified && registroData.registro) {
-        setResult({
-          ...otsResult,
-          registro: {
-            nome_ativo: registroData.registro.nome_ativo,
-            tipo_ativo: registroData.registro.tipo_ativo,
-            hash_sha256: registroData.registro.hash_sha256 || fileHash,
-            created_at: registroData.registro.created_at
-          },
-          transacao: registroData.blockchain ? {
-            tx_hash: registroData.blockchain.tx_hash,
-            block_number: 0,
-            network: registroData.blockchain.network,
-            timestamp_blockchain: registroData.blockchain.timestamp_blockchain || "",
-            timestamp_method: registroData.blockchain.method
-          } : undefined
-        });
-      } else {
-        setResult(otsResult);
-      }
+      setResult({
+        status: data.status,
+        verified: data.verified,
+        message: data.message,
+        hash: data.hash,
+        registro: data.registro ? {
+          id: data.registro.id,
+          nome_ativo: data.registro.nome_ativo,
+          tipo_ativo: data.registro.tipo_ativo,
+          hash_sha256: data.registro.hash_sha256 || fileHash,
+          created_at: data.registro.created_at,
+          status: data.registro.status,
+        } : undefined,
+        transacao: data.blockchain ? {
+          tx_hash: data.blockchain.tx_hash,
+          block_number: data.blockchain.block_number || 0,
+          network: data.blockchain.network,
+          timestamp_blockchain: data.blockchain.timestamp_blockchain || data.blockchain.confirmed_at || "",
+          timestamp_method: data.blockchain.method
+        } : undefined,
+        proof: data.proof,
+        verificationInstructions: data.verificationInstructions,
+        legal_notice: data.legal_notice,
+      });
 
     } catch (error) {
       console.error("Verification error:", error);
       setResult({
+        status: 'NAO_ENCONTRADO',
         verified: false,
-        error: "Erro ao verificar prova. Tente novamente."
+        message: "Erro ao verificar prova. Tente novamente."
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Verify with hash only (uses edge function to bypass RLS)
+  // Verify with hash only
   const handleHashVerification = async () => {
     const hashToVerify = manualHash.trim().toLowerCase();
     
@@ -208,10 +229,10 @@ export default function VerificarRegistro() {
     // Validate hash format
     const hashRegex = /^[a-fA-F0-9]{64}$/;
     if (!hashRegex.test(hashToVerify)) {
-      toast({
-        title: "Hash inválido",
-        description: "O hash deve ter 64 caracteres hexadecimais (SHA-256).",
-        variant: "destructive"
+      setResult({
+        status: 'FORMATO_INVALIDO',
+        verified: false,
+        message: "Formato de hash inválido. O hash SHA-256 deve conter exatamente 64 caracteres hexadecimais."
       });
       return;
     }
@@ -220,7 +241,6 @@ export default function VerificarRegistro() {
     setResult(null);
 
     try {
-      // Use edge function for public verification (bypasses RLS)
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-ots-proof`,
         {
@@ -235,40 +255,37 @@ export default function VerificarRegistro() {
 
       const data = await response.json();
 
-      if (data.error && !data.verified) {
-        setResult({
-          verified: false,
-          error: data.error || "Nenhum registro confirmado encontrado com este hash."
-        });
-      } else if (data.verified && data.registro) {
-        setResult({
-          verified: true,
-          message: "Registro encontrado e verificado!",
-          registro: {
-            nome_ativo: data.registro.nome_ativo,
-            tipo_ativo: data.registro.tipo_ativo,
-            hash_sha256: data.registro.hash_sha256 || hashToVerify,
-            created_at: data.registro.created_at
-          },
-          transacao: data.blockchain ? {
-            tx_hash: data.blockchain.tx_hash,
-            block_number: 0,
-            network: data.blockchain.network,
-            timestamp_blockchain: data.blockchain.timestamp_blockchain || "",
-            timestamp_method: data.blockchain.method
-          } : undefined
-        });
-      } else {
-        setResult({
-          verified: false,
-          error: "Nenhum registro confirmado encontrado com este hash."
-        });
-      }
+      setResult({
+        status: data.status,
+        verified: data.verified,
+        message: data.message,
+        hash: data.hash,
+        registro: data.registro ? {
+          id: data.registro.id,
+          nome_ativo: data.registro.nome_ativo,
+          tipo_ativo: data.registro.tipo_ativo,
+          hash_sha256: data.registro.hash_sha256 || hashToVerify,
+          created_at: data.registro.created_at,
+          status: data.registro.status,
+        } : undefined,
+        transacao: data.blockchain ? {
+          tx_hash: data.blockchain.tx_hash,
+          block_number: data.blockchain.block_number || 0,
+          network: data.blockchain.network,
+          timestamp_blockchain: data.blockchain.timestamp_blockchain || data.blockchain.confirmed_at || "",
+          timestamp_method: data.blockchain.method
+        } : undefined,
+        proof: data.proof,
+        verificationInstructions: data.verificationInstructions,
+        legal_notice: data.legal_notice,
+      });
+
     } catch (error) {
       console.error("Verification error:", error);
       setResult({
+        status: 'NAO_ENCONTRADO',
         verified: false,
-        error: "Erro ao verificar. Tente novamente."
+        message: "Erro ao verificar. Tente novamente."
       });
     } finally {
       setLoading(false);
@@ -292,6 +309,280 @@ export default function VerificarRegistro() {
     if (otsFileRef.current) otsFileRef.current.value = "";
   };
 
+  // Render status-based result card
+  const renderResultCard = () => {
+    if (!result) return null;
+
+    const status = result.status || (result.verified ? 'VERIFICADO' : 'NAO_ENCONTRADO');
+
+    // VERIFICADO
+    if (status === 'VERIFICADO') {
+      return (
+        <Card className="max-w-3xl mx-auto mt-8 border-2 border-green-500 bg-green-500/5">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-10 w-10 text-green-500" />
+              <div>
+                <CardTitle className="font-display text-xl text-green-500">
+                  ✔ Registro Verificado
+                </CardTitle>
+                <CardDescription>
+                  {result.message || "Registro confirmado em blockchain pública. Prova técnica válida e imutável."}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Proof Details */}
+            {result.proof && (
+              <div className="bg-green-500/10 rounded-xl p-6 border border-green-500/20">
+                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-500" />
+                  Detalhes da Verificação
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Protocolo</p>
+                    <p className="font-medium text-foreground">{result.proof.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Blockchain</p>
+                    <p className="font-medium text-foreground">{result.proof.bitcoin_anchored ? 'Bitcoin' : 'Interno'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                      Confirmado
+                    </Badge>
+                  </div>
+                </div>
+                {result.hash && (
+                  <div className="mt-4 pt-4 border-t border-green-500/20">
+                    <p className="text-muted-foreground text-sm mb-1">Hash do Arquivo</p>
+                    <code className="font-mono text-xs break-all bg-background p-2 rounded block">
+                      {result.hash}
+                    </code>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Registro Info */}
+            {result.registro && (
+              <div className="bg-muted/30 rounded-xl p-6 border border-border">
+                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Dados do Registro
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Nome do Ativo</p>
+                    <p className="font-medium text-foreground">{result.registro.nome_ativo}</p>
+                  </div>
+                  {result.registro.tipo_ativo && (
+                    <div>
+                      <p className="text-muted-foreground">Tipo</p>
+                      <p className="font-medium text-foreground capitalize">{result.registro.tipo_ativo}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-muted-foreground">Data do Registro</p>
+                    <p className="font-medium text-foreground flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      {formatDate(result.registro.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Transaction Info */}
+            {result.transacao && (
+              <div className="bg-orange-400/5 rounded-xl p-6 border border-orange-400/20">
+                <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-orange-400" />
+                  Prova Blockchain
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Método</p>
+                    <p className="font-medium text-orange-400">
+                      {result.transacao.timestamp_method === "OPEN_TIMESTAMP" ? "OpenTimestamps" : result.transacao.timestamp_method}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Rede</p>
+                    <p className="font-medium text-foreground capitalize">
+                      {result.transacao.network === "opentimestamps" ? "Bitcoin" : result.transacao.network}
+                    </p>
+                  </div>
+                  {result.transacao.timestamp_blockchain && (
+                    <div>
+                      <p className="text-muted-foreground">Confirmado em</p>
+                      <p className="font-medium text-foreground">
+                        {formatDate(result.transacao.timestamp_blockchain)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 pt-4 border-t border-orange-400/20">
+                  <p className="text-muted-foreground text-sm mb-1">ID da Prova</p>
+                  <code className="font-mono text-xs break-all bg-background p-2 rounded block">
+                    {result.transacao.tx_hash}
+                  </code>
+                </div>
+              </div>
+            )}
+
+            {/* External Verification */}
+            <div className="bg-muted/30 rounded-xl p-6 border border-border">
+              <h4 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+                <ExternalLink className="h-5 w-5 text-primary" />
+                Verificação Externa Independente
+              </h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                {result.verificationInstructions || "Para verificação completa e independente, use as ferramentas oficiais OpenTimestamps. A WebMarcas não controla nem pode alterar este resultado."}
+              </p>
+              <Button variant="outline" asChild className="w-full md:w-auto">
+                <a 
+                  href="https://opentimestamps.org" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Verificar em OpenTimestamps.org
+                </a>
+              </Button>
+            </div>
+
+            {/* Legal Notice */}
+            {result.legal_notice && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Aviso Legal:</strong> {result.legal_notice}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // EM_PROCESSAMENTO
+    if (status === 'EM_PROCESSAMENTO') {
+      return (
+        <Card className="max-w-3xl mx-auto mt-8 border-2 border-yellow-500 bg-yellow-500/5">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Clock className="h-10 w-10 text-yellow-500 animate-pulse" />
+              <div>
+                <CardTitle className="font-display text-xl text-yellow-600">
+                  ⏳ Em Processamento
+                </CardTitle>
+                <CardDescription>
+                  {result.message || "Registro ainda em fase de ancoragem na blockchain."}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-yellow-500/10 rounded-xl p-6 border border-yellow-500/20">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-muted-foreground">
+                  <p className="mb-2">
+                    Este registro foi recebido e está sendo processado. A confirmação na blockchain Bitcoin 
+                    pode levar de alguns minutos até algumas horas.
+                  </p>
+                  <p>
+                    Volte mais tarde para verificar o status atualizado.
+                  </p>
+                </div>
+              </div>
+            </div>
+            {result.registro && (
+              <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Ativo:</strong> {result.registro.nome_ativo}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // FORMATO_INVALIDO
+    if (status === 'FORMATO_INVALIDO') {
+      return (
+        <Card className="max-w-3xl mx-auto mt-8 border-2 border-orange-500 bg-orange-500/5">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-10 w-10 text-orange-500" />
+              <div>
+                <CardTitle className="font-display text-xl text-orange-500">
+                  ⚠ Formato Inválido
+                </CardTitle>
+                <CardDescription>
+                  {result.message || "O hash informado não possui formato válido."}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-orange-500/10 rounded-xl p-6 border border-orange-500/20">
+              <div className="flex items-start gap-3">
+                <HelpCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-muted-foreground">
+                  <p className="mb-2">
+                    O hash SHA-256 deve conter exatamente <strong>64 caracteres hexadecimais</strong> (0-9, a-f).
+                  </p>
+                  <p>
+                    Verifique se você copiou o hash corretamente do seu certificado digital.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // NAO_ENCONTRADO
+    return (
+      <Card className="max-w-3xl mx-auto mt-8 border-2 border-destructive bg-destructive/5">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <XCircle className="h-10 w-10 text-destructive" />
+            <div>
+              <CardTitle className="font-display text-xl text-destructive">
+                ❌ Não Encontrado
+              </CardTitle>
+              <CardDescription>
+                {result.message || "Nenhum registro confirmado foi localizado para este hash."}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-destructive/10 rounded-xl p-6 border border-destructive/20">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2">Possíveis causas:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>O hash pode estar incorreto ou incompleto</li>
+                  <li>O arquivo pode não ter sido registrado nesta plataforma</li>
+                  <li>O arquivo original pode ter sido modificado após o registro</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <Layout>
       {/* Hero */}
@@ -311,7 +602,7 @@ export default function VerificarRegistro() {
         </div>
       </section>
 
-      {/* Legal Disclaimer */}
+      {/* Legal Disclaimer - OBRIGATÓRIO */}
       <section className="py-6 bg-orange-400/5 border-y border-orange-400/20">
         <div className="container mx-auto px-4">
           <div className="flex items-start gap-3 max-w-4xl mx-auto">
@@ -319,7 +610,7 @@ export default function VerificarRegistro() {
             <p className="text-sm text-foreground">
               <strong>Verificação Pública:</strong> Esta verificação utiliza o protocolo público OpenTimestamps, 
               ancorado na blockchain do Bitcoin. A WebMarcas <strong>não controla</strong> nem pode alterar 
-              o resultado desta verificação. A prova é técnica, pública, imutável e auditável.
+              o resultado desta verificação.
             </p>
           </div>
         </div>
@@ -492,168 +783,7 @@ export default function VerificarRegistro() {
           </Card>
 
           {/* Results */}
-          {result && (
-            <Card className={`max-w-3xl mx-auto mt-8 border-2 ${
-              result.verified ? "border-success bg-success/5" : "border-destructive bg-destructive/5"
-            }`}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  {result.verified ? (
-                    <>
-                      <CheckCircle2 className="h-10 w-10 text-success" />
-                      <div>
-                        <CardTitle className="font-display text-xl text-success">
-                          ✓ Prova Válida
-                        </CardTitle>
-                        <CardDescription>
-                          {result.message || "A prova de existência foi verificada com sucesso"}
-                        </CardDescription>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-10 w-10 text-destructive" />
-                      <div>
-                        <CardTitle className="font-display text-xl text-destructive">
-                          ✗ Verificação Falhou
-                        </CardTitle>
-                        <CardDescription>
-                          {result.error || "Não foi possível verificar a prova"}
-                        </CardDescription>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardHeader>
-
-              {result.verified && (
-                <CardContent className="space-y-6">
-                  {/* Verification Details */}
-                  {result.details && (
-                    <div className="bg-success/10 rounded-xl p-6 border border-success/20">
-                      <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-success" />
-                        Detalhes da Verificação
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Protocolo</p>
-                          <p className="font-medium text-foreground">{result.details.protocol}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Blockchain</p>
-                          <p className="font-medium text-foreground">{result.details.blockchain}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Algoritmo</p>
-                          <p className="font-medium text-foreground">{result.details.hashAlgorithm}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Status</p>
-                          <Badge className="bg-success/10 text-success border-success/20">
-                            {result.details.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-success/20">
-                        <p className="text-muted-foreground text-sm mb-1">Hash do Arquivo</p>
-                        <code className="font-mono text-xs break-all bg-background p-2 rounded block">
-                          {result.details.fileHash}
-                        </code>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Registro Info from Database */}
-                  {result.registro && (
-                    <div className="bg-muted/30 rounded-xl p-6 border border-border">
-                      <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        Dados do Registro
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Nome do Ativo</p>
-                          <p className="font-medium text-foreground">{result.registro.nome_ativo}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Tipo</p>
-                          <p className="font-medium text-foreground capitalize">{result.registro.tipo_ativo}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Data do Registro</p>
-                          <p className="font-medium text-foreground flex items-center gap-1">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            {formatDate(result.registro.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Transaction Info */}
-                  {result.transacao && (
-                    <div className="bg-orange-400/5 rounded-xl p-6 border border-orange-400/20">
-                      <h4 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-orange-400" />
-                        Prova Blockchain
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Método</p>
-                          <p className="font-medium text-orange-400">
-                            {result.transacao.timestamp_method === "OPEN_TIMESTAMP" ? "OpenTimestamps" : result.transacao.timestamp_method}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Rede</p>
-                          <p className="font-medium text-foreground capitalize">
-                            {result.transacao.network === "opentimestamps" ? "Bitcoin" : result.transacao.network}
-                          </p>
-                        </div>
-                        {result.transacao.timestamp_blockchain && (
-                          <div>
-                            <p className="text-muted-foreground">Confirmado em</p>
-                            <p className="font-medium text-foreground">
-                              {formatDate(result.transacao.timestamp_blockchain)}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-orange-400/20">
-                        <p className="text-muted-foreground text-sm mb-1">ID da Prova</p>
-                        <code className="font-mono text-xs break-all bg-background p-2 rounded block">
-                          {result.transacao.tx_hash}
-                        </code>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* External Verification */}
-                  <div className="bg-muted/30 rounded-xl p-6 border border-border">
-                    <h4 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
-                      <ExternalLink className="h-5 w-5 text-primary" />
-                      Verificação Externa Independente
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Para verificação completa e independente, use as ferramentas oficiais OpenTimestamps. 
-                      A WebMarcas não controla nem pode alterar este resultado.
-                    </p>
-                    <Button variant="outline" asChild className="w-full md:w-auto">
-                      <a 
-                        href="https://opentimestamps.org" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Verificar em OpenTimestamps.org
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          )}
+          {renderResultCard()}
         </div>
       </section>
 

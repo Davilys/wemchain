@@ -10,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, FileText, Shield, Link2 } from "lucide-react";
+import { Loader2, Shield, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useConsent } from "@/hooks/useConsent";
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ConsentModalProps {
   open: boolean;
@@ -22,17 +23,17 @@ interface ConsentModalProps {
 
 export function ConsentModal({ open, onComplete }: ConsentModalProps) {
   const { documents, acceptDocument, consentStatus } = useConsent();
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
-  const [blockchainAccepted, setBlockchainAccepted] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"terms" | "privacy" | "blockchain">("terms");
+  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
 
   const termsDoc = documents.find((d) => d.document_type === "terms_of_use");
   const privacyDoc = documents.find((d) => d.document_type === "privacy_policy");
   const blockchainDoc = documents.find((d) => d.document_type === "blockchain_policy");
 
   const handleAcceptAll = async () => {
+    if (!accepted) return;
+    
     setLoading(true);
     try {
       if (!consentStatus.terms_of_use) {
@@ -62,92 +63,117 @@ export function ConsentModal({ open, onComplete }: ConsentModalProps) {
     }
   };
 
-  const currentDoc = step === "terms" ? termsDoc : step === "privacy" ? privacyDoc : blockchainDoc;
-  const currentAccepted = step === "terms" ? termsAccepted : step === "privacy" ? privacyAccepted : blockchainAccepted;
-  const setCurrentAccepted = step === "terms" ? setTermsAccepted : step === "privacy" ? setPrivacyAccepted : setBlockchainAccepted;
-
-  const handleNext = () => {
-    if (step === "terms") setStep("privacy");
-    else if (step === "privacy") setStep("blockchain");
-    else handleAcceptAll();
+  const toggleDocument = (docType: string) => {
+    setExpandedDoc(expandedDoc === docType ? null : docType);
   };
 
-  const canProceed = currentAccepted;
-  const isLastStep = step === "blockchain";
-
-  const StepIcon = step === "terms" ? FileText : step === "privacy" ? Shield : Link2;
+  const documentItems = [
+    { type: "terms_of_use", doc: termsDoc, label: "Termos de Uso", href: "/termos-de-uso" },
+    { type: "privacy_policy", doc: privacyDoc, label: "Política de Privacidade", href: "/politica-privacidade" },
+    { type: "blockchain_policy", doc: blockchainDoc, label: "Política de Blockchain", href: "/politica-blockchain" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-card border-border">
+      <DialogContent className="max-w-lg max-h-[85vh] bg-card border-border">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
-              <StepIcon className="h-5 w-5 text-primary" />
+              <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
               <DialogTitle className="font-display text-xl">
-                {currentDoc?.title || "Termos e Políticas"}
+                Termos e Políticas
               </DialogTitle>
               <DialogDescription className="font-body">
-                {step === "terms" && "Passo 1 de 3 - Termos de Uso"}
-                {step === "privacy" && "Passo 2 de 3 - Política de Privacidade"}
-                {step === "blockchain" && "Passo 3 de 3 - Política de Blockchain"}
+                Para continuar, aceite nossos termos
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[50vh] pr-4">
-          <div className="prose prose-invert prose-sm max-w-none">
-            {currentDoc?.content ? (
-              <ReactMarkdown>{currentDoc.content}</ReactMarkdown>
-            ) : (
-              <p className="text-muted-foreground">Carregando documento...</p>
-            )}
-          </div>
-        </ScrollArea>
+        <div className="space-y-2 py-2">
+          {documentItems.map(({ type, doc, label, href }) => (
+            <Collapsible key={type} open={expandedDoc === type}>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden">
+                <div className="flex items-center justify-between p-3">
+                  <span className="text-sm font-medium">{label}</span>
+                  <div className="flex items-center gap-1">
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 px-2 py-1 rounded hover:bg-muted transition-colors"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Nova aba
+                    </a>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => toggleDocument(type)}
+                      >
+                        {expandedDoc === type ? (
+                          <>
+                            <ChevronUp className="h-3 w-3 mr-1" />
+                            Ocultar
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-3 w-3 mr-1" />
+                            Ver aqui
+                          </>
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </div>
+                <CollapsibleContent>
+                  <ScrollArea className="h-48 border-t border-border">
+                    <div className="p-4 prose prose-invert prose-sm max-w-none">
+                      {doc?.content ? (
+                        <ReactMarkdown>{doc.content}</ReactMarkdown>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">Carregando...</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          ))}
+        </div>
 
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border">
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
           <Checkbox
-            id={`accept-${step}`}
-            checked={currentAccepted}
-            onCheckedChange={(checked) => setCurrentAccepted(checked as boolean)}
+            id="accept-all"
+            checked={accepted}
+            onCheckedChange={(checked) => setAccepted(checked as boolean)}
+            className="mt-0.5"
           />
           <label
-            htmlFor={`accept-${step}`}
+            htmlFor="accept-all"
             className="text-sm font-body leading-relaxed cursor-pointer"
           >
-            Li e aceito {step === "terms" && "os Termos de Uso"}
-            {step === "privacy" && "a Política de Privacidade"}
-            {step === "blockchain" && "a Política de Registro em Blockchain"}
+            Li e aceito os <strong>Termos de Uso</strong>, a <strong>Política de Privacidade</strong> e a <strong>Política de Blockchain</strong>
           </label>
         </div>
 
-        <DialogFooter className="flex gap-2">
-          {step !== "terms" && (
-            <Button
-              variant="outline"
-              onClick={() => setStep(step === "blockchain" ? "privacy" : "terms")}
-              disabled={loading}
-            >
-              Voltar
-            </Button>
-          )}
+        <DialogFooter>
           <Button
-            onClick={handleNext}
-            disabled={!canProceed || loading}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={handleAcceptAll}
+            disabled={!accepted || loading}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Salvando...
               </>
-            ) : isLastStep ? (
-              "Confirmar e Continuar"
             ) : (
-              "Próximo"
+              "Confirmar e Continuar"
             )}
           </Button>
         </DialogFooter>

@@ -18,6 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserPlus, ArrowLeft } from "lucide-react";
+import { 
+  formatDocument, 
+  getDocumentPlaceholder, 
+  getDocumentMaxLength 
+} from "@/lib/documentFormatters";
 
 export interface Author {
   id: string;
@@ -41,31 +46,8 @@ export function AddAuthorModal({ open, onClose, onAdd }: AddAuthorModalProps) {
   const [documentType, setDocumentType] = useState<"CPF" | "CNPJ">("CPF");
   const [documentNumber, setDocumentNumber] = useState("");
 
-  const formatCpf = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
-      .substring(0, 14);
-  };
-
-  const formatCnpj = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})$/, "$1-$2")
-      .substring(0, 18);
-  };
-
   const handleDocumentChange = (value: string) => {
-    if (documentType === "CPF") {
-      setDocumentNumber(formatCpf(value));
-    } else {
-      setDocumentNumber(formatCnpj(value));
-    }
+    setDocumentNumber(formatDocument(value, documentType));
   };
 
   const handleDocumentTypeChange = (type: "CPF" | "CNPJ") => {
@@ -110,13 +92,13 @@ export function AddAuthorModal({ open, onClose, onAdd }: AddAuthorModalProps) {
 
   const isValidDocument = () => {
     const numbers = documentNumber.replace(/\D/g, "");
-    if (documentType === "CPF") {
-      return numbers.length === 11;
-    }
-    return numbers.length === 14;
+    return documentType === "CPF" ? numbers.length === 11 : numbers.length === 14;
   };
 
   const isFormValid = name.trim() && isValidEmail(email) && isValidDocument();
+
+  const placeholder = getDocumentPlaceholder(documentType);
+  const maxLength = getDocumentMaxLength(documentType);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -187,9 +169,9 @@ export function AddAuthorModal({ open, onClose, onAdd }: AddAuthorModalProps) {
               id="author-document"
               value={documentNumber}
               onChange={(e) => handleDocumentChange(e.target.value)}
-              placeholder={documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00"}
+              placeholder={placeholder}
               className="font-body"
-              maxLength={documentType === "CPF" ? 14 : 18}
+              maxLength={maxLength}
               required
             />
           </div>

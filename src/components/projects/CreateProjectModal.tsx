@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Building2, User } from "lucide-react";
 import { CreateProjectData } from "@/hooks/useProjects";
+import { formatDocument } from "@/lib/documentFormatters";
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -68,21 +69,8 @@ export function CreateProjectModal({
     }
   };
 
-  const formatDocument = (value: string, type: "CPF" | "CNPJ") => {
-    const numbers = value.replace(/\D/g, "");
-    if (type === "CPF") {
-      return numbers
-        .slice(0, 11)
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d{1,2})/, "$1-$2");
-    }
-    return numbers
-      .slice(0, 14)
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})/, "$1-$2");
+  const getFormattedDocument = () => {
+    return formatDocument(formData.document_number, formData.document_type);
   };
 
   return (
@@ -153,7 +141,7 @@ export function CreateProjectModal({
                   ? "000.000.000-00"
                   : "00.000.000/0000-00"
               }
-              value={formatDocument(formData.document_number, formData.document_type)}
+              value={getFormattedDocument()}
               onChange={(e) =>
                 setFormData({
                   ...formData,

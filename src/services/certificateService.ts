@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface CertificateData {
   title: string;
@@ -69,6 +70,28 @@ async function generateQRCodeDataURL(text: string, size: number = 150): Promise<
   }
 }
 
+// Load image as data URL for embedding in PDF
+async function loadImageAsDataURL(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } else {
+        reject(new Error("Could not get canvas context"));
+      }
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 // Helper to draw section title with elegant underline
 function drawSectionTitle(pdf: jsPDF, title: string, x: number, y: number, width: number): number {
   pdf.setTextColor(colors.primary.r, colors.primary.g, colors.primary.b);
@@ -112,9 +135,12 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
 
   const { certificateData } = response.data as { certificateData: CertificateData };
 
-  // Generate QR Code
+  // Generate QR Code and load logo
   const verificationUrl = `https://webmarcas.net/verificar/${registroId}`;
-  const qrCodeDataUrl = await generateQRCodeDataURL(verificationUrl, 120);
+  const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
+    generateQRCodeDataURL(verificationUrl, 120),
+    loadImageAsDataURL(webmarcasLogo).catch(() => ""),
+  ]);
 
   // Create PDF
   const pdf = new jsPDF({
@@ -153,30 +179,41 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
   pdf.setLineWidth(0.5);
   pdf.rect(12, 12, pageWidth - 24, pageHeight - 24);
 
-  // ===== PREMIUM HEADER (WHITE BACKGROUND) =====
-  let y = margin + 6;
+  // ===== PREMIUM HEADER WITH LOGO =====
+  let y = margin + 4;
   
-  // Company name - elegant dark blue
+  // Add logo if available
+  const logoSize = 14;
+  if (logoDataUrl) {
+    try {
+      pdf.addImage(logoDataUrl, "PNG", margin, y - 2, logoSize, logoSize);
+    } catch (e) {
+      console.error("Error adding logo:", e);
+    }
+  }
+  
+  // Company name - elegant dark blue (positioned after logo)
+  const textStartX = logoDataUrl ? margin + logoSize + 4 : margin;
   pdf.setTextColor(colors.primary.r, colors.primary.g, colors.primary.b);
-  pdf.setFontSize(22);
+  pdf.setFontSize(20);
   pdf.setFont("helvetica", "bold");
-  pdf.text("WEBMARCAS", margin, y);
+  pdf.text("WEBMARCAS", textStartX, y + 4);
   
   // Tagline
-  pdf.setFontSize(9);
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(colors.muted.r, colors.muted.g, colors.muted.b);
-  pdf.text("Uma empresa WebPatentes", margin, y + 6);
+  pdf.text("Uma empresa WebPatentes", textStartX, y + 9);
 
   // Contact info on right - smaller and muted
-  pdf.setFontSize(8);
+  pdf.setFontSize(7);
   pdf.setTextColor(colors.light.r, colors.light.g, colors.light.b);
-  pdf.text("www.webmarcas.net", pageWidth - margin, y - 2, { align: "right" });
-  pdf.text("ola@webmarcas.net", pageWidth - margin, y + 3, { align: "right" });
+  pdf.text("www.webmarcas.net", pageWidth - margin, y, { align: "right" });
+  pdf.text("ola@webmarcas.net", pageWidth - margin, y + 4, { align: "right" });
   pdf.text("(11) 91112-0225", pageWidth - margin, y + 8, { align: "right" });
 
   // Accent line under header
-  y += 12;
+  y += 14;
   pdf.setDrawColor(colors.accent.r, colors.accent.g, colors.accent.b);
   pdf.setLineWidth(0.8);
   pdf.line(margin, y, pageWidth - margin, y);

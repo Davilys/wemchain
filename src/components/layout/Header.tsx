@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, ChevronDown, Shield, Coins } from "lucide-react";
+import { Menu, User, LogOut, ChevronDown, Shield, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MobileNav } from "./MobileNav";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import {
   DropdownMenu,
@@ -170,84 +171,17 @@ export function Header() {
           <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(true)}
               className="p-2 rounded-xl hover:bg-muted/50 transition-colors text-foreground"
               aria-label="Menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in bg-background/95 backdrop-blur-xl -mx-4 px-4">
-            <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium font-body transition-colors ${
-                    isActive(link.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className="border-t border-border pt-4 mt-3 flex flex-col gap-2">
-                {user ? (
-                  <>
-                    {/* Mobile Credits Display */}
-                    <Link 
-                      to="/creditos"
-                      className="flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 border border-primary/20"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Coins className="h-4 w-4 text-primary" />
-                        <span className="font-body font-medium text-foreground">Créditos disponíveis</span>
-                      </div>
-                      <span className="font-display font-bold text-primary text-lg">
-                        {creditsLoading ? "..." : credits?.available_credits || 0}
-                      </span>
-                    </Link>
-                    <Button asChild className="justify-start bg-primary text-primary-foreground font-body rounded-xl">
-                      <Link to="/checkout">
-                        <Coins className="h-4 w-4 mr-2" />
-                        Comprar créditos
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild className="justify-start font-body rounded-xl">
-                      <Link to="/dashboard">
-                        <User className="h-4 w-4 mr-2" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" onClick={signOut} className="justify-start text-destructive font-body rounded-xl">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sair
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" asChild className="font-body rounded-xl">
-                      <Link to="/login">
-                        Área do Cliente
-                      </Link>
-                    </Button>
-                    <Button asChild className="bg-primary text-primary-foreground font-body font-semibold rounded-xl shadow-lg">
-                      <Link to="/verificar">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Consultar Marca
-                      </Link>
-                    </Button>
-                  </>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
+        {/* Mobile Navigation Sheet */}
+        <MobileNav open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
       </div>
     </header>
   );

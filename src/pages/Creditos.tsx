@@ -174,7 +174,7 @@ export default function Creditos() {
                   <Building2 className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-display font-bold text-foreground text-lg">Business</p>
-                    <p className="font-body text-xs text-muted-foreground">Gestão de Propriedade Intelectual</p>
+                    <p className="font-body text-xs text-muted-foreground">Registro de Propriedade Intelectual</p>
                   </div>
                 </div>
                 <p className="font-display text-3xl font-bold text-primary mb-1">

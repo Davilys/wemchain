@@ -76,7 +76,7 @@ const PLANS: Plan[] = [
     name: "Business",
     price: 99,
     credits: 3,
-    description: "Gestão de Propriedade Intelectual",
+    description: "Registro de Propriedade Intelectual em Blockchain",
     features: [
       "3 créditos de registro inclusos por mês",
       "Registros adicionais por R$ 39,00 cada",

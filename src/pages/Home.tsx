@@ -46,13 +46,13 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-10 animate-fade-up">
               <Shield className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-primary tracking-wide">
-                Plataforma de Gestão de Propriedade Intelectual
+                Registro de Propriedade Intelectual em Blockchain
               </span>
             </div>
 
             {/* Main Title */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
-              <span className="text-foreground">Gestão de Propriedade Intelectual</span>
+              <span className="text-foreground">Registro de Propriedade Intelectual</span>
               <br />
               <span className="text-foreground">com Prova em </span>
               <span className="text-primary text-shadow-glow">Blockchain</span>
@@ -60,8 +60,8 @@ export default function Home() {
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
-              Centralize, registre e gerencie seus registros de propriedade com{" "}
-              <span className="text-foreground font-medium">segurança jurídica</span>, certificado digital e{" "}
+              Registre seus arquivos digitais com{" "}
+              <span className="text-foreground font-medium">prova de anterioridade</span>, certificado digital e{" "}
               <span className="text-foreground font-medium">verificação pública em blockchain</span>.
             </p>
 
@@ -197,7 +197,7 @@ export default function Home() {
                 <span className="text-sm font-semibold text-primary">Plano Recomendado</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                Plano Business – <span className="text-primary">Gestão de Propriedade Intelectual</span>
+                Plano Business – <span className="text-primary">Registro de Propriedade Intelectual</span>
               </h2>
               <div className="flex items-baseline justify-center gap-2 mb-4">
                 <span className="text-5xl md:text-6xl font-bold text-foreground">R$ 99</span>

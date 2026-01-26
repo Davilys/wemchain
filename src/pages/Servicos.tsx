@@ -59,7 +59,7 @@ const plans = [
     icon: Crown,
     price: "R$ 99",
     period: "/mês",
-    description: "Gestão de Propriedade Intelectual",
+    description: "Registro de Propriedade Intelectual em Blockchain",
     features: [
       "3 créditos de registro inclusos por mês",
       "Registros adicionais por R$ 39,00 cada",

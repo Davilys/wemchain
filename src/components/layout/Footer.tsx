@@ -111,8 +111,15 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Transparency Notice */}
+        <div className="border-t border-border/30 mt-12 pt-6">
+          <p className="text-center text-muted-foreground/60 text-xs italic max-w-2xl mx-auto leading-relaxed">
+            Funcionalidades avançadas de gestão poderão ser disponibilizadas futuramente. No momento, o plano contempla exclusivamente os recursos descritos acima.
+          </p>
+        </div>
+
         {/* Bottom Bar */}
-        <div className="border-t border-border/30 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-border/30 mt-6 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
             <p className="text-muted-foreground/60 text-sm">
               © {currentYear} WebMarcas. Todos os direitos reservados.

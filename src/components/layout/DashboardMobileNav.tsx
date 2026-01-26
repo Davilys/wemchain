@@ -9,6 +9,7 @@ import {
   Home,
   Shield,
   FolderOpen,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +69,13 @@ const menuItems = [
     icon: Award,
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
+  },
+  {
+    title: "Minha Conta",
+    url: "/conta",
+    icon: User,
+    color: "text-slate-500",
+    bgColor: "bg-slate-500/10",
   },
 ];
 

@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Configuração de planos - CORRIGIDO PLANO BUSINESS
+// Configuração de planos - PLANO BUSINESS CORRIGIDO
 const PLANS: Record<string, {
   name: string;
   value: number;
@@ -31,14 +31,14 @@ const PLANS: Record<string, {
   BUSINESS: {
     name: "Business",
     value: 99.00,
-    credits: 1, // CORRIGIDO: 1 crédito incluso, não 5
-    description: "Plano Business - Gestão de Propriedade Intelectual",
+    credits: 3, // CORRIGIDO: 3 créditos inclusos por mês
+    description: "Plano Business - Gestão de Propriedade Intelectual (3 créditos/mês)",
     isSubscription: true,
     cycle: "MONTHLY",
   },
   ADICIONAL: {
     name: "Registro Adicional",
-    value: 49.00,
+    value: 39.00, // CORRIGIDO: R$ 39,00 por registro adicional
     credits: 1,
     description: "Registro Adicional de Propriedade",
     isSubscription: false,

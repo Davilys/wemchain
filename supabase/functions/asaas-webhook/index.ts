@@ -5,11 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
 };
 
-// Configuração de planos
+// Configuração de planos - PLANO BUSINESS CORRIGIDO
 const PLAN_CONFIG: Record<string, { credits: number; isSubscription: boolean }> = {
   BASICO: { credits: 1, isSubscription: false },
   PROFISSIONAL: { credits: 5, isSubscription: false },
-  MENSAL: { credits: 5, isSubscription: true },
+  BUSINESS: { credits: 3, isSubscription: true }, // CORRIGIDO: 3 créditos por mês
+  ADICIONAL: { credits: 1, isSubscription: false }, // Registro adicional R$ 39
 };
 
 // Eventos ASAAS que liberam créditos
@@ -335,7 +336,7 @@ async function handleSubscriptionPaymentConfirmed(
     return { action: "SKIPPED - Subscription not found", credits: 0, error: "Assinatura não encontrada" };
   }
 
-  const credits = subscription.credits_per_cycle || 5;
+  const credits = subscription.credits_per_cycle || 3; // CORRIGIDO: Default para 3 créditos
 
   // Usar função atômica do ledger com reset (assinatura)
   const { data: result, error } = await supabase.rpc("add_credits_atomic", {
@@ -400,9 +401,9 @@ async function handleSubscriptionCreated(
       user_id: externalReference,
       asaas_subscription_id: subscriptionId,
       asaas_customer_id: customerId,
-      plan_type: "MENSAL",
+      plan_type: "BUSINESS",
       status: "PENDING",
-      credits_per_cycle: 5,
+      credits_per_cycle: 3, // CORRIGIDO: 3 créditos por ciclo
     });
 
     return { action: "SUBSCRIPTION_CREATED", error: null };
@@ -497,6 +498,8 @@ async function handlePaymentFailed(
 // Determinar tipo de plano pelo valor
 function determinePlanType(value: number): string {
   if (value >= 149) return "PROFISSIONAL";
-  if (value >= 99) return "MENSAL";
+  if (value >= 99) return "BUSINESS";
+  if (value >= 49) return "BASICO";
+  if (value >= 39) return "ADICIONAL";
   return "BASICO";
 }

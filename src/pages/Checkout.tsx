@@ -75,11 +75,11 @@ const PLANS: Plan[] = [
     id: "BUSINESS",
     name: "Business",
     price: 99,
-    credits: 1,
+    credits: 3,
     description: "Gestão de Propriedade Intelectual",
     features: [
-      "1 crédito de registro incluso por mês",
-      "Registros adicionais por R$ 49,00 cada",
+      "3 créditos de registro inclusos por mês",
+      "Registros adicionais por R$ 39,00 cada",
       "Gestão de projetos e registros de propriedade",
       "Organização por linha do tempo",
       "Cadastro e gestão de clientes",
@@ -97,7 +97,7 @@ const PLANS: Plan[] = [
 const PLANO_ADICIONAL: Plan = {
   id: "ADICIONAL",
   name: "Registro Adicional",
-  price: 49,
+  price: 39,
   credits: 1,
   description: "Para assinantes Business",
   features: [
@@ -469,7 +469,7 @@ export default function Checkout() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-display text-2xl font-bold text-primary">R$ 49</p>
+                      <p className="font-display text-2xl font-bold text-primary">R$ 39</p>
                       <p className="font-body text-xs text-muted-foreground">por registro</p>
                     </div>
                   </div>

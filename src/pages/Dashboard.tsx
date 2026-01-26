@@ -286,9 +286,14 @@ export default function Dashboard() {
         <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
           <div className="flex items-start gap-3">
             <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-            <p className="font-body text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Prova de Anterioridade:</strong> Seus registros em blockchain garantem prova técnica de anterioridade com validade jurídica conforme CPC Art. 369. Este serviço não substitui o registro junto ao INPI.
-            </p>
+            <div className="space-y-2">
+              <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Prova de Anterioridade:</strong> Seus registros em blockchain garantem prova técnica de anterioridade com validade jurídica conforme CPC Art. 369. Este serviço não substitui o registro junto ao INPI.
+              </p>
+              <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Plano Business:</strong> Os créditos do plano são renovados mensalmente e não acumulam. Registros adicionais podem ser adquiridos a qualquer momento enquanto a assinatura estiver ativa.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_action_logs: {
+        Row: {
+          action_type: string
+          admin_id: string
+          admin_role: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          admin_role: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          admin_role?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       asaas_payments: {
         Row: {
           asaas_payment_id: string | null
@@ -772,10 +811,12 @@ export type Database = {
         Args: { p_asaas_subscription_id: string }
         Returns: string
       }
+      get_user_admin_role: { Args: { _user_id: string }; Returns: string }
       handle_payment_refund: {
         Args: { p_asaas_payment_id: string; p_refund_amount?: number }
         Returns: Json
       }
+      has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -814,7 +855,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role:
+        | "admin"
+        | "user"
+        | "super_admin"
+        | "suporte"
+        | "financeiro"
+        | "auditor"
       credit_operation: "ADD" | "CONSUME" | "REFUND" | "ADJUST" | "EXPIRE"
       registro_status: "pendente" | "processando" | "confirmado" | "falhou"
       timestamp_method: "OPEN_TIMESTAMP" | "BYTESTAMP" | "SMART_CONTRACT"
@@ -946,7 +993,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: [
+        "admin",
+        "user",
+        "super_admin",
+        "suporte",
+        "financeiro",
+        "auditor",
+      ],
       credit_operation: ["ADD", "CONSUME", "REFUND", "ADJUST", "EXPIRE"],
       registro_status: ["pendente", "processando", "confirmado", "falhou"],
       timestamp_method: ["OPEN_TIMESTAMP", "BYTESTAMP", "SMART_CONTRACT"],

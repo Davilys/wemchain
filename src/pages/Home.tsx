@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Shield, 
   Clock, 
@@ -13,26 +13,33 @@ import {
   Globe,
   FileText,
   Award,
-  Database,
-  Sparkles,
-  BadgeCheck,
-  ShieldCheck,
-  Star,
+  Image,
+  Video,
+  Code,
+  Table,
+  Mail,
   Users,
-  TrendingUp
+  FolderOpen,
+  UserPlus,
+  ArrowLeftRight,
+  LayoutDashboard,
+  BadgeCheck,
+  HelpCircle,
+  MessageCircle
 } from "lucide-react";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export default function Home() {
+  const whatsappNumber = "5511911120225";
+  const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre o Plano Business da WebMarcas.");
+
   return (
     <Layout>
-      {/* Hero Section - WebMarcas Premium Style */}
+      {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
-        {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-radial" />
         <div className="absolute inset-0 pattern-dots" />
         
-        {/* Glowing orbs - subtle blue */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-primary/5 rounded-full blur-[150px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-primary/3 rounded-full blur-[120px]" />
         
@@ -40,24 +47,25 @@ export default function Home() {
           <div className="max-w-5xl mx-auto text-center">
             {/* Premium Badge */}
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-10 animate-fade-up">
-              <Award className="h-4 w-4 text-primary" />
+              <Shield className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-primary tracking-wide">
-                Prova de Anterioridade em Blockchain
+                Plataforma de Gestão de Propriedade Intelectual
               </span>
             </div>
 
-            {/* Main Title - WebMarcas Style */}
+            {/* Main Title */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
-              <span className="text-foreground">Registre sua criação na</span>
+              <span className="text-foreground">Gestão de Propriedade Intelectual</span>
               <br />
-              <span className="text-primary text-shadow-glow">Blockchain!</span>
+              <span className="text-foreground">com Prova em </span>
+              <span className="text-primary text-shadow-glow">Blockchain</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
-              Comprove a <span className="text-foreground font-medium">existência e autoria</span> do seu arquivo com registro imutável.
-              <br className="hidden sm:block" />
-              <span className="text-foreground font-medium">Prova jurídica de anterioridade</span> aceita em tribunais.
+              Centralize, registre e gerencie seus registros de propriedade com{" "}
+              <span className="text-foreground font-medium">segurança jurídica</span>, certificado digital e{" "}
+              <span className="text-foreground font-medium">verificação pública em blockchain</span>.
             </p>
 
             {/* CTA Buttons */}
@@ -68,7 +76,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Registrar Agora
+                  Assinar Plano Business
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -78,33 +86,32 @@ export default function Home() {
                 variant="outline"
                 className="border-2 border-secondary bg-secondary/80 text-foreground hover:bg-secondary font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
               >
-                <Link to="/servicos">
-                  Ver Preços
+                <Link to="/como-funciona">
+                  Ver como funciona
                 </Link>
               </Button>
             </div>
 
             {/* Trust Badge */}
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary/60 border border-border/50 mb-12 animate-fade-up delay-400">
-              <ShieldCheck className="h-4 w-4 text-green-500" />
+              <BadgeCheck className="h-4 w-4 text-green-500" />
               <span className="text-sm text-muted-foreground">
-                Registro permanente e <span className="text-foreground font-medium">verificável publicamente</span>
+                <span className="text-foreground font-medium">R$ 99/mês</span> com 3 créditos de registro inclusos
               </span>
             </div>
 
             {/* Feature Cards Row */}
             <div className="flex flex-wrap gap-4 justify-center items-center animate-fade-up delay-500 px-4 max-w-4xl mx-auto">
               {[
-                { icon: Lock, color: "text-blue-500", bg: "bg-blue-500/10", label: "Imutável" },
-                { icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", label: "Instantâneo" },
-                { icon: Globe, color: "text-green-500", bg: "bg-green-500/10", label: "Verificável" },
-                { icon: Award, color: "text-yellow-500", bg: "bg-yellow-500/10", label: "Certificado" },
+                { icon: FolderOpen, color: "text-blue-500", bg: "bg-blue-500/10", label: "Gestão de Projetos" },
+                { icon: Lock, color: "text-purple-500", bg: "bg-purple-500/10", label: "Prova em Blockchain" },
+                { icon: Award, color: "text-green-500", bg: "bg-green-500/10", label: "Certificado Digital" },
+                { icon: Globe, color: "text-yellow-500", bg: "bg-yellow-500/10", label: "Verificação Pública" },
               ].map((item, index) => (
                 <div 
                   key={index} 
                   className="relative flex flex-col items-center p-5 rounded-2xl bg-card border border-border/50 min-w-[140px] group hover:-translate-y-1 transition-all duration-300"
                 >
-                  {/* Decorative corner gradient */}
                   <div className={`absolute top-0 right-0 w-16 h-16 ${item.bg} rounded-bl-[60px] rounded-tr-2xl opacity-50`} />
                   <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center mb-3 relative z-10`}>
                     <item.icon className={`h-6 w-6 ${item.color}`} />
@@ -116,128 +123,64 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Bottom gradient fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-card to-transparent" />
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 md:py-16 bg-card relative border-y border-border/30">
+      {/* O que é a WebMarcas */}
+      <section className="py-16 md:py-24 bg-card relative border-y border-border/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
-            {[
-              { value: "10.000+", label: "Arquivos Registrados", icon: FileCheck },
-              { value: "100%", label: "Verificáveis", icon: CheckCircle2 },
-              { value: "Minutos", label: "Tempo de Registro", icon: Clock },
-              { value: "Eterno", label: "Validade na Blockchain", icon: Database },
-            ].map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors">
-                  <stat.icon className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-                </div>
-                <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Shield className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Sobre a Plataforma</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+              O que é a <span className="text-primary">WebMarcas</span>?
+            </h2>
+            <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-3xl mx-auto">
+              A WebMarcas é uma plataforma de <strong className="text-foreground">gestão de propriedade intelectual</strong>, 
+              que permite registrar arquivos digitais em blockchain para gerar prova técnica de anterioridade, 
+              organizar projetos, gerenciar clientes e controlar a titularidade de registros de forma segura e auditável.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* What is Blockchain Registration */}
+      {/* Registros de Propriedade em Blockchain */}
       <section className="section-padding bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial-bottom opacity-50" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Database className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Tecnologia Blockchain</span>
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Tipos de Registros</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              O que é Registro em{" "}
-              <span className="text-primary">Blockchain</span>?
+              Registros de Propriedade em{" "}
+              <span className="text-primary">Blockchain</span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed px-4">
-              Uma tecnologia que cria uma prova digital imutável da existência do seu arquivo em determinada data e hora, 
-              servindo como evidência jurídica de anterioridade.
+              Qualquer arquivo digital pode ser registrado para comprovar existência, autoria e integridade em uma data específica.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
             {[
-              {
-                icon: FileCheck,
-                title: "Hash Criptográfico",
-                desc: 'Seu arquivo é convertido em uma "impressão digital" única (SHA-256) que identifica o conteúdo de forma exclusiva.',
-                color: "text-blue-500",
-                bg: "bg-blue-500/10"
-              },
-              {
-                icon: Clock,
-                title: "Timestamp Imutável",
-                desc: "O hash é gravado na blockchain com data e hora exatas, criando um registro permanente e inalterável.",
-                color: "text-blue-500",
-                bg: "bg-blue-500/10"
-              },
-              {
-                icon: Award,
-                title: "Certificado Digital",
-                desc: "Você recebe um certificado PDF com todos os dados do registro, TXID e QR Code para verificação.",
-                color: "text-green-500",
-                bg: "bg-green-500/10"
-              }
-            ].map((item, index) => (
-              <Card 
-                key={index} 
-                className="card-premium group"
-              >
-                <CardContent className="p-6 md:p-8 text-center">
-                  <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl ${item.bg} flex items-center justify-center mx-auto mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-300`}>
-                    <item.icon className={`h-8 w-8 md:h-10 md:w-10 ${item.color}`} />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4 group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                    {item.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* What You Can Register */}
-      <section className="section-padding bg-card relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-        
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Shield className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Proteção Completa</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              O que você pode{" "}
-              <span className="text-primary">registrar</span>?
-            </h2>
-            <p className="text-muted-foreground text-base md:text-lg leading-relaxed px-4">
-              Qualquer arquivo digital pode ser registrado na blockchain para comprovar sua existência em determinada data.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
-            {[
-              { icon: Shield, title: "Marcas", desc: "Logotipos, nomes e identidades visuais", color: "text-blue-500", bg: "bg-blue-500/10" },
-              { icon: FileText, title: "Obras Autorais", desc: "Textos, músicas, códigos e designs", color: "text-purple-500", bg: "bg-purple-500/10" },
-              { icon: Globe, title: "Documentos", desc: "Contratos, projetos e relatórios", color: "text-green-500", bg: "bg-green-500/10" },
-              { icon: Zap, title: "Invenções", desc: "Protótipos, ideias e inovações", color: "text-yellow-500", bg: "bg-yellow-500/10" },
+              { icon: Image, title: "Imagens", desc: "Logos, artes, plantas", color: "text-blue-500", bg: "bg-blue-500/10" },
+              { icon: FileText, title: "PDFs e documentos", desc: "Contratos, projetos", color: "text-purple-500", bg: "bg-purple-500/10" },
+              { icon: Mail, title: "Evidências digitais", desc: "E-mails, WhatsApp", color: "text-green-500", bg: "bg-green-500/10" },
+              { icon: Video, title: "Vídeos e áudios", desc: "Gravações, podcasts", color: "text-yellow-500", bg: "bg-yellow-500/10" },
+              { icon: Code, title: "Códigos-fonte", desc: "Software, scripts", color: "text-orange-500", bg: "bg-orange-500/10" },
+              { icon: Table, title: "Planilhas e dados", desc: "Excel, CSV, datasets", color: "text-blue-500", bg: "bg-blue-500/10" },
             ].map((item, index) => (
               <Card key={index} className="card-premium group">
                 <CardContent className="p-4 md:p-6">
                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl ${item.bg} flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform duration-300`}>
                     <item.icon className={`h-6 w-6 md:h-7 md:w-7 ${item.color}`} />
                   </div>
-                  <h3 className="text-base md:text-lg font-bold mb-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <h3 className="text-base md:text-lg font-bold mb-1 group-hover:text-primary transition-colors">{item.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">{item.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -245,119 +188,250 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="section-padding bg-background relative">
+      {/* Plano Business - Destaque Principal */}
+      <section className="section-padding bg-primary/5 relative border-y border-primary/20">
         <div className="absolute inset-0 bg-gradient-radial opacity-30" />
         
         <div className="container mx-auto px-4 relative">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <Zap className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Plano Recomendado</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+                Plano Business – <span className="text-primary">Gestão de Propriedade Intelectual</span>
+              </h2>
+              <div className="flex items-baseline justify-center gap-2 mb-4">
+                <span className="text-5xl md:text-6xl font-bold text-foreground">R$ 99</span>
+                <span className="text-xl text-muted-foreground">/ mês</span>
+              </div>
+              <p className="text-lg text-primary font-semibold mb-6">
+                3 créditos de registro inclusos por mês
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-10">
+              {[
+                { icon: FileCheck, text: "3 créditos de registro em blockchain por mês" },
+                { icon: Zap, text: "Registros adicionais por R$ 39,00 cada" },
+                { icon: FolderOpen, text: "Gestão de projetos e registros de propriedade" },
+                { icon: Clock, text: "Organização em linha do tempo" },
+                { icon: Users, text: "Cadastro e gestão de clientes" },
+                { icon: UserPlus, text: "Definição de funções para equipe" },
+                { icon: ArrowLeftRight, text: "Transferência de propriedade (titularidade)" },
+                { icon: LayoutDashboard, text: "Dashboard completo" },
+                { icon: Award, text: "Certificados digitais em PDF" },
+                { icon: Globe, text: "Verificação pública em blockchain" },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-sm md:text-base text-foreground">{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Button 
+                asChild 
+                size="lg" 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg px-10 py-7 rounded-xl shadow-lg btn-premium group"
+              >
+                <Link to="/cadastro">
+                  Assinar Plano Business agora
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Como Funciona */}
+      <section className="section-padding bg-background relative">
+        <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-semibold text-green-500">Vantagens Exclusivas</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Processo Simples</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Vantagens do Registro em{" "}
-              <span className="text-primary">Blockchain</span>
+              Como <span className="text-primary">Funciona</span>
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
             {[
-              { title: "Prova de Anterioridade", desc: "Comprove que seu arquivo existia antes de qualquer disputa", icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10" },
-              { title: "Imutável e Permanente", desc: "Uma vez registrado, ninguém pode alterar ou apagar", icon: Lock, color: "text-purple-500", bg: "bg-purple-500/10" },
-              { title: "Verificação Pública", desc: "Qualquer pessoa pode verificar a autenticidade do registro", icon: Globe, color: "text-green-500", bg: "bg-green-500/10" },
-              { title: "Validade Jurídica", desc: "Aceito como prova técnica em processos judiciais (CPC Art. 369)", icon: Award, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-              { title: "Registro Instantâneo", desc: "Seu arquivo é registrado em minutos, não em meses", icon: Zap, color: "text-orange-500", bg: "bg-orange-500/10" },
-              { title: "Custo Acessível", desc: "Muito mais barato que outros métodos de proteção", icon: BadgeCheck, color: "text-blue-500", bg: "bg-blue-500/10" },
+              { step: "1", title: "Faça o upload", desc: "Envie seu arquivo para a plataforma", icon: FileCheck },
+              { step: "2", title: "Confirme o registro", desc: "Revise os dados e confirme", icon: CheckCircle2 },
+              { step: "3", title: "Prova gerada", desc: "O registro é gravado em blockchain", icon: Lock },
+              { step: "4", title: "Baixe o certificado", desc: "Receba seu certificado digital PDF", icon: Award },
             ].map((item, index) => (
-              <div 
-                key={index} 
-                className="flex gap-4 md:gap-5 p-4 md:p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 group"
-              >
-                <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                  <item.icon className={`h-5 w-5 md:h-6 md:w-6 ${item.color}`} />
+              <div key={index} className="relative text-center p-6 rounded-2xl bg-card border border-border/50 group hover:border-primary/30 transition-all">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
+                  {item.step}
+                </div>
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 mt-2 group-hover:scale-110 transition-transform">
+                  <item.icon className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-muted-foreground max-w-xl mx-auto">
+            Todo o processo é <strong className="text-foreground">simples, rápido e com linguagem clara</strong>, sem complexidade técnica.
+          </p>
+        </div>
+      </section>
+
+      {/* Segurança e Validade */}
+      <section className="py-12 md:py-16 bg-card relative border-y border-border/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative p-6 md:p-8 rounded-2xl bg-green-500/5 border border-green-500/20">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-base md:text-lg font-bold mb-1 md:mb-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <h3 className="text-xl font-bold text-foreground mb-3">Segurança e Validade</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    O registro em blockchain gera uma <strong className="text-foreground">prova técnica de anterioridade</strong>, 
+                    com timestamp imutável e verificação pública.
+                  </p>
+                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                    <p className="text-sm text-muted-foreground">
+                      <strong className="text-yellow-600">⚠️ Importante:</strong> Este serviço não substitui o registro de marca ou patente junto ao INPI. 
+                      Ele atua como prova complementar de existência e autoria.
+                    </p>
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Certificado Digital */}
+      <section className="section-padding bg-background relative">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">Documentação</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight">
+                  Certificado <span className="text-primary">Digital</span>
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  Cada registro confirmado gera um certificado digital em PDF, contendo:
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    "Hash criptográfico",
+                    "Data e hora do registro",
+                    "Blockchain utilizada",
+                    "Dados do titular",
+                    "Verificação independente"
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-foreground">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-8 flex flex-col items-center justify-center">
+                  <Award className="h-20 w-20 text-primary/50 mb-4" />
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-foreground mb-1">Certificado de Registro</p>
+                    <p className="text-sm text-muted-foreground">Blockchain • SHA-256</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Para Quem É */}
+      <section className="section-padding bg-card relative border-y border-border/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Público-Alvo</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+              Para quem é a <span className="text-primary">WebMarcas</span>?
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
+            {[
+              { icon: Shield, title: "Empresas e startups", color: "text-blue-500", bg: "bg-blue-500/10" },
+              { icon: Image, title: "Agências e estúdios criativos", color: "text-purple-500", bg: "bg-purple-500/10" },
+              { icon: Code, title: "Desenvolvedores e equipes técnicas", color: "text-green-500", bg: "bg-green-500/10" },
+              { icon: Video, title: "Criadores de conteúdo", color: "text-yellow-500", bg: "bg-yellow-500/10" },
+              { icon: FileText, title: "Profissionais que precisam comprovar autoria", color: "text-orange-500", bg: "bg-orange-500/10" },
+              { icon: FolderOpen, title: "Quem precisa de organização de projetos", color: "text-blue-500", bg: "bg-blue-500/10" },
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-background border border-border/50 hover:border-primary/30 transition-all group">
+                <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                  <item.icon className={`h-6 w-6 ${item.color}`} />
+                </div>
+                <span className="font-medium text-foreground">{item.title}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-12 md:py-16 bg-card relative border-y border-border/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border-2 border-card flex items-center justify-center">
-                    <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="text-lg md:text-xl font-bold text-foreground">+10.000</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Registros realizados</div>
-              </div>
-            </div>
-            
-            <div className="h-px md:h-12 w-full md:w-px bg-border" />
-            
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-5 w-5 md:h-6 md:w-6 text-yellow-500 fill-yellow-500" />
-                ))}
-              </div>
-              <div>
-                <div className="text-lg md:text-xl font-bold text-foreground">4.9/5</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Avaliação média</div>
-              </div>
-            </div>
-            
-            <div className="h-px md:h-12 w-full md:w-px bg-border" />
-            
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-green-500" />
-              </div>
-              <div>
-                <div className="text-lg md:text-xl font-bold text-foreground">100%</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Imutável e verificável</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Legal Disclaimer */}
-      <section className="py-12 md:py-16 bg-background relative">
+      {/* FAQ Curto */}
+      <section className="section-padding bg-background relative">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="relative p-6 md:p-8 rounded-2xl bg-yellow-500/5 border border-yellow-500/20">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                  <FileText className="h-4 w-4 text-yellow-500" />
-                  <span className="text-xs md:text-sm font-bold text-yellow-500">Aviso Jurídico Importante</span>
-                </div>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <HelpCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Dúvidas Frequentes</span>
               </div>
-              <p className="text-muted-foreground text-center pt-4 text-sm md:text-base leading-relaxed">
-                O registro em blockchain constitui <strong className="text-foreground">prova técnica de anterioridade</strong>, 
-                não substituindo o registro de marca junto ao INPI. Para proteção completa da sua marca, 
-                recomendamos também o{" "}
-                <a 
-                  href="https://www.webpatentes.com.br" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-semibold"
-                >
-                  registro oficial no INPI através da WebPatentes
-                </a>.
-              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                Perguntas <span className="text-primary">Frequentes</span>
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                {
+                  q: "O que é um crédito?",
+                  a: "Cada crédito corresponde a um registro de propriedade em blockchain."
+                },
+                {
+                  q: "Os créditos acumulam?",
+                  a: "Não. Os créditos do plano são renovados mensalmente."
+                },
+                {
+                  q: "Posso comprar registros adicionais?",
+                  a: "Sim. Cada registro adicional custa R$ 39,00."
+                }
+              ].map((faq, index) => (
+                <Card key={index} className="card-premium">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{faq.q}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{faq.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
@@ -379,11 +453,11 @@ export default function Home() {
               />
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight">
-              Proteja sua criação{" "}
+              Proteja e organize sua propriedade intelectual{" "}
               <span className="text-primary">agora</span>
             </h2>
-            <p className="text-muted-foreground text-base md:text-lg mb-8 md:mb-10 leading-relaxed px-4">
-              Registre seu arquivo na blockchain em minutos e garanta prova de anterioridade imutável.
+            <p className="text-muted-foreground text-base md:text-lg mb-4 leading-relaxed px-4">
+              Sem taxas ocultas. Cancele quando quiser.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Button 
@@ -392,7 +466,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Criar Conta Grátis
+                  Assinar Plano Business por R$ 99,00/mês
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -402,9 +476,14 @@ export default function Home() {
                 variant="outline"
                 className="border-2 border-border bg-card/50 text-foreground hover:bg-card font-semibold px-8 py-6 md:py-7 rounded-xl backdrop-blur-sm w-full sm:w-auto"
               >
-                <Link to="/como-funciona">
-                  Saiba Como Funciona
-                </Link>
+                <a 
+                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Falar com Especialista
+                </a>
               </Button>
             </div>
           </div>

@@ -205,18 +205,35 @@ export default function Checkout() {
         const session = await supabase.auth.getSession();
         if (!session.data.session) return;
 
-        const response = await supabase.functions.invoke("check-asaas-payment", {
-          body: null,
+        // Build query params for GET request
+        const params = new URLSearchParams();
+        if (paymentData.paymentId) {
+          params.set("paymentId", paymentData.paymentId);
+        }
+        if (paymentData.subscriptionId) {
+          params.set("subscriptionId", paymentData.subscriptionId);
+        }
+
+        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-asaas-payment?${params.toString()}`;
+        
+        const response = await fetch(functionUrl, {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${session.data.session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
         });
 
-        if (response.data?.payments?.[0]?.status === "CONFIRMED") {
-          toast.success("Pagamento confirmado! Créditos liberados.");
-          refetchCredits();
-          clearInterval(interval);
-          navigate("/dashboard");
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Check if payment is confirmed
+          if (data.payment?.status === "CONFIRMED" || data.payments?.[0]?.status === "CONFIRMED") {
+            toast.success("Pagamento confirmado! Créditos liberados.");
+            refetchCredits();
+            clearInterval(interval);
+            navigate("/dashboard");
+          }
         }
       } catch (error) {
         console.error("Error checking payment:", error);

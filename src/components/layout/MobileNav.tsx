@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   FileText,
   Plus,
-  Award
+  Award,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +43,7 @@ const dashboardLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/novo-registro", label: "Novo Registro", icon: Plus },
   { href: "/meus-registros", label: "Meus Registros", icon: FileText },
+  { href: "/projetos", label: "Projetos", icon: FolderOpen },
   { href: "/creditos", label: "Créditos", icon: Coins },
   { href: "/meus-registros?status=confirmado", label: "Certificados", icon: Award },
 ];

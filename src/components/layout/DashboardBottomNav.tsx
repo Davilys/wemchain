@@ -7,9 +7,8 @@ import {
   Coins,
   FolderOpen,
 } from "lucide-react";
-import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 
-const baseMenuItems = [
+const menuItems = [
   {
     title: "Início",
     url: "/dashboard",
@@ -27,6 +26,11 @@ const baseMenuItems = [
     isMain: true,
   },
   {
+    title: "Projetos",
+    url: "/projetos",
+    icon: FolderOpen,
+  },
+  {
     title: "Créditos",
     url: "/creditos",
     icon: Coins,
@@ -35,29 +39,6 @@ const baseMenuItems = [
 
 export function DashboardBottomNav() {
   const location = useLocation();
-  const { isBusinessPlan } = useBusinessPlan();
-
-  // Add Projetos for Business plan users (replaces Créditos in bottom nav)
-  const menuItems = isBusinessPlan
-    ? [
-        baseMenuItems[0], // Início
-        baseMenuItems[1], // Registros
-        baseMenuItems[2], // Novo (main)
-        {
-          title: "Projetos",
-          url: "/projetos",
-          icon: FolderOpen,
-        },
-        baseMenuItems[3], // Créditos
-      ]
-    : [
-        ...baseMenuItems,
-        {
-          title: "Projetos",
-          url: "/projetos",
-          icon: FolderOpen,
-        },
-      ];
 
   const isActive = (url: string) => {
     if (url.includes("?")) {

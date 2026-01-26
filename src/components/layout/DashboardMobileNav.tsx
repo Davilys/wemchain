@@ -7,7 +7,8 @@ import {
   Award,
   LogOut,
   Home,
-  Shield
+  Shield,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,6 +47,13 @@ const menuItems = [
     icon: FileText,
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
+  },
+  {
+    title: "Projetos",
+    url: "/projetos",
+    icon: FolderOpen,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
   },
   {
     title: "Créditos",

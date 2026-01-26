@@ -58,7 +58,9 @@ import {
   CheckCircle,
   Key,
   LogOut,
-  Users
+  Users,
+  Crown,
+  CrownIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -89,6 +91,13 @@ interface UserRegistro {
   created_at: string;
 }
 
+interface UserSubscription {
+  id: string;
+  plan_type: string;
+  status: string;
+  credits_per_cycle: number;
+}
+
 export default function AdminUsuarios() {
   const { user: adminUser } = useAuth();
   const { logAdminAction } = useAdminAuditLog();
@@ -100,6 +109,7 @@ export default function AdminUsuarios() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
   const [userRegistros, setUserRegistros] = useState<UserRegistro[]>([]);
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -117,6 +127,12 @@ export default function AdminUsuarios() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createData, setCreateData] = useState({ email: "", password: "", full_name: "", initial_credits: 0 });
   const [creating, setCreating] = useState(false);
+
+  // Subscription management dialog
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+  const [subscriptionAction, setSubscriptionAction] = useState<"grant" | "revoke" | "update">("grant");
+  const [subscriptionData, setSubscriptionData] = useState({ credits_per_cycle: 5 });
+  const [managingSubscription, setManagingSubscription] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -145,16 +161,21 @@ export default function AdminUsuarios() {
     setDetailsLoading(true);
 
     try {
-      const [creditsResult, registrosResult] = await Promise.all([
+      const [creditsResult, registrosResult, subscriptionResult] = await Promise.all([
         supabase.from("credits").select("*").eq("user_id", user.user_id).maybeSingle(),
         supabase.from("registros").select("id, nome_ativo, status, created_at")
           .eq("user_id", user.user_id)
           .order("created_at", { ascending: false })
           .limit(10),
+        supabase.from("asaas_subscriptions").select("id, plan_type, status, credits_per_cycle")
+          .eq("user_id", user.user_id)
+          .eq("status", "ACTIVE")
+          .maybeSingle(),
       ]);
 
       setUserCredits(creditsResult.data);
       setUserRegistros(registrosResult.data || []);
+      setUserSubscription(subscriptionResult.data);
     } catch (error) {
       console.error("Error fetching user details:", error);
     } finally {
@@ -309,6 +330,78 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function openSubscriptionDialog(user: UserProfile, action: "grant" | "revoke" | "update") {
+    setSelectedUser(user);
+    setSubscriptionAction(action);
+    setSubscriptionData({ credits_per_cycle: 5 });
+    
+    // Se for update, buscar dados atuais
+    if (action === "update") {
+      const { data } = await supabase
+        .from("asaas_subscriptions")
+        .select("credits_per_cycle")
+        .eq("user_id", user.user_id)
+        .eq("status", "ACTIVE")
+        .maybeSingle();
+      
+      if (data) {
+        setSubscriptionData({ credits_per_cycle: data.credits_per_cycle });
+      }
+    }
+    
+    setSubscriptionDialogOpen(true);
+  }
+
+  async function handleManageSubscription() {
+    if (!selectedUser) return;
+    setManagingSubscription(true);
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        throw new Error("Sessão não encontrada");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-manage-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            action: subscriptionAction,
+            user_id: selectedUser.user_id,
+            plan_type: "BUSINESS",
+            credits_per_cycle: subscriptionData.credits_per_cycle,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao gerenciar assinatura");
+      }
+
+      const messages = {
+        grant: "Plano Business concedido com sucesso!",
+        revoke: "Plano Business revogado com sucesso!",
+        update: "Plano Business atualizado com sucesso!",
+      };
+
+      toast.success(messages[subscriptionAction]);
+      setSubscriptionDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao gerenciar assinatura");
+    } finally {
+      setManagingSubscription(false);
+    }
+  }
+
   const filteredUsers = users.filter((user) => {
     const search = searchTerm.toLowerCase();
     return (
@@ -447,6 +540,19 @@ export default function AdminUsuarios() {
                             <DropdownMenuItem onClick={() => openEditDialog(user)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar Dados
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => openSubscriptionDialog(user, "grant")}>
+                              <Crown className="h-4 w-4 mr-2" />
+                              Conceder Plano Business
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openSubscriptionDialog(user, "update")}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar Plano Business
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openSubscriptionDialog(user, "revoke")}>
+                              <CrownIcon className="h-4 w-4 mr-2 text-destructive" />
+                              Revogar Plano Business
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openBlockDialog(user)}>
@@ -721,6 +827,75 @@ export default function AdminUsuarios() {
               >
                 {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Criar Usuário
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Subscription Management Dialog */}
+        <Dialog open={subscriptionDialogOpen} onOpenChange={setSubscriptionDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-warning" />
+                {subscriptionAction === "grant" && "Conceder Plano Business"}
+                {subscriptionAction === "revoke" && "Revogar Plano Business"}
+                {subscriptionAction === "update" && "Editar Plano Business"}
+              </DialogTitle>
+              <DialogDescription>
+                {subscriptionAction === "grant" && 
+                  `Conceder acesso ao Plano Business para ${selectedUser?.full_name || "este usuário"}.`}
+                {subscriptionAction === "revoke" && 
+                  `Revogar o acesso ao Plano Business de ${selectedUser?.full_name || "este usuário"}.`}
+                {subscriptionAction === "update" && 
+                  `Atualizar configurações do Plano Business de ${selectedUser?.full_name || "este usuário"}.`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {(subscriptionAction === "grant" || subscriptionAction === "update") && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="credits_cycle">Créditos por Ciclo</Label>
+                  <Input
+                    id="credits_cycle"
+                    type="number"
+                    min="1"
+                    value={subscriptionData.credits_per_cycle}
+                    onChange={(e) => setSubscriptionData({ 
+                      credits_per_cycle: parseInt(e.target.value) || 5 
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Quantidade de créditos disponíveis por ciclo mensal
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {subscriptionAction === "revoke" && (
+              <div className="py-4">
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive">
+                    <strong>Atenção:</strong> Ao revogar o plano, o usuário perderá acesso à aba Projetos 
+                    e não poderá mais registrar em nome de terceiros.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSubscriptionDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleManageSubscription} 
+                disabled={managingSubscription}
+                variant={subscriptionAction === "revoke" ? "destructive" : "default"}
+              >
+                {managingSubscription && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {subscriptionAction === "grant" && "Conceder Plano"}
+                {subscriptionAction === "revoke" && "Revogar Plano"}
+                {subscriptionAction === "update" && "Salvar Alterações"}
               </Button>
             </DialogFooter>
           </DialogContent>

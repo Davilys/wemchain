@@ -77,7 +77,7 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
     },
     {
       title: "Conta",
-      url: "/dashboard#conta",
+      url: "/conta",
       icon: User,
       color: "text-slate-500",
       bgColor: "bg-slate-500/10",

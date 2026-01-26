@@ -29,7 +29,7 @@ export function NoCreditModal({ open, onClose }: NoCreditModalProps) {
           </AlertDialogTitle>
           <AlertDialogDescription className="font-body text-sm text-muted-foreground">
             Para realizar este Registro de Propriedade em Blockchain, você precisa adquirir créditos. 
-            Registros adicionais custam R$ 49,00 cada.
+            Registros adicionais custam R$ 39,00 cada.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

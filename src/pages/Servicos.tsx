@@ -226,12 +226,12 @@ export default function Servicos() {
                   a: "Sim! O plano Básico permite fazer registros individuais por R$ 49 cada. Se você precisar de mais registros, os pacotes oferecem economia significativa."
                 },
                 {
-                  q: "Os créditos expiram?",
-                  a: "Não! Seus créditos de registro nunca expiram. Use quando precisar."
+                  q: "Como funcionam os créditos do plano Business?",
+                  a: "O plano Business inclui 3 créditos por mês que renovam a cada ciclo. Os créditos não acumulam entre ciclos. Registros adicionais podem ser adquiridos por R$ 39 cada."
                 },
                 {
                   q: "Quais formas de pagamento são aceitas?",
-                  a: "Aceitamos Pix (desconto de 5%) e cartão de crédito (parcelamento em até 12x)."
+                  a: "Aceitamos Pix para todos os planos. O pagamento é processado em tempo real e os créditos são liberados automaticamente."
                 },
                 {
                   q: "Preciso registrar no INPI também?",

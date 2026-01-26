@@ -105,27 +105,25 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Visão Geral</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold font-display">Visão Geral</h1>
+          <p className="text-muted-foreground font-body">
             Métricas e estatísticas do sistema WebMarcas
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {metricCards.map((card) => (
-            <Card key={card.title} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <div key={card.title} className="card-premium p-5 group">
+              <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <p className="text-sm font-medium text-muted-foreground font-body">
                   {card.title}
-                </CardTitle>
-                <div className={`p-2 rounded-lg ${card.bgColor}`}>
-                  <card.icon className={`h-4 w-4 ${card.color}`} />
+                </p>
+                <div className={`p-2.5 rounded-xl ${card.bgColor} group-hover:scale-110 transition-transform`}>
+                  <card.icon className={`h-5 w-5 ${card.color}`} />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="text-2xl font-bold font-display">{card.value}</div>
+            </div>
           ))}
         </div>
       </div>

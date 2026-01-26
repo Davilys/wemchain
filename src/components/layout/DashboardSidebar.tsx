@@ -8,8 +8,10 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface DashboardSidebarProps {
   collapsed: boolean;
@@ -21,26 +23,36 @@ const menuItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
   },
   {
     title: "Novo Registro",
     url: "/novo-registro",
     icon: Plus,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
   },
   {
-    title: "Registros de Propriedade",
+    title: "Meus Registros",
     url: "/meus-registros",
     icon: FileText,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
   },
   {
     title: "Créditos",
     url: "/creditos",
     icon: Coins,
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
   },
   {
     title: "Certificados",
     url: "/meus-registros?status=confirmado",
     icon: Award,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
   },
 ];
 
@@ -57,16 +69,40 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col border-r border-border bg-card/50 transition-all duration-300 relative",
-        collapsed ? "w-16" : "w-56"
+        "hidden lg:flex flex-col border-r border-border/50 bg-card/95 backdrop-blur-sm transition-all duration-300 relative",
+        collapsed ? "w-16" : "w-60"
       )}
     >
+      {/* Logo Header */}
+      {!collapsed && (
+        <div className="p-4 border-b border-border/50">
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <div className="relative">
+              <img 
+                src={webmarcasLogo} 
+                alt="WebMarcas" 
+                className="h-9 w-9 object-contain"
+              />
+              <Shield className="absolute -bottom-1 -right-1 h-3.5 w-3.5 text-primary bg-background rounded-full" />
+            </div>
+            <div>
+              <span className="text-base font-bold text-foreground tracking-tight">
+                Web<span className="text-primary">Marcas</span>
+              </span>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Registro em Blockchain
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={onToggle}
-        className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-border bg-card shadow-sm z-10 hover:bg-muted"
+        className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-border/50 bg-card shadow-sm z-10 hover:bg-muted"
       >
         {collapsed ? (
           <ChevronRight className="h-3 w-3" />
@@ -76,26 +112,36 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
       </Button>
 
       {/* Menu Items */}
-      <nav className="flex-1 py-6 px-3">
+      <nav className="flex-1 py-4 px-2">
         <ul className="space-y-1">
           {menuItems.map((item) => (
             <li key={item.url}>
               <Link
                 to={item.url}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg font-body text-sm transition-all duration-200",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl font-body text-sm transition-all duration-200",
                   isActive(item.url)
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-primary/10 border border-primary/20"
+                    : "hover:bg-muted/50 border border-transparent"
                 )}
                 title={collapsed ? item.title : undefined}
               >
-                <item.icon className={cn(
-                  "h-5 w-5 flex-shrink-0",
-                  isActive(item.url) ? "text-primary" : ""
-                )} />
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
+                  isActive(item.url) ? item.bgColor : "bg-muted"
+                )}>
+                  <item.icon className={cn(
+                    "h-4 w-4",
+                    isActive(item.url) ? item.color : "text-muted-foreground"
+                  )} />
+                </div>
                 {!collapsed && (
-                  <span className="truncate">{item.title}</span>
+                  <span className={cn(
+                    "truncate font-medium",
+                    isActive(item.url) ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {item.title}
+                  </span>
                 )}
               </Link>
             </li>
@@ -105,13 +151,13 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
 
       {/* Bottom CTA - Only when expanded */}
       {!collapsed && (
-        <div className="p-3 border-t border-border">
+        <div className="p-3 border-t border-border/50">
           <Link
             to="/checkout"
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground font-body text-sm font-semibold hover:bg-primary/90 transition-all btn-premium"
           >
-            <Plus className="h-4 w-4" />
-            Registros de Propriedade
+            <Coins className="h-4 w-4" />
+            Comprar Créditos
           </Link>
         </div>
       )}

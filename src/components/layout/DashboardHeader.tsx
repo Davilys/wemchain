@@ -24,7 +24,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
   return (
-    <header className="h-16 border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4 md:px-6">
+    <header className="h-16 border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-40 flex items-center justify-between px-4 md:px-6">
       {/* Left: Menu + Logo */}
       <div className="flex items-center gap-3">
         <Button
@@ -36,18 +36,19 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
 
-        <Link to="/dashboard" className="flex items-center gap-3">
+        <Link to="/dashboard" className="flex items-center gap-3 lg:hidden">
           <img 
             src={webmarcasLogo} 
             alt="WebMarcas" 
             className="h-8 w-auto"
           />
-          <div className="hidden sm:block">
-            <span className="text-xs text-muted-foreground font-body">
-              Prova de Anterioridade em Blockchain
-            </span>
-          </div>
         </Link>
+
+        {/* Premium Badge - visible on desktop */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+          <User className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-semibold text-primary">Área do Cliente</span>
+        </div>
       </div>
 
       {/* Right: Credits + Theme + User */}
@@ -61,20 +62,20 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 px-2 h-9">
-              <Avatar className="h-7 w-7">
-                <AvatarFallback className="bg-muted text-muted-foreground font-body text-xs">
+            <Button variant="ghost" className="gap-2 px-2 h-9 hover:bg-muted/50">
+              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                <AvatarFallback className="bg-primary/10 text-primary font-body text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-border/50">
             <div className="px-2 py-1.5 text-xs text-muted-foreground font-body truncate">
               {user?.email}
             </div>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border/50" />
             <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
               <Link to="/creditos" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -87,7 +88,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
                 Configurações
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border/50" />
             <DropdownMenuItem 
               onClick={signOut}
               className="text-destructive font-body text-sm cursor-pointer"

@@ -1,46 +1,16 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
+import { useAdminPermissions } from "./useAdminPermissions";
 
+/**
+ * @deprecated Use useAdminPermissions instead for more granular control
+ * This hook is kept for backward compatibility
+ */
 export function useAdminRole() {
-  const { user, loading: authLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function checkAdminRole() {
-      if (!user) {
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error checking admin role:", error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data);
-        }
-      } catch (err) {
-        console.error("Error in admin role check:", err);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (!authLoading) {
-      checkAdminRole();
-    }
-  }, [user, authLoading]);
-
-  return { isAdmin, loading: loading || authLoading };
+  const { isAdmin, loading, role } = useAdminPermissions();
+  
+  return { 
+    isAdmin, 
+    loading,
+    // Para compatibilidade - considera qualquer role admin como admin
+    role,
+  };
 }

@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { 
+  hasPermission, 
+  hasAnyPermission, 
+  hasAllPermissions,
+  AdminRole,
+  Permission 
+} from "../lib/adminPermissions";
 
 /**
  * 🧑‍💼 ADMIN TESTS
@@ -21,6 +28,76 @@ vi.mock("@/integrations/supabase/client", () => ({
 describe("Admin Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("RBAC Permission System", () => {
+    it("super_admin should have all permissions", () => {
+      const permissions: Permission[] = [
+        "admins.manage",
+        "users.view",
+        "users.create",
+        "credits.adjust",
+        "config.edit",
+        "config.maintenance",
+        "logs.view_all",
+      ];
+      
+      permissions.forEach(p => {
+        expect(hasPermission("super_admin", p)).toBe(true);
+      });
+    });
+
+    it("admin should not have admin management permissions", () => {
+      expect(hasPermission("admin", "admins.manage")).toBe(false);
+      expect(hasPermission("admin", "config.edit")).toBe(false);
+      expect(hasPermission("admin", "config.maintenance")).toBe(false);
+    });
+
+    it("admin should have operational permissions", () => {
+      expect(hasPermission("admin", "users.view")).toBe(true);
+      expect(hasPermission("admin", "users.edit")).toBe(true);
+      expect(hasPermission("admin", "credits.adjust")).toBe(true);
+      expect(hasPermission("admin", "registros.view")).toBe(true);
+    });
+
+    it("suporte should have limited permissions", () => {
+      expect(hasPermission("suporte", "users.view")).toBe(true);
+      expect(hasPermission("suporte", "registros.view")).toBe(true);
+      expect(hasPermission("suporte", "certificates.reissue")).toBe(true);
+      expect(hasPermission("suporte", "credits.adjust")).toBe(false);
+      expect(hasPermission("suporte", "users.edit")).toBe(false);
+    });
+
+    it("financeiro should only access financial data", () => {
+      expect(hasPermission("financeiro", "payments.view")).toBe(true);
+      expect(hasPermission("financeiro", "payments.view_details")).toBe(true);
+      expect(hasPermission("financeiro", "subscriptions.view")).toBe(true);
+      expect(hasPermission("financeiro", "users.view")).toBe(false);
+      expect(hasPermission("financeiro", "registros.view")).toBe(false);
+    });
+
+    it("auditor should have read-only access to everything", () => {
+      expect(hasPermission("auditor", "users.view")).toBe(true);
+      expect(hasPermission("auditor", "logs.view_all")).toBe(true);
+      expect(hasPermission("auditor", "registros.view")).toBe(true);
+      expect(hasPermission("auditor", "credits.adjust")).toBe(false);
+      expect(hasPermission("auditor", "users.edit")).toBe(false);
+    });
+
+    it("null role should have no permissions", () => {
+      expect(hasPermission(null, "users.view")).toBe(false);
+      expect(hasAnyPermission(null, ["users.view", "credits.view"])).toBe(false);
+    });
+
+    it("hasAnyPermission should work correctly", () => {
+      expect(hasAnyPermission("suporte", ["users.view", "admins.manage"])).toBe(true);
+      expect(hasAnyPermission("suporte", ["admins.manage", "config.edit"])).toBe(false);
+    });
+
+    it("hasAllPermissions should work correctly", () => {
+      expect(hasAllPermissions("admin", ["users.view", "users.edit"])).toBe(true);
+      expect(hasAllPermissions("admin", ["users.view", "admins.manage"])).toBe(false);
+    });
   });
 
   describe("Admin Role Verification", () => {

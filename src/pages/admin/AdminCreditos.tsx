@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+import { PermissionGate } from "@/components/admin/PermissionGate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { Search, Edit, History, Loader2, Coins, Plus, Minus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,6 +56,7 @@ interface LedgerEntry {
 
 export default function AdminCreditos() {
   const { user } = useAuth();
+  const { can } = useAdminPermissions();
   const [credits, setCredits] = useState<UserCredits[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -282,14 +286,16 @@ export default function AdminCreditos() {
                           >
                             <History className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openAdjustDialog(credit)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Ajustar
-                          </Button>
+                          <PermissionGate permission="credits.adjust">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openAdjustDialog(credit)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Ajustar
+                            </Button>
+                          </PermissionGate>
                         </div>
                       </TableCell>
                     </TableRow>

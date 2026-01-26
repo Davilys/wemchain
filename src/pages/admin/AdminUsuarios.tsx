@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+import { PermissionGate } from "@/components/admin/PermissionGate";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuditLog } from "@/hooks/useAdminAuditLog";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { 
   Search, 
   Eye, 
@@ -89,6 +92,7 @@ interface UserRegistro {
 export default function AdminUsuarios() {
   const { user: adminUser } = useAuth();
   const { logAdminAction } = useAdminAuditLog();
+  const { can } = useAdminPermissions();
   
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);

@@ -339,39 +339,40 @@ export default function Checkout() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-        {/* Header */}
-        <div className="flex items-center gap-4">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 animate-fade-in px-4 sm:px-0">
+        {/* Header - Mobile optimized */}
+        <div className="flex items-center gap-3 sm:gap-4">
           {step !== "plans" && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setStep(step === "payment" ? "form" : "plans")}
+              className="h-10 w-10 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
-          <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">
               {step === "plans" && "Registros de Propriedade"}
               {step === "form" && "Dados para Pagamento"}
               {step === "payment" && "Pagamento via Pix"}
             </h1>
-            <p className="text-muted-foreground font-body">
-              {step === "plans" && "Escolha a melhor opção para seus registros em blockchain"}
+            <p className="text-sm sm:text-base text-muted-foreground font-body truncate">
+              {step === "plans" && "Escolha a melhor opção para seus registros"}
               {step === "form" && `${selectedPlan?.name} - R$ ${selectedPlan?.price}${selectedPlan?.isSubscription ? '/mês' : ''}`}
-              {step === "payment" && "Escaneie o QR Code ou copie o código Pix"}
+              {step === "payment" && "Escaneie ou copie o código Pix"}
             </p>
           </div>
         </div>
 
-        {/* Créditos atuais */}
+        {/* Créditos atuais - Mobile optimized */}
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <span className="font-body text-foreground">
-                Você possui <strong className="text-primary">{credits?.available_credits || 0} crédito{(credits?.available_credits || 0) !== 1 ? 's' : ''}</strong> disponíve{(credits?.available_credits || 0) !== 1 ? 'is' : 'l'}
+          <CardContent className="py-3 sm:py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+              <span className="font-body text-sm sm:text-base text-foreground">
+                Você possui <strong className="text-primary">{credits?.available_credits || 0} crédito{(credits?.available_credits || 0) !== 1 ? 's' : ''}</strong>
               </span>
             </div>
           </CardContent>
@@ -381,11 +382,11 @@ export default function Checkout() {
         {step === "plans" && (
           <div className="space-y-8">
             {/* Planos Principais */}
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {PLANS.map((plan) => (
                 <Card
                   key={plan.id}
-                  className={`relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+                  className={`relative cursor-pointer transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] hover:shadow-xl touch-manipulation ${
                     plan.id === "BUSINESS" 
                       ? "border-primary shadow-lg shadow-primary/20" 
                       : plan.popular 
@@ -395,53 +396,53 @@ export default function Checkout() {
                   onClick={() => handleSelectPlan(plan)}
                 >
                   {plan.id === "BUSINESS" && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs">
                       Recomendado
                     </Badge>
                   )}
                   {plan.popular && plan.id !== "BUSINESS" && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary/80 text-primary-foreground">
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary/80 text-primary-foreground text-xs">
                       Mais Popular
                     </Badge>
                   )}
-                  <CardHeader className="text-center pb-4">
-                    <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <CardHeader className="text-center pb-3 sm:pb-4">
+                    <div className="mx-auto mb-3 sm:mb-4 h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                       {plan.id === "BUSINESS" ? (
-                        <Building2 className="h-7 w-7 text-primary" />
+                        <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                       ) : plan.popular ? (
-                        <Zap className="h-7 w-7 text-primary" />
+                        <Zap className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                       ) : (
-                        <Shield className="h-7 w-7 text-primary" />
+                        <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                       )}
                     </div>
-                    <CardTitle className="font-display text-xl">{plan.name}</CardTitle>
-                    <CardDescription className="font-body">{plan.description}</CardDescription>
+                    <CardTitle className="font-display text-lg sm:text-xl">{plan.name}</CardTitle>
+                    <CardDescription className="font-body text-xs sm:text-sm">{plan.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4 sm:space-y-6">
                     <div className="text-center">
                       <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-sm text-muted-foreground">R$</span>
-                        <span className="font-display text-4xl font-bold text-foreground">{plan.price}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">R$</span>
+                        <span className="font-display text-3xl sm:text-4xl font-bold text-foreground">{plan.price}</span>
                         {plan.isSubscription && (
-                          <span className="text-muted-foreground">/mês</span>
+                          <span className="text-muted-foreground text-sm">/mês</span>
                         )}
                       </div>
-                      <p className="text-sm text-primary font-medium mt-1">
+                      <p className="text-xs sm:text-sm text-primary font-medium mt-1">
                         {plan.credits} crédito{plan.credits > 1 ? "s" : ""} {plan.isSubscription ? "por mês" : ""}
                       </p>
                     </div>
 
-                    <ul className="space-y-2.5">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm font-body">
-                          <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <ul className="space-y-2">
+                      {plan.features.slice(0, 5).map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm font-body">
+                          <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0 mt-0.5" />
                           <span className="text-muted-foreground">{feature}</span>
                         </li>
                       ))}
                     </ul>
 
                     <Button
-                      className={`w-full ${
+                      className={`w-full h-11 sm:h-10 text-sm ${
                         plan.id === "BUSINESS"
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
                           : plan.popular
@@ -523,33 +524,35 @@ export default function Checkout() {
           </div>
         )}
 
-        {/* Step 2: Formulário */}
+        {/* Step 2: Formulário - Mobile optimized */}
         {step === "form" && selectedPlan && (
           <Card className="max-w-lg mx-auto">
-            <CardHeader>
-              <CardTitle className="font-display flex items-center gap-2">
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="font-display flex items-center gap-2 text-lg sm:text-xl">
                 <CreditCard className="h-5 w-5 text-primary" />
                 Dados do Pagador
               </CardTitle>
-              <CardDescription className="font-body">
+              <CardDescription className="font-body text-sm">
                 Informe seus dados para gerar o pagamento via Pix
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo *</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">Nome Completo *</Label>
                   <Input
                     id="name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Seu nome completo"
                     required
+                    className="h-12 sm:h-10 text-base sm:text-sm"
+                    autoComplete="name"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cpfCnpj">CPF ou CNPJ *</Label>
+                  <Label htmlFor="cpfCnpj" className="text-sm font-medium">CPF ou CNPJ *</Label>
                   <Input
                     id="cpfCnpj"
                     value={customerCpfCnpj}
@@ -557,32 +560,37 @@ export default function Checkout() {
                     placeholder="000.000.000-00"
                     maxLength={18}
                     required
+                    className="h-12 sm:h-10 text-base sm:text-sm"
+                    inputMode="numeric"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone (opcional)</Label>
+                  <Label htmlFor="phone" className="text-sm font-medium">Telefone (opcional)</Label>
                   <Input
                     id="phone"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(formatPhone(e.target.value))}
                     placeholder="(11) 99999-9999"
                     maxLength={15}
+                    className="h-12 sm:h-10 text-base sm:text-sm"
+                    inputMode="tel"
+                    autoComplete="tel"
                   />
                 </div>
 
-                <div className="pt-4 border-t border-border/50">
-                  <div className="flex justify-between text-sm mb-2">
+                <div className="pt-4 border-t border-border/50 space-y-2">
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Plano selecionado:</span>
                     <span className="font-medium">{selectedPlan.name}</span>
                   </div>
                   {selectedPlan.isSubscription && (
-                    <div className="flex justify-between text-sm mb-2">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tipo:</span>
                       <span className="font-medium text-primary">Assinatura mensal</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-lg font-bold pt-2">
                     <span>Total:</span>
                     <span className="text-primary">
                       R$ {selectedPlan.price},00
@@ -593,7 +601,7 @@ export default function Checkout() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-primary text-primary-foreground"
+                  className="w-full h-12 sm:h-11 bg-primary text-primary-foreground text-base sm:text-sm font-medium"
                   disabled={loading}
                 >
                   {loading ? (
@@ -616,79 +624,96 @@ export default function Checkout() {
         {/* Step 3: Pagamento Pix */}
         {step === "payment" && paymentData && (
           <Card className="max-w-lg mx-auto">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
-                <Clock className="h-8 w-8 text-green-500" />
+            <CardHeader className="text-center px-4 sm:px-6">
+              <div className="mx-auto mb-4 h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                <Clock className="h-7 w-7 sm:h-8 sm:w-8 text-green-500" />
               </div>
-              <CardTitle className="font-display">Aguardando Pagamento</CardTitle>
-              <CardDescription className="font-body">
+              <CardTitle className="font-display text-lg sm:text-xl">Aguardando Pagamento</CardTitle>
+              <CardDescription className="font-body text-sm">
                 Escaneie o QR Code com o app do seu banco ou copie o código Pix
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* QR Code */}
-              {paymentData.pixQrCode && (
+            <CardContent className="space-y-5 px-4 sm:px-6">
+              {/* QR Code - Responsive and always visible */}
+              {paymentData.pixQrCode ? (
                 <div className="flex justify-center">
-                  <div className="p-4 bg-white rounded-xl">
+                  <div className="p-3 sm:p-4 bg-white rounded-xl shadow-lg border border-border/20">
                     <img
                       src={`data:image/png;base64,${paymentData.pixQrCode}`}
                       alt="QR Code Pix"
-                      className="w-48 h-48"
+                      className="w-40 h-40 sm:w-52 sm:h-52 object-contain"
+                      style={{ imageRendering: 'pixelated' }}
                     />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <div className="p-4 bg-muted rounded-xl flex flex-col items-center justify-center w-40 h-40 sm:w-52 sm:h-52">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                    <span className="text-xs text-muted-foreground">Carregando QR Code...</span>
                   </div>
                 </div>
               )}
 
-              {/* Código Pix */}
+              {/* Código Pix Copia e Cola - Mobile friendly */}
               {paymentData.pixCopyPaste && (
                 <div className="space-y-2">
-                  <Label>Código Pix Copia e Cola</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={paymentData.pixCopyPaste}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
+                  <Label className="text-sm font-medium">Código Pix Copia e Cola</Label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        value={paymentData.pixCopyPaste}
+                        readOnly
+                        className="font-mono text-xs pr-10 h-12 sm:h-10"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                    </div>
                     <Button
-                      variant="outline"
-                      size="icon"
+                      variant="default"
                       onClick={copyToClipboard}
-                      className="flex-shrink-0"
+                      className="h-12 sm:h-10 w-full sm:w-auto px-6 bg-primary text-primary-foreground"
                     >
                       {copied ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2 text-green-100" />
+                          <span>Copiado!</span>
+                        </>
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          <span>Copiar Código</span>
+                        </>
                       )}
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Link de pagamento */}
+              {/* Link de pagamento alternativo */}
               {paymentData.invoiceUrl && (
-                <div className="text-center">
+                <div className="text-center pt-2">
                   <a
                     href={paymentData.invoiceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline text-sm font-body"
+                    className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-body font-medium"
                   >
+                    <CreditCard className="h-4 w-4" />
                     Abrir página de pagamento completa
                   </a>
                 </div>
               )}
 
               {/* Status */}
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Aguardando confirmação do pagamento...</span>
               </div>
 
               {/* Aviso */}
-              <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
-                <p className="font-body text-xs text-muted-foreground text-center">
-                  Após o pagamento, seus créditos serão liberados automaticamente e você poderá começar a registrar.
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="font-body text-xs text-muted-foreground text-center leading-relaxed">
+                  💡 <strong className="text-foreground">Dica:</strong> Após o pagamento, seus créditos serão liberados automaticamente em até 5 minutos e você poderá começar a registrar.
                 </p>
               </div>
             </CardContent>

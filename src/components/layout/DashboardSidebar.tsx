@@ -13,7 +13,6 @@ import {
   Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface DashboardSidebarProps {
@@ -61,7 +60,6 @@ const menuItems = [
 
 export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const location = useLocation();
-  const { isBusinessPlan } = useBusinessPlan();
 
   const isActive = (url: string) => {
     if (url.includes("?")) {
@@ -70,21 +68,19 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
     return location.pathname === url || location.pathname.startsWith(url + "/");
   };
 
-  // Add Projetos item for Business plan users
-  const allMenuItems = isBusinessPlan
-    ? [
-        ...menuItems.slice(0, 3), // Dashboard, Novo Registro, Meus Registros
-        {
-          title: "Projetos",
-          url: "/projetos",
-          icon: FolderOpen,
-          color: "text-amber-500",
-          bgColor: "bg-amber-500/10",
-          isBusiness: true,
-        },
-        ...menuItems.slice(3), // Créditos, Certificados
-      ]
-    : menuItems;
+  // Projetos sempre visível para todos - página faz verificação de plano
+  const allMenuItems = [
+    ...menuItems.slice(0, 3), // Dashboard, Novo Registro, Meus Registros
+    {
+      title: "Projetos",
+      url: "/projetos",
+      icon: FolderOpen,
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+      isBusiness: true,
+    },
+    ...menuItems.slice(3), // Créditos, Certificados
+  ];
 
   return (
     <aside

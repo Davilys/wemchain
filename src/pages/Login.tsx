@@ -110,9 +110,9 @@ export default function Login() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="font-semibold">Senha</Label>
-                    <Link to="/recuperar-senha" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
-                      Esqueci minha senha
-                    </Link>
+                    <span className="text-sm text-muted-foreground">
+                      Esqueceu? Contate o suporte
+                    </span>
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />

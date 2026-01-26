@@ -323,11 +323,11 @@ export default function Cadastro() {
                     />
                     <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed font-body font-normal cursor-pointer">
                       Concordo com os{" "}
-                      <Link to="/termos" className="text-primary hover:underline transition-colors font-medium">
+                      <Link to="/termos-de-uso" className="text-primary hover:underline transition-colors font-medium">
                         Termos de Uso
                       </Link>{" "}
                       e{" "}
-                      <Link to="/privacidade" className="text-primary hover:underline transition-colors font-medium">
+                      <Link to="/politica-privacidade" className="text-primary hover:underline transition-colors font-medium">
                         Política de Privacidade
                       </Link>
                     </Label>

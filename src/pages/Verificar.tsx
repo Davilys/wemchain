@@ -349,50 +349,74 @@ export default function Verificar() {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="bg-gradient-hero py-20 md:py-28 relative overflow-hidden">
+      {/* Hero Section - Premium Style matching Home */}
+      <section className="relative py-20 md:py-28 overflow-hidden bg-gradient-hero">
         <div className="absolute inset-0 bg-gradient-radial" />
+        <div className="absolute inset-0 pattern-dots" />
+        
+        {/* Decorative blurs */}
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-primary/3 rounded-full blur-[100px]" />
+        
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+          {/* Premium Badge */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-8 animate-fade-up">
             <Shield className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">Verificação Pública</span>
+            <span className="text-sm font-semibold text-primary tracking-wide">Verificação Pública</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
-            Verificar <span className="text-primary">Certificado</span>
+          
+          {/* Title */}
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 tracking-tight animate-fade-up delay-100">
+            Verificar <span className="text-primary text-shadow-glow">Certificado</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Confirme a autenticidade de um registro em blockchain
+          
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-up delay-200">
+            Confirme a <span className="text-foreground font-medium">autenticidade</span> de um registro em blockchain
           </p>
         </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-card to-transparent" />
       </section>
 
       {/* Legal Disclaimer - OBRIGATÓRIO */}
-      <section className="py-4 bg-orange-400/5 border-y border-orange-400/20">
+      <section className="py-4 bg-yellow-500/5 border-y border-yellow-500/20">
         <div className="container mx-auto px-4">
           <div className="flex items-start gap-3 max-w-2xl mx-auto">
-            <Info className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-foreground">
-              Esta verificação utiliza o protocolo público OpenTimestamps, ancorado na blockchain do Bitcoin. 
-              A WebMarcas <strong>não controla</strong> nem pode alterar o resultado desta verificação.
+            <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+              <Info className="h-4 w-4 text-yellow-500" />
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Esta verificação utiliza o protocolo público <strong className="text-foreground">OpenTimestamps</strong>, ancorado na blockchain do Bitcoin. 
+              A WebMarcas <strong className="text-foreground">não controla</strong> nem pode alterar o resultado desta verificação.
             </p>
           </div>
         </div>
       </section>
 
       {/* Search Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="section-padding bg-background relative">
+        <div className="absolute inset-0 bg-gradient-radial-bottom opacity-50" />
+        
+        <div className="container mx-auto px-4 relative">
           <Card className="max-w-2xl mx-auto card-premium">
-            <CardHeader>
-              <CardTitle className="text-2xl tracking-tight">Verificar Registro</CardTitle>
-              <CardDescription>
-                Insira o hash SHA-256 do arquivo para verificar seu registro
-              </CardDescription>
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Search className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl md:text-2xl tracking-tight text-foreground">Verificar Registro</CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    Insira o hash SHA-256 do arquivo
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="hash" className="flex items-center gap-2">
-                  <Hash className="h-4 w-4" />
+              <div className="space-y-3">
+                <Label htmlFor="hash" className="flex items-center gap-2 text-foreground font-medium">
+                  <Hash className="h-4 w-4 text-primary" />
                   Hash SHA-256 do arquivo
                 </Label>
                 <Input
@@ -400,7 +424,7 @@ export default function Verificar() {
                   placeholder="Ex: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  className="font-mono text-sm"
+                  className="font-mono text-sm bg-background border-border/50 focus:border-primary"
                 />
                 <p className="text-xs text-muted-foreground">
                   O hash está no seu certificado digital ou pode ser gerado a partir do arquivo original
@@ -410,16 +434,17 @@ export default function Verificar() {
               <Button 
                 onClick={handleSearch} 
                 disabled={loading} 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
+                size="lg"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold btn-premium"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Verificando...
                   </>
                 ) : (
                   <>
-                    <Search className="mr-2 h-4 w-4" />
+                    <Search className="mr-2 h-5 w-5" />
                     Verificar Registro
                   </>
                 )}
@@ -433,30 +458,38 @@ export default function Verificar() {
       </section>
 
       {/* How to Verify */}
-      <section className="py-20 md:py-28 bg-card border-y border-border/30">
+      <section className="section-padding bg-card relative border-y border-border/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
+            {/* Section Header */}
             <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <HelpCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Passo a Passo</span>
+              </div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">
-                Como Verificar
+                Como <span className="text-primary">Verificar</span>
               </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Duas formas de confirmar a autenticidade do seu registro
+              </p>
             </div>
 
             <div className="space-y-6">
               <Card className="card-premium">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <Hash className="h-4 w-4 text-blue-500" />
+                  <CardTitle className="text-lg flex items-center gap-3 text-foreground">
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <Hash className="h-5 w-5 text-blue-500" />
                     </div>
                     Verificação por Hash
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Localize o hash SHA-256 no seu certificado digital</li>
+                  <ol className="list-decimal list-inside space-y-3 text-muted-foreground">
+                    <li>Localize o <strong className="text-foreground">hash SHA-256</strong> no seu certificado digital</li>
                     <li>Cole o hash no campo de busca acima</li>
-                    <li>Clique em "Verificar Registro"</li>
+                    <li>Clique em "<strong className="text-foreground">Verificar Registro</strong>"</li>
                     <li>Confira se os dados correspondem ao seu certificado</li>
                   </ol>
                 </CardContent>
@@ -464,19 +497,19 @@ export default function Verificar() {
 
               <Card className="card-premium">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                      <ExternalLink className="h-4 w-4 text-purple-500" />
+                  <CardTitle className="text-lg flex items-center gap-3 text-foreground">
+                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                      <ExternalLink className="h-5 w-5 text-purple-500" />
                     </div>
                     Verificação Externa Independente
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Baixe o arquivo .ots do seu certificado</li>
-                    <li>Acesse opentimestamps.org</li>
+                  <ol className="list-decimal list-inside space-y-3 text-muted-foreground">
+                    <li>Baixe o arquivo <strong className="text-foreground">.ots</strong> do seu certificado</li>
+                    <li>Acesse <strong className="text-foreground">opentimestamps.org</strong></li>
                     <li>Faça upload do arquivo original e do .ots</li>
-                    <li>A verificação é pública e não depende da WebMarcas</li>
+                    <li>A verificação é <strong className="text-foreground">pública e independente</strong> da WebMarcas</li>
                   </ol>
                 </CardContent>
               </Card>

@@ -403,41 +403,45 @@ export default function NovoRegistro() {
           </Button>
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              Novo Registro de Propriedade
+              {project ? "Registrar para Cliente" : "Novo Registro de Propriedade"}
             </h1>
             <p className="font-body text-sm text-muted-foreground">
               {project ? (
-                <>Registrando em nome de <span className="font-medium text-primary">{project.name}</span>. Este registro consumirá 1 crédito.</>
+                <>Registrando em nome de <span className="font-medium text-amber-500">{project.name}</span></>
               ) : (
-                <>Registre seu arquivo em blockchain com prova de anterioridade. <span className="font-medium text-primary">Este registro consumirá 1 crédito.</span></>
+                <>Registre seu arquivo em blockchain com prova de anterioridade</>
               )}
             </p>
           </div>
         </div>
 
-        {/* Project Info Banner */}
+        {/* Project Info Banner - Titular Bloqueado */}
         {project && (
-          <Card className="border-primary/30 bg-primary/5">
+          <Card className="border-amber-500/30 bg-amber-500/5">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                   {project.document_type === "CNPJ" ? (
-                    <Building2 className="h-5 w-5 text-primary" />
+                    <Building2 className="h-6 w-6 text-amber-500" />
                   ) : (
-                    <User className="h-5 w-5 text-primary" />
+                    <User className="h-6 w-6 text-amber-500" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-body text-sm font-medium text-foreground">
-                    Titular: {project.name}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Lock className="h-3.5 w-3.5 text-amber-500" />
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Titular bloqueado</span>
+                  </div>
+                  <p className="font-body text-base font-semibold text-foreground truncate">
+                    {project.name}
                   </p>
                   <p className="font-body text-xs text-muted-foreground">
                     {project.document_type}: {project.document_number.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
                   </p>
                 </div>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="ghost" size="sm" asChild className="text-xs">
                   <Link to={`/projetos/${project.id}`}>
-                    Ver Projeto
+                    Voltar ao Projeto
                   </Link>
                 </Button>
               </div>
@@ -679,16 +683,22 @@ export default function NovoRegistro() {
 
             {/* Terms Checkbox */}
             {file && hash && (
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="terms"
-                  checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
-                  className="mt-0.5"
-                />
-              <Label htmlFor="terms" className="font-body text-sm text-muted-foreground cursor-pointer">
-                  Estou ciente que este Registro de Propriedade consome <strong className="text-foreground">1 crédito</strong>
-                </Label>
+              <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="terms" className="font-body text-sm text-muted-foreground cursor-pointer leading-relaxed">
+                    {project ? (
+                      <>Este registro será feito em nome de <strong className="text-foreground">{project.name}</strong> e consumirá <strong className="text-primary">1 crédito</strong> da sua conta.</>
+                    ) : (
+                      <>Estou ciente que este Registro de Propriedade consome <strong className="text-primary">1 crédito</strong>.</>
+                    )}
+                  </Label>
+                </div>
               </div>
             )}
 
@@ -696,15 +706,15 @@ export default function NovoRegistro() {
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => navigate("/dashboard")}
-                className="flex-1 font-body"
+                onClick={() => navigate(project ? `/projetos/${project.id}` : "/dashboard")}
+                className="font-body"
               >
-                Voltar
+                {project ? "Voltar ao Projeto" : "Cancelar"}
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading || !primaryAuthor}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium"
+                className={`flex-1 font-body font-semibold ${project ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
               >
                 {loading ? (
                   <>
@@ -714,7 +724,7 @@ export default function NovoRegistro() {
                 ) : (
                   <>
                     <Shield className="h-4 w-4 mr-2" />
-                    Registrar Propriedade
+                    Registrar
                   </>
                 )}
               </Button>

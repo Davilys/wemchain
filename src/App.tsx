@@ -15,6 +15,7 @@ import Verificar from "./pages/Verificar";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
+import Conta from "./pages/Conta";
 import NovoRegistro from "./pages/NovoRegistro";
 import MeusRegistros from "./pages/MeusRegistros";
 import Projetos from "./pages/Projetos";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/conta" element={<Conta />} />
               <Route path="/novo-registro" element={<NovoRegistro />} />
               <Route path="/meus-registros" element={<MeusRegistros />} />
               <Route path="/projetos" element={<Projetos />} />

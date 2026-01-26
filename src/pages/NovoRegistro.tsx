@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,9 @@ import {
   Coins,
   Globe,
   EyeOff,
-  Info
+  Info,
+  Building2,
+  User
 } from "lucide-react";
 
 const acceptedTypes = [
@@ -73,10 +75,20 @@ interface UserProfile {
   cpf_cnpj: string | null;
 }
 
+interface ProjectData {
+  id: string;
+  name: string;
+  document_type: "CPF" | "CNPJ";
+  document_number: string;
+  email: string | null;
+}
+
 export default function NovoRegistro() {
   const { user, loading: authLoading } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
   
   const [file, setFile] = useState<File | null>(null);
   const [nomeAtivo, setNomeAtivo] = useState("");
@@ -92,6 +104,10 @@ export default function NovoRegistro() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [coauthors, setCoauthors] = useState<Author[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  
+  // Project state (for Business plan)
+  const [project, setProject] = useState<ProjectData | null>(null);
+  const [projectLoading, setProjectLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -99,10 +115,56 @@ export default function NovoRegistro() {
     }
   }, [user, authLoading, navigate]);
 
-  // Fetch user profile for primary author
+  // Fetch project data if projectId is provided
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!projectId || !user) {
+        setProjectLoading(false);
+        return;
+      }
+      
+      setProjectLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("id, name, document_type, document_number, email")
+          .eq("id", projectId)
+          .eq("owner_user_id", user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          setProject(data as ProjectData);
+        } else {
+          toast({
+            title: "Projeto não encontrado",
+            description: "O projeto informado não existe ou não pertence a você.",
+            variant: "destructive"
+          });
+          navigate("/projetos");
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast({
+          title: "Erro ao carregar projeto",
+          description: "Não foi possível carregar os dados do projeto.",
+          variant: "destructive"
+        });
+      } finally {
+        setProjectLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [projectId, user, navigate]);
+
+  // Fetch user profile for primary author (only if not using project)
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!user || projectId) {
+        setProfileLoading(false);
+        return;
+      }
       
       try {
         const { data, error } = await supabase
@@ -121,12 +183,20 @@ export default function NovoRegistro() {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user, projectId]);
 
   const hasCredits = (credits?.available_credits || 0) > 0;
 
-  // Primary author derived from profile
-  const primaryAuthor: Omit<Author, "id" | "display_order"> | null = profile?.full_name 
+  // Primary author derived from project (if Business) or user profile
+  const primaryAuthor: Omit<Author, "id" | "display_order"> | null = project
+    ? {
+        name: project.name,
+        email: project.email || user?.email || "",
+        document_type: project.document_type,
+        document_number: project.document_number,
+        role: "PRIMARY",
+      }
+    : profile?.full_name 
     ? {
         name: profile.full_name,
         email: user?.email || "",
@@ -255,6 +325,10 @@ export default function NovoRegistro() {
           arquivo_tamanho: file.size,
           hash_sha256: hash,
           status: "pendente" as any,
+          project_id: project?.id || null,
+          titular_name: primaryAuthor.name,
+          titular_document: primaryAuthor.document_number,
+          titular_type: primaryAuthor.document_type,
         })
         .select()
         .single();
@@ -307,7 +381,7 @@ export default function NovoRegistro() {
     }
   };
 
-  if (authLoading || creditsLoading || profileLoading) {
+  if (authLoading || creditsLoading || profileLoading || projectLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -323,7 +397,7 @@ export default function NovoRegistro() {
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild className="h-9 w-9">
-            <Link to="/dashboard">
+            <Link to={project ? `/projetos/${project.id}` : "/dashboard"}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -332,10 +406,44 @@ export default function NovoRegistro() {
               Novo Registro de Propriedade
             </h1>
             <p className="font-body text-sm text-muted-foreground">
-              Registre seu arquivo em blockchain com prova de anterioridade. <span className="font-medium text-primary">Este registro consumirá 1 crédito.</span>
+              {project ? (
+                <>Registrando em nome de <span className="font-medium text-primary">{project.name}</span>. Este registro consumirá 1 crédito.</>
+              ) : (
+                <>Registre seu arquivo em blockchain com prova de anterioridade. <span className="font-medium text-primary">Este registro consumirá 1 crédito.</span></>
+              )}
             </p>
           </div>
         </div>
+
+        {/* Project Info Banner */}
+        {project && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  {project.document_type === "CNPJ" ? (
+                    <Building2 className="h-5 w-5 text-primary" />
+                  ) : (
+                    <User className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-body text-sm font-medium text-foreground">
+                    Titular: {project.name}
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground">
+                    {project.document_type}: {project.document_number.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/projetos/${project.id}`}>
+                    Ver Projeto
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* No Credits Warning */}
         {!hasCredits && (

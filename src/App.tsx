@@ -17,6 +17,8 @@ import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
 import NovoRegistro from "./pages/NovoRegistro";
 import MeusRegistros from "./pages/MeusRegistros";
+import Projetos from "./pages/Projetos";
+import ProjetoDetalhe from "./pages/ProjetoDetalhe";
 import Checkout from "./pages/Checkout";
 import Processando from "./pages/Processando";
 import Certificado from "./pages/Certificado";
@@ -66,6 +68,8 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/novo-registro" element={<NovoRegistro />} />
               <Route path="/meus-registros" element={<MeusRegistros />} />
+              <Route path="/projetos" element={<Projetos />} />
+              <Route path="/projetos/:id" element={<ProjetoDetalhe />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/creditos" element={<Creditos />} />
               <Route path="/processando/:id" element={<Processando />} />

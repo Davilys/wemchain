@@ -5,10 +5,11 @@ import {
   FileText,
   Plus,
   Coins,
-  Award,
+  FolderOpen,
 } from "lucide-react";
+import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 
-const menuItems = [
+const baseMenuItems = [
   {
     title: "Início",
     url: "/dashboard",
@@ -30,21 +31,39 @@ const menuItems = [
     url: "/creditos",
     icon: Coins,
   },
-  {
-    title: "Certificados",
-    url: "/meus-registros?status=confirmado",
-    icon: Award,
-  },
 ];
 
 export function DashboardBottomNav() {
   const location = useLocation();
+  const { isBusinessPlan } = useBusinessPlan();
+
+  // Add Projetos for Business plan users (replaces Créditos in bottom nav)
+  const menuItems = isBusinessPlan
+    ? [
+        baseMenuItems[0], // Início
+        baseMenuItems[1], // Registros
+        baseMenuItems[2], // Novo (main)
+        {
+          title: "Projetos",
+          url: "/projetos",
+          icon: FolderOpen,
+        },
+        baseMenuItems[3], // Créditos
+      ]
+    : [
+        ...baseMenuItems,
+        {
+          title: "Projetos",
+          url: "/projetos",
+          icon: FolderOpen,
+        },
+      ];
 
   const isActive = (url: string) => {
     if (url.includes("?")) {
       return location.pathname + location.search === url;
     }
-    return location.pathname === url;
+    return location.pathname === url || location.pathname.startsWith(url + "/");
   };
 
   return (
@@ -53,7 +72,7 @@ export function DashboardBottomNav() {
         {menuItems.map((item) => {
           const active = isActive(item.url);
           
-          if (item.isMain) {
+          if ("isMain" in item && item.isMain) {
             return (
               <Link
                 key={item.url}
@@ -75,12 +94,12 @@ export function DashboardBottomNav() {
               key={item.url}
               to={item.url}
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-3 min-w-[60px] transition-colors",
+                "flex flex-col items-center justify-center py-2 px-2 min-w-[50px] transition-colors",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
               <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
                 active ? "bg-primary/15" : "bg-transparent"
               )}>
                 <item.icon className={cn(
@@ -89,7 +108,7 @@ export function DashboardBottomNav() {
                 )} />
               </div>
               <span className={cn(
-                "text-[10px] font-medium mt-0.5 transition-colors",
+                "text-[9px] font-medium mt-0.5 transition-colors",
                 active ? "text-primary" : "text-muted-foreground"
               )}>
                 {item.title}

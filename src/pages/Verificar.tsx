@@ -15,7 +15,9 @@ import {
   Shield,
   Info,
   AlertTriangle,
-  HelpCircle
+  HelpCircle,
+  FileCheck,
+  Lock
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -137,15 +139,17 @@ export default function Verificar() {
     // VERIFICADO
     if (status === 'VERIFICADO') {
       return (
-        <Card className="max-w-2xl mx-auto mt-8 border-2 border-green-500 bg-green-500/5">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
+        <Card className="max-w-2xl mx-auto mt-8 card-premium border-2 border-green-500/50 bg-green-500/5">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="h-7 w-7 text-green-500" />
+              </div>
               <div>
-                <CardTitle className="text-xl text-green-500 tracking-tight">
-                  ✔ Registro Verificado
+                <CardTitle className="text-xl font-bold text-green-500 tracking-tight">
+                  Registro Verificado
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   {result.message || "Registro confirmado em blockchain pública (Bitcoin)."}
                 </CardDescription>
               </div>
@@ -153,66 +157,76 @@ export default function Verificar() {
           </CardHeader>
           <CardContent className="space-y-6">
             {result.registro && (
-              <div className="space-y-4">
-                <h4 className="font-semibold text-foreground">Dados do Registro</h4>
+              <div className="space-y-4 p-4 rounded-xl bg-card border border-border/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                  </div>
+                  <h4 className="font-semibold text-foreground">Dados do Registro</h4>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Nome do Ativo:</span>
-                    <p className="font-medium">{result.registro.nome_ativo}</p>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Nome do Ativo</span>
+                    <p className="font-medium text-foreground mt-1">{result.registro.nome_ativo}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Tipo:</span>
-                    <p className="font-medium capitalize">{result.registro.tipo_ativo}</p>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Tipo</span>
+                    <p className="font-medium text-foreground capitalize mt-1">{result.registro.tipo_ativo}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <span className="text-muted-foreground">Hash SHA-256:</span>
-                    <p className="font-mono text-xs break-all bg-muted p-2 rounded mt-1">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Hash SHA-256</span>
+                    <p className="font-mono text-xs break-all bg-muted/50 p-3 rounded-lg mt-1 border border-border/30 text-foreground">
                       {result.hash}
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Registrado em:</span>
-                    <p className="font-medium">{formatDate(result.registro.created_at)}</p>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Registrado em</span>
+                    <p className="font-medium text-foreground mt-1">{formatDate(result.registro.created_at)}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {result.blockchain && (
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-semibold text-foreground">Dados da Blockchain</h4>
+              <div className="space-y-4 p-4 rounded-xl bg-card border border-border/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <Lock className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <h4 className="font-semibold text-foreground">Dados da Blockchain</h4>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Rede:</span>
-                    <p className="font-medium">{result.blockchain.methodDescription}</p>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Rede</span>
+                    <p className="font-medium text-foreground mt-1">{result.blockchain.methodDescription}</p>
                   </div>
                   {result.blockchain.block_number && (
                     <div>
-                      <span className="text-muted-foreground">Bloco:</span>
-                      <p className="font-medium">{result.blockchain.block_number}</p>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">Bloco</span>
+                      <p className="font-medium text-foreground mt-1">{result.blockchain.block_number}</p>
                     </div>
                   )}
                   <div className="md:col-span-2">
-                    <span className="text-muted-foreground">ID da Transação:</span>
-                    <p className="font-mono text-xs break-all bg-muted p-2 rounded mt-1">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">ID da Transação</span>
+                    <p className="font-mono text-xs break-all bg-muted/50 p-3 rounded-lg mt-1 border border-border/30 text-foreground">
                       {result.blockchain.tx_hash}
                     </p>
                   </div>
                   {result.blockchain.confirmed_at && (
-                    <div className="md:col-span-2 flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>Confirmado na blockchain em: {formatDate(result.blockchain.confirmed_at)}</span>
+                    <div className="md:col-span-2 flex items-center gap-2 text-muted-foreground p-3 rounded-lg bg-muted/30">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <span className="text-sm">Confirmado na blockchain em: <span className="text-foreground font-medium">{formatDate(result.blockchain.confirmed_at)}</span></span>
                     </div>
                   )}
                 </div>
                 
-                <div className="w-full mt-4 p-3 bg-muted rounded-xl text-center text-sm text-muted-foreground">
-                  <Shield className="h-4 w-4 inline-block mr-2" />
+                <div className="w-full p-4 bg-green-500/10 rounded-xl text-center text-sm text-foreground border border-green-500/20">
+                  <Shield className="h-4 w-4 inline-block mr-2 text-green-500" />
                   {result.verificationInstructions || "Verificado via OpenTimestamps (ancorado no Bitcoin)"}
                 </div>
 
                 {result.blockchain.bitcoin_anchored && (
-                  <Button variant="outline" asChild className="w-full mt-4 rounded-xl">
+                  <Button variant="outline" asChild className="w-full rounded-xl border-primary/30 hover:bg-primary/5 font-semibold">
                     <a 
                       href="https://opentimestamps.org" 
                       target="_blank" 
@@ -225,8 +239,8 @@ export default function Verificar() {
                 )}
 
                 {result.legal_notice && (
-                  <div className="w-full mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-muted-foreground">
-                    <strong>Aviso Legal:</strong> {result.legal_notice}
+                  <div className="w-full p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-muted-foreground">
+                    <strong className="text-yellow-600">Aviso Legal:</strong> {result.legal_notice}
                   </div>
                 )}
               </div>
@@ -239,15 +253,17 @@ export default function Verificar() {
     // EM_PROCESSAMENTO
     if (status === 'EM_PROCESSAMENTO') {
       return (
-        <Card className="max-w-2xl mx-auto mt-8 border-2 border-yellow-500 bg-yellow-500/5">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-yellow-500 animate-pulse" />
+        <Card className="max-w-2xl mx-auto mt-8 card-premium border-2 border-yellow-500/50 bg-yellow-500/5">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="h-7 w-7 text-yellow-500 animate-pulse" />
+              </div>
               <div>
-                <CardTitle className="text-xl text-yellow-600 tracking-tight">
-                  ⏳ Em Processamento
+                <CardTitle className="text-xl font-bold text-yellow-500 tracking-tight">
+                  Em Processamento
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   {result.message || "Registro em fase de ancoragem na blockchain."}
                 </CardDescription>
               </div>
@@ -255,14 +271,18 @@ export default function Verificar() {
           </CardHeader>
           <CardContent>
             <div className="bg-yellow-500/10 rounded-xl p-6 border border-yellow-500/20">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                  <Info className="h-5 w-5 text-yellow-500" />
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  <p className="mb-2">
-                    Este registro foi recebido e está sendo processado. A confirmação na blockchain Bitcoin 
-                    pode levar de alguns minutos até algumas horas.
+                  <p className="mb-3 text-foreground font-medium">
+                    Este registro foi recebido e está sendo processado.
                   </p>
-                  <p>
+                  <p className="mb-2">
+                    A confirmação na blockchain Bitcoin pode levar de alguns minutos até algumas horas.
+                  </p>
+                  <p className="text-foreground font-medium">
                     Volte mais tarde para verificar o status atualizado.
                   </p>
                 </div>
@@ -276,15 +296,17 @@ export default function Verificar() {
     // FORMATO_INVALIDO
     if (status === 'FORMATO_INVALIDO') {
       return (
-        <Card className="max-w-2xl mx-auto mt-8 border-2 border-orange-500 bg-orange-500/5">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-8 w-8 text-orange-500" />
+        <Card className="max-w-2xl mx-auto mt-8 card-premium border-2 border-orange-500/50 bg-orange-500/5">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-7 w-7 text-orange-500" />
+              </div>
               <div>
-                <CardTitle className="text-xl text-orange-500 tracking-tight">
-                  ⚠ Formato Inválido
+                <CardTitle className="text-xl font-bold text-orange-500 tracking-tight">
+                  Formato Inválido
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   {result.message || "O hash informado não possui formato válido."}
                 </CardDescription>
               </div>
@@ -292,13 +314,15 @@ export default function Verificar() {
           </CardHeader>
           <CardContent>
             <div className="bg-orange-500/10 rounded-xl p-6 border border-orange-500/20">
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                  <HelpCircle className="h-5 w-5 text-orange-500" />
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  <p className="mb-2">
-                    O hash SHA-256 deve conter exatamente <strong>64 caracteres hexadecimais</strong> (0-9, a-f).
+                  <p className="mb-3">
+                    O hash SHA-256 deve conter exatamente <strong className="text-foreground">64 caracteres hexadecimais</strong> (0-9, a-f).
                   </p>
-                  <p>
+                  <p className="text-foreground font-medium">
                     Verifique se você copiou o hash corretamente do seu certificado digital.
                   </p>
                 </div>
@@ -311,15 +335,17 @@ export default function Verificar() {
 
     // NAO_ENCONTRADO
     return (
-      <Card className="max-w-2xl mx-auto mt-8 border-2 border-destructive bg-destructive/5">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <XCircle className="h-8 w-8 text-destructive" />
+      <Card className="max-w-2xl mx-auto mt-8 card-premium border-2 border-destructive/50 bg-destructive/5">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <XCircle className="h-7 w-7 text-destructive" />
+            </div>
             <div>
-              <CardTitle className="text-xl text-destructive tracking-tight">
-                ❌ Não Encontrado
+              <CardTitle className="text-xl font-bold text-destructive tracking-tight">
+                Não Encontrado
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-muted-foreground">
                 {result.message || "Nenhum registro encontrado para este hash."}
               </CardDescription>
             </div>
@@ -327,17 +353,19 @@ export default function Verificar() {
         </CardHeader>
         <CardContent>
           <div className="bg-destructive/10 rounded-xl p-6 border border-destructive/20">
-            <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
+                <Info className="h-5 w-5 text-destructive" />
+              </div>
               <div className="text-sm text-muted-foreground">
-                <p className="mb-2">Possíveis causas:</p>
-                <ul className="list-disc list-inside space-y-1">
+                <p className="mb-3 text-foreground font-medium">Possíveis causas:</p>
+                <ul className="list-disc list-inside space-y-2">
                   <li>O hash pode estar incorreto ou incompleto</li>
                   <li>O arquivo pode não ter sido registrado nesta plataforma</li>
                   <li>O arquivo original pode ter sido modificado após o registro</li>
                 </ul>
                 {result.suggestion && (
-                  <p className="mt-3 text-foreground font-medium">{result.suggestion}</p>
+                  <p className="mt-4 text-foreground font-medium p-3 rounded-lg bg-card border border-border/50">{result.suggestion}</p>
                 )}
               </div>
             </div>

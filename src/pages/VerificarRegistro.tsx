@@ -131,61 +131,50 @@ export default function VerificarRegistro() {
       const formData = new FormData();
       formData.append('otsFile', otsFile);
       formData.append('fileHash', fileHash);
-
-      const { data: { session } } = await supabase.auth.getSession();
       
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-ots-proof`,
         {
           method: 'POST',
           body: formData,
-          headers: session?.access_token ? {
-            'Authorization': `Bearer ${session.access_token}`
-          } : {}
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+          }
         }
       );
 
       const otsResult = await response.json();
 
-      // Also check database for registro info
-      const { data: registro } = await supabase
-        .from("registros")
-        .select(`
-          nome_ativo,
-          tipo_ativo,
-          hash_sha256,
-          created_at,
-          transacoes_blockchain (
-            tx_hash,
-            block_number,
-            network,
-            timestamp_blockchain,
-            timestamp_method
-          )
-        `)
-        .eq("hash_sha256", fileHash)
-        .eq("status", "confirmado")
-        .maybeSingle();
+      // Also get registro info from database via edge function
+      const registroResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-ots-proof`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+          },
+          body: JSON.stringify({ hash: fileHash })
+        }
+      );
 
-      if (registro) {
-        const transacao = Array.isArray(registro.transacoes_blockchain) 
-          ? registro.transacoes_blockchain[0] 
-          : registro.transacoes_blockchain;
+      const registroData = await registroResponse.json();
 
+      if (registroData.verified && registroData.registro) {
         setResult({
           ...otsResult,
           registro: {
-            nome_ativo: registro.nome_ativo,
-            tipo_ativo: registro.tipo_ativo,
-            hash_sha256: registro.hash_sha256 || "",
-            created_at: registro.created_at
+            nome_ativo: registroData.registro.nome_ativo,
+            tipo_ativo: registroData.registro.tipo_ativo,
+            hash_sha256: registroData.registro.hash_sha256 || fileHash,
+            created_at: registroData.registro.created_at
           },
-          transacao: transacao ? {
-            tx_hash: transacao.tx_hash,
-            block_number: transacao.block_number || 0,
-            network: transacao.network,
-            timestamp_blockchain: transacao.timestamp_blockchain || "",
-            timestamp_method: transacao.timestamp_method
+          transacao: registroData.blockchain ? {
+            tx_hash: registroData.blockchain.tx_hash,
+            block_number: 0,
+            network: registroData.blockchain.network,
+            timestamp_blockchain: registroData.blockchain.timestamp_blockchain || "",
+            timestamp_method: registroData.blockchain.method
           } : undefined
         });
       } else {
@@ -203,9 +192,9 @@ export default function VerificarRegistro() {
     }
   };
 
-  // Verify with hash only
+  // Verify with hash only (uses edge function to bypass RLS)
   const handleHashVerification = async () => {
-    const hashToVerify = manualHash.trim();
+    const hashToVerify = manualHash.trim().toLowerCase();
     
     if (!hashToVerify) {
       toast({
@@ -231,47 +220,42 @@ export default function VerificarRegistro() {
     setResult(null);
 
     try {
-      const { data: registro, error } = await supabase
-        .from("registros")
-        .select(`
-          nome_ativo,
-          tipo_ativo,
-          hash_sha256,
-          created_at,
-          transacoes_blockchain (
-            tx_hash,
-            block_number,
-            network,
-            timestamp_blockchain,
-            timestamp_method
-          )
-        `)
-        .eq("hash_sha256", hashToVerify)
-        .eq("status", "confirmado")
-        .maybeSingle();
+      // Use edge function for public verification (bypasses RLS)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-ots-proof`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+          },
+          body: JSON.stringify({ hash: hashToVerify })
+        }
+      );
 
-      if (error) throw error;
+      const data = await response.json();
 
-      if (registro) {
-        const transacao = Array.isArray(registro.transacoes_blockchain) 
-          ? registro.transacoes_blockchain[0] 
-          : registro.transacoes_blockchain;
-        
+      if (data.error && !data.verified) {
+        setResult({
+          verified: false,
+          error: data.error || "Nenhum registro confirmado encontrado com este hash."
+        });
+      } else if (data.verified && data.registro) {
         setResult({
           verified: true,
           message: "Registro encontrado e verificado!",
           registro: {
-            nome_ativo: registro.nome_ativo,
-            tipo_ativo: registro.tipo_ativo,
-            hash_sha256: registro.hash_sha256 || "",
-            created_at: registro.created_at
+            nome_ativo: data.registro.nome_ativo,
+            tipo_ativo: data.registro.tipo_ativo,
+            hash_sha256: data.registro.hash_sha256 || hashToVerify,
+            created_at: data.registro.created_at
           },
-          transacao: transacao ? {
-            tx_hash: transacao.tx_hash,
-            block_number: transacao.block_number || 0,
-            network: transacao.network,
-            timestamp_blockchain: transacao.timestamp_blockchain || "",
-            timestamp_method: transacao.timestamp_method
+          transacao: data.blockchain ? {
+            tx_hash: data.blockchain.tx_hash,
+            block_number: 0,
+            network: data.blockchain.network,
+            timestamp_blockchain: data.blockchain.timestamp_blockchain || "",
+            timestamp_method: data.blockchain.method
           } : undefined
         });
       } else {

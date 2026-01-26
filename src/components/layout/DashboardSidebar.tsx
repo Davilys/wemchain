@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   FileText,
-  Plus,
   Coins,
   Award,
   ChevronLeft,
@@ -11,8 +10,10 @@ import {
   Shield,
   FolderOpen,
   Crown,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 interface DashboardSidebarProps {
@@ -20,46 +21,9 @@ interface DashboardSidebarProps {
   onToggle?: () => void;
 }
 
-const menuItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-  },
-  {
-    title: "Novo Registro",
-    url: "/novo-registro",
-    icon: Plus,
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
-  },
-  {
-    title: "Meus Registros",
-    url: "/meus-registros",
-    icon: FileText,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
-  },
-  {
-    title: "Créditos",
-    url: "/creditos",
-    icon: Coins,
-    color: "text-yellow-500",
-    bgColor: "bg-yellow-500/10",
-  },
-  {
-    title: "Certificados",
-    url: "/meus-registros?status=confirmado",
-    icon: Award,
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10",
-  },
-];
-
 export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const location = useLocation();
+  const { isBusinessPlan } = useBusinessPlan();
 
   const isActive = (url: string) => {
     if (url.includes("?")) {
@@ -68,9 +32,16 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
     return location.pathname === url || location.pathname.startsWith(url + "/");
   };
 
-  // Projetos sempre visível para todos - página faz verificação de plano
-  const allMenuItems = [
-    ...menuItems.slice(0, 3), // Dashboard, Novo Registro, Meus Registros
+  // Menu items na ordem definida
+  const menuItems = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+      show: true,
+    },
     {
       title: "Projetos",
       url: "/projetos",
@@ -78,9 +49,43 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
       color: "text-amber-500",
       bgColor: "bg-amber-500/10",
       isBusiness: true,
+      show: isBusinessPlan, // Só aparece para Business
     },
-    ...menuItems.slice(3), // Créditos, Certificados
+    {
+      title: "Meus Registros",
+      url: "/meus-registros",
+      icon: FileText,
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+      show: true,
+    },
+    {
+      title: "Créditos",
+      url: "/creditos",
+      icon: Coins,
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-500/10",
+      show: true,
+    },
+    {
+      title: "Certificados",
+      url: "/meus-registros?status=confirmado",
+      icon: Award,
+      color: "text-green-500",
+      bgColor: "bg-green-500/10",
+      show: true,
+    },
+    {
+      title: "Conta",
+      url: "/dashboard#conta",
+      icon: User,
+      color: "text-slate-500",
+      bgColor: "bg-slate-500/10",
+      show: true,
+    },
   ];
+
+  const visibleMenuItems = menuItems.filter(item => item.show);
 
   return (
     <aside
@@ -127,10 +132,20 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
         )}
       </Button>
 
+      {/* Business Badge */}
+      {!collapsed && isBusinessPlan && (
+        <div className="px-3 pt-4">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <Crown className="h-4 w-4 text-amber-500" />
+            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Plano Business</span>
+          </div>
+        </div>
+      )}
+
       {/* Menu Items */}
       <nav className="flex-1 py-4 px-2">
         <ul className="space-y-1">
-          {allMenuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <li key={item.url}>
               <Link
                 to={item.url}

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { useBusinessPlan } from "@/hooks/useBusinessPlan";
@@ -19,10 +19,11 @@ import {
   Coins,
   FolderOpen,
   Building2,
-  User,
-  AlertTriangle,
   ArrowLeft,
   Crown,
+  Users,
+  FileText,
+  Info,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -125,33 +126,33 @@ export default function Projetos() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
               <h1 className="font-display text-2xl font-bold text-foreground">
                 Projetos
               </h1>
-              <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
-                <Crown className="h-3 w-3 mr-1" />
-                Business
+              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                Seus clientes
               </Badge>
             </div>
-            <p className="font-body text-sm text-muted-foreground">
-              Gerencie seus clientes e registre arquivos em nome de terceiros
+            <p className="font-body text-sm text-muted-foreground max-w-lg">
+              Crie projetos para registrar arquivos em nome de seus clientes usando seus créditos.
             </p>
           </div>
-          <Button onClick={() => setCreateModalOpen(true)}>
+          <Button onClick={() => setCreateModalOpen(true)} size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">
             <FolderPlus className="h-4 w-4 mr-2" />
-            Novo Projeto
+            + Criar projeto (cliente)
           </Button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-amber-500/20 bg-amber-500/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-primary" />
+                <FolderOpen className="h-5 w-5 text-amber-500" />
                 <span className="text-sm text-muted-foreground">Projetos Ativos</span>
               </div>
               <p className="text-2xl font-bold mt-1">{activeCount}</p>
@@ -160,19 +161,19 @@ export default function Projetos() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-blue-500" />
+                <FileText className="h-5 w-5 text-purple-500" />
                 <span className="text-sm text-muted-foreground">Total de Registros</span>
               </div>
               <p className="text-2xl font-bold mt-1">{totalRegistros}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-yellow-500" />
+                <Coins className="h-5 w-5 text-primary" />
                 <span className="text-sm text-muted-foreground">Seus Créditos</span>
               </div>
-              <p className="text-2xl font-bold mt-1">{credits?.available_credits || 0}</p>
+              <p className="text-2xl font-bold mt-1 text-primary">{credits?.available_credits || 0}</p>
             </CardContent>
           </Card>
         </div>
@@ -181,13 +182,13 @@ export default function Projetos() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+              <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-foreground mb-1">
-                  Como funciona o Plano Business
+                  Como funciona
                 </p>
                 <p className="text-muted-foreground">
-                  Cada projeto representa um cliente (titular) para quem você fará registros.
+                  Cada projeto representa um <strong>cliente (titular)</strong> para quem você fará registros.
                   Todos os registros consomem créditos da <strong>sua conta</strong>, não do cliente.
                   O titular do projeto será automaticamente definido como autor principal nos registros.
                 </p>
@@ -229,11 +230,11 @@ export default function Projetos() {
                   {searchTerm
                     ? "Nenhum projeto encontrado com esse termo"
                     : activeTab === "active"
-                    ? "Você ainda não tem projetos. Crie o primeiro!"
+                    ? "Você ainda não tem projetos. Crie o primeiro para começar a registrar para seus clientes!"
                     : "Nenhum projeto arquivado"}
                 </p>
                 {!searchTerm && activeTab === "active" && (
-                  <Button onClick={() => setCreateModalOpen(true)}>
+                  <Button onClick={() => setCreateModalOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white">
                     <FolderPlus className="h-4 w-4 mr-2" />
                     Criar Primeiro Projeto
                   </Button>

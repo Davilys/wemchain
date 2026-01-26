@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,8 +33,9 @@ import {
   Edit,
   History,
   AlertTriangle,
-  ExternalLink,
   Eye,
+  Info,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,7 +53,7 @@ export default function ProjetoDetalhe() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { credits } = useCredits();
-  const { projects, updateProject, getProjectLogs, logProjectAction } = useProjects();
+  const { projects, updateProject, getProjectLogs } = useProjects();
 
   const [project, setProject] = useState<Project | null>(null);
   const [registros, setRegistros] = useState<Registro[]>([]);
@@ -133,19 +134,14 @@ export default function ProjetoDetalhe() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      confirmado: "default",
-      pendente: "secondary",
-      processando: "outline",
-      falhou: "destructive",
+    const config: Record<string, { label: string; className: string }> = {
+      confirmado: { label: "Confirmado", className: "bg-green-500/10 text-green-600 border-green-500/20" },
+      pendente: { label: "Pendente", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+      processando: { label: "Processando", className: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+      falhou: { label: "Falhou", className: "bg-red-500/10 text-red-600 border-red-500/20" },
     };
-    const labels: Record<string, string> = {
-      confirmado: "Confirmado",
-      pendente: "Pendente",
-      processando: "Processando",
-      falhou: "Falhou",
-    };
-    return <Badge variant={variants[status] || "secondary"}>{labels[status] || status}</Badge>;
+    const style = config[status] || config.pendente;
+    return <Badge className={style.className}>{style.label}</Badge>;
   };
 
   const getActionLabel = (actionType: string) => {
@@ -189,7 +185,7 @@ export default function ProjetoDetalhe() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header Fixo */}
         <div className="flex items-start gap-4">
           <Button variant="ghost" size="icon" asChild className="h-9 w-9 mt-1">
             <Link to="/projetos">
@@ -199,30 +195,32 @@ export default function ProjetoDetalhe() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
               <div
-                className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                className={`h-12 w-12 rounded-xl flex items-center justify-center ${
                   project.document_type === "CNPJ"
                     ? "bg-blue-500/10"
                     : "bg-purple-500/10"
                 }`}
               >
                 {project.document_type === "CNPJ" ? (
-                  <Building2 className="h-5 w-5 text-blue-500" />
+                  <Building2 className="h-6 w-6 text-blue-500" />
                 ) : (
-                  <User className="h-5 w-5 text-purple-500" />
+                  <User className="h-6 w-6 text-purple-500" />
                 )}
               </div>
               <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
-                  {project.name}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    {project.name}
+                  </h1>
+                  {project.status === "archived" && (
+                    <Badge variant="secondary">Arquivado</Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {project.document_type}:{" "}
                   {formatDocument(project.document_number, project.document_type)}
                 </p>
               </div>
-              {project.status === "archived" && (
-                <Badge variant="secondary">Arquivado</Badge>
-              )}
             </div>
           </div>
           <div className="flex gap-2">
@@ -230,69 +228,80 @@ export default function ProjetoDetalhe() {
               <Edit className="h-4 w-4 mr-1" />
               Editar
             </Button>
-            <Button size="sm" onClick={handleNewRegistro}>
-              <Plus className="h-4 w-4 mr-1" />
-              Novo Registro
-            </Button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Registros</span>
+        {/* Aviso sobre titular */}
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <Info className="h-5 w-5 text-amber-500" />
               </div>
-              <p className="text-2xl font-bold mt-1">{registros.length}</p>
+              <p className="text-sm text-muted-foreground flex-1">
+                Os registros deste projeto serão feitos em nome de <strong className="text-foreground">{project.name}</strong>.
+              </p>
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                <Coins className="h-3 w-3 mr-1" />
+                {credits?.available_credits || 0} créditos
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CTA Principal */}
+        <Button 
+          onClick={handleNewRegistro} 
+          size="lg" 
+          className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white h-14 text-base font-semibold"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Registrar novo arquivo para este cliente
+        </Button>
+
+        {/* Stats Compactos */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Card>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground">Registros</span>
+              </div>
+              <p className="text-xl font-bold mt-1">{registros.length}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-yellow-500" />
-                <span className="text-sm text-muted-foreground">Seus Créditos</span>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">E-mail</span>
               </div>
-              <p className="text-2xl font-bold mt-1">{credits?.available_credits || 0}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">E-mail</span>
-              </div>
-              <p className="text-sm font-medium mt-1 truncate">
+              <p className="text-xs font-medium mt-1 truncate">
                 {project.email || "Não informado"}
               </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Criado em</span>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Criado em</span>
               </div>
-              <p className="text-sm font-medium mt-1">
+              <p className="text-xs font-medium mt-1">
                 {format(new Date(project.created_at), "dd/MM/yyyy", { locale: ptBR })}
               </p>
             </CardContent>
           </Card>
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Seus Créditos</span>
+              </div>
+              <p className="text-xl font-bold mt-1 text-primary">{credits?.available_credits || 0}</p>
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Info Banner */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                Os registros feitos neste projeto terão <strong>{project.name}</strong> como titular/autor.
-                Cada registro consumirá <strong>1 crédito da sua conta</strong>.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -320,53 +329,55 @@ export default function ProjetoDetalhe() {
                     <p className="text-muted-foreground mb-4">
                       Nenhum registro neste projeto ainda
                     </p>
-                    <Button onClick={handleNewRegistro}>
+                    <Button onClick={handleNewRegistro} className="bg-amber-500 hover:bg-amber-600 text-white">
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Primeiro Registro
                     </Button>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome do Ativo</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {registros.map((registro) => (
-                        <TableRow key={registro.id}>
-                          <TableCell className="font-medium">
-                            {registro.nome_ativo}
-                          </TableCell>
-                          <TableCell className="capitalize">
-                            {registro.tipo_ativo.replace("_", " ")}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(registro.status)}</TableCell>
-                          <TableCell>
-                            {format(new Date(registro.created_at), "dd/MM/yyyy HH:mm", {
-                              locale: ptBR,
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                            >
-                              <Link to={`/certificado/${registro.id}`}>
-                                <Eye className="h-4 w-4 mr-1" />
-                                Ver
-                              </Link>
-                            </Button>
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome do Ativo</TableHead>
+                          <TableHead className="hidden sm:table-cell">Tipo</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden sm:table-cell">Data</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {registros.map((registro) => (
+                          <TableRow key={registro.id}>
+                            <TableCell className="font-medium">
+                              {registro.nome_ativo}
+                            </TableCell>
+                            <TableCell className="capitalize hidden sm:table-cell">
+                              {registro.tipo_ativo.replace("_", " ")}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(registro.status)}</TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              {format(new Date(registro.created_at), "dd/MM/yyyy", {
+                                locale: ptBR,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                              >
+                                <Link to={`/certificado/${registro.id}`}>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Ver
+                                </Link>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -418,32 +429,34 @@ export default function ProjetoDetalhe() {
                     <p className="text-muted-foreground">Nenhuma ação registrada ainda</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ação</TableHead>
-                        <TableHead>Data/Hora</TableHead>
-                        <TableHead>Detalhes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">
-                            {getActionLabel(log.action_type)}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", {
-                              locale: ptBR,
-                            })}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
-                            {log.details ? JSON.stringify(log.details) : "-"}
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Ação</TableHead>
+                          <TableHead>Data/Hora</TableHead>
+                          <TableHead className="hidden sm:table-cell">Detalhes</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {logs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium">
+                              {getActionLabel(log.action_type)}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", {
+                                locale: ptBR,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">
+                              {log.details ? JSON.stringify(log.details) : "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

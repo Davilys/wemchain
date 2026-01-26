@@ -6,39 +6,13 @@ import {
   Plus,
   Coins,
   FolderOpen,
+  Crown,
 } from "lucide-react";
-
-const menuItems = [
-  {
-    title: "Início",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Registros",
-    url: "/meus-registros",
-    icon: FileText,
-  },
-  {
-    title: "Novo",
-    url: "/novo-registro",
-    icon: Plus,
-    isMain: true,
-  },
-  {
-    title: "Projetos",
-    url: "/projetos",
-    icon: FolderOpen,
-  },
-  {
-    title: "Créditos",
-    url: "/creditos",
-    icon: Coins,
-  },
-];
+import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 
 export function DashboardBottomNav() {
   const location = useLocation();
+  const { isBusinessPlan } = useBusinessPlan();
 
   const isActive = (url: string) => {
     if (url.includes("?")) {
@@ -47,10 +21,48 @@ export function DashboardBottomNav() {
     return location.pathname === url || location.pathname.startsWith(url + "/");
   };
 
+  // Menu items - Projetos só aparece para Business
+  const menuItems = [
+    {
+      title: "Início",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      show: true,
+    },
+    {
+      title: "Projetos",
+      url: "/projetos",
+      icon: FolderOpen,
+      isBusiness: true,
+      show: isBusinessPlan,
+    },
+    {
+      title: "Novo",
+      url: "/novo-registro",
+      icon: Plus,
+      isMain: true,
+      show: true,
+    },
+    {
+      title: "Registros",
+      url: "/meus-registros",
+      icon: FileText,
+      show: true,
+    },
+    {
+      title: "Créditos",
+      url: "/creditos",
+      icon: Coins,
+      show: true,
+    },
+  ];
+
+  const visibleItems = menuItems.filter(item => item.show);
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/50 safe-area-bottom">
       <div className="flex items-center justify-around px-2 py-1">
-        {menuItems.map((item) => {
+        {visibleItems.map((item) => {
           const active = isActive(item.url);
           
           if ("isMain" in item && item.isMain) {
@@ -75,18 +87,21 @@ export function DashboardBottomNav() {
               key={item.url}
               to={item.url}
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-2 min-w-[50px] transition-colors",
+                "flex flex-col items-center justify-center py-2 px-2 min-w-[50px] transition-colors relative",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
               <div className={cn(
-                "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all relative",
                 active ? "bg-primary/15" : "bg-transparent"
               )}>
                 <item.icon className={cn(
                   "h-5 w-5 transition-colors",
                   active ? "text-primary" : "text-muted-foreground"
                 )} />
+                {"isBusiness" in item && item.isBusiness && (
+                  <Crown className="absolute -top-1 -right-1 h-3 w-3 text-amber-500" />
+                )}
               </div>
               <span className={cn(
                 "text-[9px] font-medium mt-0.5 transition-colors",

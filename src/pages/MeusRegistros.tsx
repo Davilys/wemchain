@@ -21,6 +21,8 @@ import {
   Eye
 } from "lucide-react";
 import { getBlockchainVerificationUrl } from "@/lib/blockchainUtils";
+import { downloadCertificate } from "@/services/certificateService";
+import { toast } from "sonner";
 
 interface Registro {
   id: string;
@@ -45,6 +47,20 @@ export default function MeusRegistros() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (registroId: string) => {
+    try {
+      setDownloadingId(registroId);
+      await downloadCertificate(registroId);
+      toast.success("Certificado baixado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao baixar:", error);
+      toast.error("Erro ao baixar certificado");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -302,8 +318,14 @@ export default function MeusRegistros() {
                             size="icon"
                             className="h-8 w-8"
                             title="Baixar certificado"
+                            onClick={() => handleDownload(registro.id)}
+                            disabled={downloadingId === registro.id}
                           >
-                            <Download className="h-4 w-4" />
+                            {downloadingId === registro.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                       </div>

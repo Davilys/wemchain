@@ -13,6 +13,7 @@ interface Credits {
   last_ledger_id: string | null;
   created_at: string;
   updated_at: string;
+  is_unlimited?: boolean;
 }
 
 interface LedgerEntry {
@@ -34,6 +35,7 @@ interface UseCreditsReturn {
   error: string | null;
   refetch: () => Promise<void>;
   hasCredits: boolean;
+  isUnlimited: boolean;
   consumeCredit: (registroId: string) => Promise<{ success: boolean; error?: string; remaining?: number }>;
   reconcile: () => Promise<{ success: boolean; wasConsistent: boolean }>;
 }
@@ -44,18 +46,27 @@ export function useCredits(): UseCreditsReturn {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUnlimited, setIsUnlimited] = useState(false);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
       setCredits(null);
       setLedger([]);
       setLoading(false);
+      setIsUnlimited(false);
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
+
+      // Verificar se é super_admin (créditos ilimitados)
+      const { data: isSuperAdmin } = await supabase.rpc("is_super_admin", {
+        _user_id: user.id,
+      });
+
+      setIsUnlimited(isSuperAdmin === true);
 
       // Buscar cache de créditos
       const { data: creditsData, error: creditsError } = await supabase
@@ -80,7 +91,14 @@ export function useCredits(): UseCreditsReturn {
         console.error("Error fetching ledger:", ledgerError);
       }
 
-      setCredits(creditsData as Credits | null);
+      // Marcar créditos como ilimitados se for super_admin
+      const creditsWithUnlimited = creditsData 
+        ? { ...creditsData, is_unlimited: isSuperAdmin === true } as Credits
+        : isSuperAdmin 
+          ? { is_unlimited: true, available_credits: -1 } as unknown as Credits 
+          : null;
+
+      setCredits(creditsWithUnlimited);
       setLedger((ledgerData as LedgerEntry[]) || []);
     } catch (err) {
       console.error("Error fetching credits:", err);
@@ -224,7 +242,8 @@ export function useCredits(): UseCreditsReturn {
     loading,
     error,
     refetch: fetchCredits,
-    hasCredits: (credits?.available_credits || 0) > 0,
+    hasCredits: isUnlimited || (credits?.available_credits || 0) > 0,
+    isUnlimited,
     consumeCredit,
     reconcile,
   };

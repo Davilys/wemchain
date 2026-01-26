@@ -115,7 +115,7 @@ export default function AdminUsuarios() {
 
   // Create user dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createData, setCreateData] = useState({ email: "", password: "", full_name: "" });
+  const [createData, setCreateData] = useState({ email: "", password: "", full_name: "", initial_credits: 0 });
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -250,21 +250,58 @@ export default function AdminUsuarios() {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
+
+    if (createData.password.length < 6) {
+      toast.error("Senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
     setCreating(true);
 
     try {
-      // Note: Creating users requires admin SDK or service role
-      // This is a placeholder - in production you'd use an edge function
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        throw new Error("Sessão não encontrada");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            email: createData.email,
+            password: createData.password,
+            full_name: createData.full_name,
+            initial_credits: createData.initial_credits || 0,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao criar usuário");
+      }
+
       await logAdminAction({
         actionType: "admin_user_created",
         metadata: {
           email: createData.email,
           full_name: createData.full_name,
+          initial_credits: createData.initial_credits,
+          new_user_id: result.user?.id,
         },
       });
 
-      toast.info("Funcionalidade de criação requer configuração adicional do backend");
+      toast.success(`Usuário ${createData.full_name} criado com sucesso!`);
       setCreateDialogOpen(false);
+      setCreateData({ email: "", password: "", full_name: "", initial_credits: 0 });
+      fetchUsers();
     } catch (error: any) {
       toast.error(error.message || "Erro ao criar usuário");
     } finally {
@@ -624,7 +661,7 @@ export default function AdminUsuarios() {
             <DialogHeader>
               <DialogTitle>Criar Novo Usuário</DialogTitle>
               <DialogDescription>
-                Crie uma nova conta de usuário. O usuário receberá um email de confirmação.
+                Crie uma nova conta de usuário. O email será confirmado automaticamente.
               </DialogDescription>
             </DialogHeader>
             
@@ -633,6 +670,7 @@ export default function AdminUsuarios() {
                 <Label htmlFor="create_name">Nome Completo *</Label>
                 <Input
                   id="create_name"
+                  placeholder="João da Silva"
                   value={createData.full_name}
                   onChange={(e) => setCreateData({ ...createData, full_name: e.target.value })}
                 />
@@ -642,18 +680,34 @@ export default function AdminUsuarios() {
                 <Input
                   id="create_email"
                   type="email"
+                  placeholder="joao@exemplo.com"
                   value={createData.email}
                   onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="create_password">Senha *</Label>
+                <Label htmlFor="create_password">Senha * (mín. 6 caracteres)</Label>
                 <Input
                   id="create_password"
                   type="password"
+                  placeholder="••••••••"
                   value={createData.password}
                   onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create_credits">Créditos Iniciais</Label>
+                <Input
+                  id="create_credits"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={createData.initial_credits || ""}
+                  onChange={(e) => setCreateData({ ...createData, initial_credits: parseInt(e.target.value) || 0 })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Opcional: quantidade de créditos para o novo usuário
+                </p>
               </div>
             </div>
 
@@ -661,7 +715,10 @@ export default function AdminUsuarios() {
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreateUser} disabled={creating}>
+              <Button 
+                onClick={handleCreateUser} 
+                disabled={creating || !createData.email || !createData.password || !createData.full_name}
+              >
                 {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Criar Usuário
               </Button>

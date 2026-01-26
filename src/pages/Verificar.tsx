@@ -4,39 +4,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search,
   CheckCircle2,
   XCircle,
   ExternalLink,
   Hash,
-  FileText,
   Clock,
   Loader2,
   Shield
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface VerificationResult {
   found: boolean;
+  verified: boolean;
+  hash: string;
+  message?: string;
+  suggestion?: string;
   registro?: {
+    id: string;
     nome_ativo: string;
     tipo_ativo: string;
-    hash_sha256: string;
+    arquivo_nome: string;
     created_at: string;
   };
-  transacao?: {
-    tx_hash: string;
-    block_number: number;
+  blockchain?: {
     network: string;
-    timestamp_blockchain: string;
+    method: string;
+    methodDescription: string;
+    tx_hash: string;
+    confirmed_at: string;
+    block_number: number | null;
+    confirmations: number | null;
+    bitcoin_anchored: boolean;
   };
+  verificationInstructions?: string;
+  legal_notice?: string;
 }
 
 export default function Verificar() {
-  const [searchType, setSearchType] = useState<"hash" | "txid">("hash");
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VerificationResult | null>(null);
@@ -55,99 +62,34 @@ export default function Verificar() {
     setResult(null);
 
     try {
-      if (searchType === "hash") {
-        const { data: registro, error } = await supabase
-          .from("registros")
-          .select(`
-            nome_ativo,
-            tipo_ativo,
-            hash_sha256,
-            created_at,
-            transacoes_blockchain (
-              tx_hash,
-              block_number,
-              network,
-              timestamp_blockchain
-            )
-          `)
-          .eq("hash_sha256", searchValue.trim())
-          .eq("status", "confirmado")
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (registro) {
-          const transacao = Array.isArray(registro.transacoes_blockchain) 
-            ? registro.transacoes_blockchain[0] 
-            : registro.transacoes_blockchain;
-          
-          setResult({
-            found: true,
-            registro: {
-              nome_ativo: registro.nome_ativo,
-              tipo_ativo: registro.tipo_ativo,
-              hash_sha256: registro.hash_sha256 || "",
-              created_at: registro.created_at
-            },
-            transacao: transacao ? {
-              tx_hash: transacao.tx_hash,
-              block_number: transacao.block_number || 0,
-              network: transacao.network,
-              timestamp_blockchain: transacao.timestamp_blockchain || ""
-            } : undefined
-          });
-        } else {
-          setResult({ found: false });
+      // Use the public verify-timestamp edge function (no auth required)
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const params = new URLSearchParams({ hash: searchValue.trim().toLowerCase() });
+      
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/verify-timestamp?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
         }
-      } else {
-        const { data: transacao, error } = await supabase
-          .from("transacoes_blockchain")
-          .select(`
-            tx_hash,
-            block_number,
-            network,
-            timestamp_blockchain,
-            registros (
-              nome_ativo,
-              tipo_ativo,
-              hash_sha256,
-              created_at
-            )
-          `)
-          .eq("tx_hash", searchValue.trim())
-          .maybeSingle();
+      );
 
-        if (error) throw error;
-
-        if (transacao) {
-          const registro = Array.isArray(transacao.registros) 
-            ? transacao.registros[0] 
-            : transacao.registros;
-
-          setResult({
-            found: true,
-            registro: registro ? {
-              nome_ativo: registro.nome_ativo,
-              tipo_ativo: registro.tipo_ativo,
-              hash_sha256: registro.hash_sha256 || "",
-              created_at: registro.created_at
-            } : undefined,
-            transacao: {
-              tx_hash: transacao.tx_hash,
-              block_number: transacao.block_number || 0,
-              network: transacao.network,
-              timestamp_blockchain: transacao.timestamp_blockchain || ""
-            }
-          });
-        } else {
-          setResult({ found: false });
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro na verificação");
       }
+
+      const data: VerificationResult = await response.json();
+      setResult(data);
+      
     } catch (error) {
       console.error("Erro na verificação:", error);
       toast({
         title: "Erro na verificação",
-        description: "Ocorreu um erro ao verificar. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao verificar. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -195,54 +137,26 @@ export default function Verificar() {
             <CardHeader>
               <CardTitle className="text-2xl tracking-tight">Verificar Registro</CardTitle>
               <CardDescription>
-                Insira o hash do arquivo ou o ID da transação blockchain para verificar
+                Insira o hash SHA-256 do arquivo para verificar seu registro
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as "hash" | "txid")}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="hash" className="gap-2">
-                    <Hash className="h-4 w-4" />
-                    Por Hash
-                  </TabsTrigger>
-                  <TabsTrigger value="txid" className="gap-2">
-                    <FileText className="h-4 w-4" />
-                    Por TXID
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="hash" className="mt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="hash">Hash SHA-256 do arquivo</Label>
-                    <Input
-                      id="hash"
-                      placeholder="Ex: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="font-mono text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      O hash está no seu certificado digital ou pode ser gerado a partir do arquivo original
-                    </p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="txid" className="mt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="txid">ID da Transação (TXID)</Label>
-                    <Input
-                      id="txid"
-                      placeholder="Ex: 0x1234567890abcdef..."
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="font-mono text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      O TXID está no seu certificado digital
-                    </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
+              <div className="space-y-2">
+                <Label htmlFor="hash" className="flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  Hash SHA-256 do arquivo
+                </Label>
+                <Input
+                  id="hash"
+                  placeholder="Ex: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  O hash está no seu certificado digital ou pode ser gerado a partir do arquivo original
+                </p>
+              </div>
 
               <Button 
                 onClick={handleSearch} 
@@ -316,7 +230,7 @@ export default function Verificar() {
                         <div className="md:col-span-2">
                           <span className="text-muted-foreground">Hash SHA-256:</span>
                           <p className="font-mono text-xs break-all bg-muted p-2 rounded mt-1">
-                            {result.registro.hash_sha256}
+                            {result.hash}
                           </p>
                         </div>
                         <div>
@@ -327,36 +241,38 @@ export default function Verificar() {
                     </div>
                   )}
 
-                  {result.transacao && (
+                  {result.blockchain && (
                     <div className="space-y-4 pt-4 border-t">
                       <h4 className="font-semibold text-foreground">Dados da Blockchain</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Rede:</span>
-                          <p className="font-medium capitalize">{result.transacao.network}</p>
+                          <p className="font-medium">{result.blockchain.methodDescription}</p>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Bloco:</span>
-                          <p className="font-medium">{result.transacao.block_number}</p>
-                        </div>
+                        {result.blockchain.block_number && (
+                          <div>
+                            <span className="text-muted-foreground">Bloco:</span>
+                            <p className="font-medium">{result.blockchain.block_number}</p>
+                          </div>
+                        )}
                         <div className="md:col-span-2">
                           <span className="text-muted-foreground">ID da Transação:</span>
                           <p className="font-mono text-xs break-all bg-muted p-2 rounded mt-1">
-                            {result.transacao.tx_hash}
+                            {result.blockchain.tx_hash}
                           </p>
                         </div>
-                        {result.transacao.timestamp_blockchain && (
+                        {result.blockchain.confirmed_at && (
                           <div className="md:col-span-2 flex items-center gap-2 text-muted-foreground">
                             <Clock className="h-4 w-4" />
-                            <span>Confirmado na blockchain em: {formatDate(result.transacao.timestamp_blockchain)}</span>
+                            <span>Confirmado na blockchain em: {formatDate(result.blockchain.confirmed_at)}</span>
                           </div>
                         )}
                       </div>
                       
-                      {result.transacao.network === "polygon" ? (
+                      {result.blockchain.network === "polygon" ? (
                         <Button variant="outline" asChild className="w-full mt-4 rounded-xl">
                           <a 
-                            href={getVerificationUrl(result.transacao.tx_hash, result.transacao.network)} 
+                            href={getVerificationUrl(result.blockchain.tx_hash, result.blockchain.network)} 
                             target="_blank" 
                             rel="noopener noreferrer"
                           >
@@ -367,7 +283,13 @@ export default function Verificar() {
                       ) : (
                         <div className="w-full mt-4 p-3 bg-muted rounded-xl text-center text-sm text-muted-foreground">
                           <Shield className="h-4 w-4 inline-block mr-2" />
-                          Verificado via OpenTimestamps (ancorado no Bitcoin)
+                          {result.verificationInstructions || "Verificado via OpenTimestamps (ancorado no Bitcoin)"}
+                        </div>
+                      )}
+
+                      {result.legal_notice && (
+                        <div className="w-full mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-muted-foreground">
+                          <strong>Aviso Legal:</strong> {result.legal_notice}
                         </div>
                       )}
                     </div>
@@ -413,16 +335,16 @@ export default function Verificar() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-purple-500" />
+                      <ExternalLink className="h-4 w-4 text-purple-500" />
                     </div>
-                    Verificação por TXID
+                    Verificação Externa
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Localize o ID da Transação (TXID) no seu certificado</li>
-                    <li>Cole o TXID no campo de busca</li>
-                    <li>Você também pode verificar diretamente no PolygonScan</li>
+                    <li>Para registros Polygon, você pode verificar diretamente no PolygonScan</li>
+                    <li>Para OpenTimestamps, acesse opentimestamps.org</li>
+                    <li>O ID da transação está no seu certificado digital</li>
                   </ol>
                 </CardContent>
               </Card>

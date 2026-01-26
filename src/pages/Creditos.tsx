@@ -22,7 +22,7 @@ import {
 
 export default function Creditos() {
   const { user, loading: authLoading } = useAuth();
-  const { credits, ledger, loading: creditsLoading } = useCredits();
+  const { credits, ledger, loading: creditsLoading, isUnlimited } = useCredits();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +65,7 @@ export default function Creditos() {
           totalCredits={credits?.total_credits || 0}
           usedCredits={credits?.used_credits || 0}
           loading={creditsLoading}
+          isUnlimited={isUnlimited}
         />
 
         {/* Info Block */}

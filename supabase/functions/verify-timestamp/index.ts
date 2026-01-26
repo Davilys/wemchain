@@ -61,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    // Search for registro with this hash - use limit(1) to handle duplicates
+    // Search for registro with this hash - handle potential duplicates
     const { data: registros, error: registroError } = await supabase
       .from('registros')
       .select(`
@@ -86,10 +86,11 @@ serve(async (req) => {
       `)
       .eq('hash_sha256', fileHash.toLowerCase())
       .eq('status', 'confirmado')
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .order('created_at', { ascending: false });
     
+    // Get the first (most recent) registro if multiple exist
     const registro = registros && registros.length > 0 ? registros[0] : null;
+    const totalRegistros = registros?.length || 0;
 
     if (registroError) {
       console.error('[VERIFY-TIMESTAMP] Database error:', registroError);

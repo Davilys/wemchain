@@ -63,14 +63,11 @@ const plans = [
     features: [
       "3 créditos de registro inclusos por mês",
       "Registros adicionais por R$ 39,00 cada",
-      "Gestão de projetos e registros de propriedade",
-      "Organização por linha do tempo",
-      "Cadastro e gestão de clientes",
-      "Definição de funções para equipe",
-      "Transferência de propriedade de registros",
-      "Dashboard completo",
-      "Certificados digitais em PDF",
-      "Verificação pública em blockchain"
+      "Registro de arquivos digitais como prova de propriedade",
+      "Certificados digitais em PDF para cada registro",
+      "Verificação pública em blockchain",
+      "Dashboard para acompanhamento dos registros",
+      "Histórico completo dos registros realizados"
     ],
     highlighted: false,
     cta: "Assinar Plano",

@@ -19,9 +19,6 @@ import {
   Table,
   Mail,
   Users,
-  FolderOpen,
-  UserPlus,
-  ArrowLeftRight,
   LayoutDashboard,
   BadgeCheck,
   HelpCircle,
@@ -103,7 +100,7 @@ export default function Home() {
             {/* Feature Cards Row */}
             <div className="flex flex-wrap gap-4 justify-center items-center animate-fade-up delay-500 px-4 max-w-4xl mx-auto">
               {[
-                { icon: FolderOpen, color: "text-blue-500", bg: "bg-blue-500/10", label: "Gestão de Projetos" },
+                { icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10", label: "Prova de Propriedade" },
                 { icon: Lock, color: "text-purple-500", bg: "bg-purple-500/10", label: "Prova em Blockchain" },
                 { icon: Award, color: "text-green-500", bg: "bg-green-500/10", label: "Certificado Digital" },
                 { icon: Globe, color: "text-yellow-500", bg: "bg-yellow-500/10", label: "Verificação Pública" },
@@ -138,9 +135,9 @@ export default function Home() {
               O que é a <span className="text-primary">WebMarcas</span>?
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-3xl mx-auto">
-              A WebMarcas é uma plataforma de <strong className="text-foreground">gestão de propriedade intelectual</strong>, 
-              que permite registrar arquivos digitais em blockchain para gerar prova técnica de anterioridade, 
-              organizar projetos, gerenciar clientes e controlar a titularidade de registros de forma segura e auditável.
+              A WebMarcas é uma plataforma de <strong className="text-foreground">registro e comprovação de propriedade intelectual</strong>, 
+              que permite registrar arquivos digitais em blockchain para gerar prova técnica de anterioridade 
+              com emissão de certificado digital e verificação pública.
             </p>
           </div>
         </div>
@@ -215,14 +212,11 @@ export default function Home() {
               {[
                 { icon: FileCheck, text: "3 créditos de registro em blockchain por mês" },
                 { icon: Zap, text: "Registros adicionais por R$ 39,00 cada" },
-                { icon: FolderOpen, text: "Gestão de projetos e registros de propriedade" },
-                { icon: Clock, text: "Organização em linha do tempo" },
-                { icon: Users, text: "Cadastro e gestão de clientes" },
-                { icon: UserPlus, text: "Definição de funções para equipe" },
-                { icon: ArrowLeftRight, text: "Transferência de propriedade (titularidade)" },
-                { icon: LayoutDashboard, text: "Dashboard completo" },
-                { icon: Award, text: "Certificados digitais em PDF" },
+                { icon: FileText, text: "Registro de arquivos digitais como prova de propriedade" },
+                { icon: Award, text: "Certificados digitais em PDF para cada registro" },
                 { icon: Globe, text: "Verificação pública em blockchain" },
+                { icon: LayoutDashboard, text: "Dashboard para acompanhamento dos registros" },
+                { icon: Clock, text: "Histórico completo dos registros realizados" },
               ].map((item, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -381,7 +375,6 @@ export default function Home() {
               { icon: Code, title: "Desenvolvedores e equipes técnicas", color: "text-green-500", bg: "bg-green-500/10" },
               { icon: Video, title: "Criadores de conteúdo", color: "text-yellow-500", bg: "bg-yellow-500/10" },
               { icon: FileText, title: "Profissionais que precisam comprovar autoria", color: "text-orange-500", bg: "bg-orange-500/10" },
-              { icon: FolderOpen, title: "Quem precisa de organização de projetos", color: "text-blue-500", bg: "bg-blue-500/10" },
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-background border border-border/50 hover:border-primary/30 transition-all group">
                 <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>

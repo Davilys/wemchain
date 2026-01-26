@@ -53,12 +53,12 @@ export default function ProjetoDetalhe() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { credits } = useCredits();
-  const { projects, updateProject, getProjectLogs } = useProjects();
+  const { projects, loading: projectsLoading, updateProject, getProjectLogs } = useProjects();
 
   const [project, setProject] = useState<Project | null>(null);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [logs, setLogs] = useState<ProjectLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("registros");
 
@@ -68,18 +68,54 @@ export default function ProjetoDetalhe() {
     }
   }, [user, authLoading, navigate]);
 
+  // Buscar projeto diretamente do banco se não estiver na lista
   useEffect(() => {
-    const foundProject = projects.find((p) => p.id === id);
-    if (foundProject) {
-      setProject(foundProject);
-    }
-  }, [projects, id]);
+    const loadProject = async () => {
+      if (!id || !user) return;
+      
+      // Primeiro tenta da lista em cache
+      const foundProject = projects.find((p) => p.id === id);
+      if (foundProject) {
+        setProject(foundProject);
+        return;
+      }
+      
+      // Se a lista de projetos ainda está carregando, espera
+      if (projectsLoading) return;
+      
+      // Se não encontrou na lista e não está carregando, busca direto do banco
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", id)
+          .eq("owner_user_id", user.id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (data) {
+          // Buscar contagem de registros
+          const { count } = await supabase
+            .from("registros")
+            .select("*", { count: "exact", head: true })
+            .eq("project_id", data.id);
+          
+          setProject({ ...data, registros_count: count || 0 } as Project);
+        }
+      } catch (error) {
+        console.error("Error loading project:", error);
+      }
+    };
 
+    loadProject();
+  }, [projects, projectsLoading, id, user]);
+
+  // Buscar registros e logs do projeto
   useEffect(() => {
     const fetchData = async () => {
       if (!id || !user) return;
 
-      setLoading(true);
+      setDataLoading(true);
       try {
         // Buscar registros do projeto
         const { data: registrosData, error: registrosError } = await supabase
@@ -98,12 +134,12 @@ export default function ProjetoDetalhe() {
         console.error("Error fetching project data:", error);
         toast.error("Erro ao carregar dados do projeto");
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
 
     fetchData();
-  }, [id, user, getProjectLogs]);
+  }, [id, user]); // Removido getProjectLogs das dependências
 
   const handleEditProject = async (data: any) => {
     if (project) {
@@ -155,7 +191,7 @@ export default function ProjetoDetalhe() {
     return labels[actionType] || actionType;
   };
 
-  if (loading || authLoading) {
+  if (dataLoading || authLoading || projectsLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

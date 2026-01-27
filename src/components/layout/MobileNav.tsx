@@ -207,9 +207,9 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                   asChild 
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-semibold"
                 >
-                  <Link to="/verificar" onClick={handleLinkClick}>
+                  <Link to="/verificar-registro" onClick={handleLinkClick}>
                     <Shield className="h-4 w-4 mr-2" />
-                    Consultar Marca
+                    Verificar Registro
                   </Link>
                 </Button>
                 <Button 

@@ -585,18 +585,34 @@ export default function VerificarRegistro() {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="bg-gradient-hero py-20 md:py-28">
-        <div className="container mx-auto px-4 text-center">
-          <Badge className="bg-secondary/10 text-secondary border-secondary/20 mb-4">
-            <Shield className="h-3 w-3 mr-1" />
-            Verificação Independente
-          </Badge>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-            Verificar <span className="text-secondary">Prova de Existência</span>
+      {/* Hero Section - Premium Visual Identity */}
+      <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden bg-gradient-hero">
+        {/* Decorative overlays */}
+        <div className="absolute inset-0 bg-gradient-radial" />
+        <div className="absolute inset-0 pattern-dots" />
+        
+        {/* Floating blurs */}
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] md:w-[500px] md:h-[500px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-primary/3 rounded-full blur-[100px]" />
+        
+        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10 text-center">
+          {/* Premium Badge */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-8 animate-fade-up">
+            <Shield className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-primary tracking-wide">
+              Verificação Independente
+            </span>
+          </div>
+          
+          {/* Main Title */}
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
+            <span className="text-foreground">Verificar </span>
+            <span className="text-primary text-shadow-glow">Prova de Existência</span>
           </h1>
-          <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto">
-            Verifique a autenticidade de um registro em blockchain de forma pública e independente, 
+          
+          {/* Subtitle */}
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
+            Verifique a <span className="text-foreground font-medium">autenticidade</span> de um registro em blockchain de forma pública e independente, 
             sem necessidade de login ou intervenção da WebMarcas.
           </p>
         </div>
@@ -617,15 +633,16 @@ export default function VerificarRegistro() {
       </section>
 
       {/* Verification Section */}
-      <section className="py-20 md:py-28">
+      {/* Verification Section */}
+      <section className="py-16 md:py-24 relative">
         <div className="container mx-auto px-4">
-          <Card className="max-w-3xl mx-auto border-border/50">
-            <CardHeader>
-              <CardTitle className="font-display text-2xl flex items-center gap-2">
-                <Search className="h-6 w-6 text-secondary" />
+          <Card className="max-w-3xl mx-auto card-premium border-border/50 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-primary/20">
+              <CardTitle className="font-display text-2xl flex items-center gap-2 text-foreground">
+                <Search className="h-6 w-6 text-primary" />
                 Verificar Registro
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-muted-foreground">
                 Escolha o método de verificação abaixo
               </CardDescription>
             </CardHeader>
@@ -648,7 +665,7 @@ export default function VerificarRegistro() {
                   <div className="space-y-2">
                     <Label htmlFor="original-file">Arquivo Original</Label>
                     <div 
-                      className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-secondary/50 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
                       onClick={() => originalFileRef.current?.click()}
                     >
                       <input
@@ -660,7 +677,7 @@ export default function VerificarRegistro() {
                       />
                       {originalFile ? (
                         <div className="flex items-center justify-center gap-3">
-                          <FileText className="h-8 w-8 text-secondary" />
+                          <FileText className="h-8 w-8 text-primary" />
                           <div className="text-left">
                             <p className="font-medium text-foreground">{originalFile.name}</p>
                             <p className="text-sm text-muted-foreground">
@@ -692,7 +709,7 @@ export default function VerificarRegistro() {
                   <div className="space-y-2">
                     <Label htmlFor="ots-file">Arquivo de Prova (.ots)</Label>
                     <div 
-                      className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-secondary/50 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
                       onClick={() => otsFileRef.current?.click()}
                     >
                       <input
@@ -728,7 +745,7 @@ export default function VerificarRegistro() {
                   <Button 
                     onClick={handleFileVerification} 
                     disabled={loading || !originalFile || !otsFile} 
-                    className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 btn-premium"
                   >
                     {loading ? (
                       <>
@@ -763,7 +780,7 @@ export default function VerificarRegistro() {
                   <Button 
                     onClick={handleHashVerification} 
                     disabled={loading || !manualHash.trim()} 
-                    className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 btn-premium"
                   >
                     {loading ? (
                       <>
@@ -788,12 +805,13 @@ export default function VerificarRegistro() {
       </section>
 
       {/* How to Verify Section */}
-      <section className="py-20 md:py-28 bg-muted/50">
-        <div className="container mx-auto px-4">
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial-bottom" />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Como Verificar
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
+                Como <span className="text-primary text-shadow-glow">Verificar</span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 Três níveis de verificação para máxima transparência e segurança jurídica
@@ -802,12 +820,12 @@ export default function VerificarRegistro() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Level 1 */}
-              <Card className="border-border/50">
+              <Card className="card-premium border-border/50">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <span className="text-xl font-bold text-primary">1</span>
                   </div>
-                  <CardTitle className="text-lg">Verificação Interna</CardTitle>
+                  <CardTitle className="text-lg text-foreground">Verificação Interna</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   <ul className="space-y-2">
@@ -819,12 +837,12 @@ export default function VerificarRegistro() {
               </Card>
 
               {/* Level 2 */}
-              <Card className="border-secondary/50 bg-secondary/5">
+              <Card className="card-premium border-primary/30 bg-primary/5">
                 <CardHeader>
-                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
-                    <span className="text-xl font-bold text-secondary">2</span>
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <span className="text-xl font-bold text-primary">2</span>
                   </div>
-                  <CardTitle className="text-lg">Verificação Técnica</CardTitle>
+                  <CardTitle className="text-lg text-foreground">Verificação Técnica</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   <ul className="space-y-2">
@@ -836,12 +854,12 @@ export default function VerificarRegistro() {
               </Card>
 
               {/* Level 3 */}
-              <Card className="border-orange-400/50 bg-orange-400/5">
+              <Card className="card-premium border-orange-500/30 bg-orange-500/5">
                 <CardHeader>
-                  <div className="h-12 w-12 rounded-full bg-orange-400/10 flex items-center justify-center mb-4">
-                    <span className="text-xl font-bold text-orange-400">3</span>
+                  <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
+                    <span className="text-xl font-bold text-orange-500">3</span>
                   </div>
-                  <CardTitle className="text-lg">Verificação Externa</CardTitle>
+                  <CardTitle className="text-lg text-foreground">Verificação Externa</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   <ul className="space-y-2">
@@ -857,12 +875,14 @@ export default function VerificarRegistro() {
       </section>
 
       {/* Legal Notice Section */}
-      <section className="py-16 bg-primary/5 border-t border-border">
+      <section className="py-16 relative overflow-hidden bg-gradient-to-t from-muted/30 to-transparent border-t border-border/50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <AlertTriangle className="h-10 w-10 text-orange-400 mx-auto mb-4" />
-            <h3 className="font-display text-xl font-bold text-foreground mb-4">
-              Blindagem Jurídica
+            <div className="h-14 w-14 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="h-7 w-7 text-orange-500" />
+            </div>
+            <h3 className="font-display text-xl font-extrabold text-foreground mb-4 tracking-tight">
+              Blindagem <span className="text-primary">Jurídica</span>
             </h3>
             <div className="space-y-4 text-sm text-muted-foreground">
               <p>
@@ -876,7 +896,7 @@ export default function VerificarRegistro() {
                 <strong className="text-foreground"> imutável</strong> e 
                 <strong className="text-foreground"> auditável</strong>.
               </p>
-              <p className="pt-4 border-t border-border">
+              <p className="pt-4 border-t border-border/50">
                 Este registro constitui prova técnica de anterioridade. <strong>Não substitui</strong> o 
                 registro de marca junto ao INPI (Instituto Nacional da Propriedade Industrial).
               </p>

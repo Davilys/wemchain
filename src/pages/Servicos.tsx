@@ -118,15 +118,15 @@ export default function Servicos() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-20 md:py-28 bg-background">
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
               <Card 
                 key={index} 
                 className={`relative flex flex-col card-premium ${
                   plan.highlighted 
-                    ? "border-primary shadow-lg shadow-primary/10 scale-105" 
+                    ? "border-primary shadow-lg shadow-primary/10 lg:scale-105" 
                     : ""
                 }`}
               >
@@ -179,9 +179,9 @@ export default function Servicos() {
       </section>
 
       {/* Additional Services */}
-      <section className="py-20 md:py-28 bg-card border-y border-border/30">
+      <section className="py-16 md:py-24 bg-card border-y border-border">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">
               Serviços <span className="text-primary">Complementares</span>
             </h2>
@@ -190,7 +190,7 @@ export default function Servicos() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
             {additionalServices.map((service, index) => (
               <Card key={index} className="card-premium">
                 <CardHeader>

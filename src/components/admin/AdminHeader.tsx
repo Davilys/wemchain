@@ -17,8 +17,8 @@ export function AdminHeader() {
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "AD";
 
   return (
-    <header className="h-16 border-b border-border/50 bg-card/95 backdrop-blur-xl flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 shadow-sm">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Premium Admin Badge */}
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
           <ShieldCheck className="h-4 w-4 text-primary" />
@@ -47,7 +47,7 @@ export function AdminHeader() {
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-border/50">
+          <DropdownMenuContent align="end" className="w-48 bg-card border-border shadow-lg z-50">
             <DropdownMenuItem className="font-body">
               <User className="h-4 w-4 mr-2" />
               Meu Perfil

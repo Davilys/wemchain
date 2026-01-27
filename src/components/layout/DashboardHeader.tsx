@@ -20,7 +20,7 @@ export function DashboardHeader() {
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
   return (
-    <header className="h-16 border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-40 flex items-center justify-between px-4 md:px-6">
+    <header className="h-16 border-b border-border bg-card sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shadow-sm">
       {/* Left: Logo */}
       <div className="flex items-center gap-3">
         <Link to="/dashboard" className="flex items-center gap-3 lg:hidden">
@@ -58,11 +58,11 @@ export function DashboardHeader() {
               <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-border/50">
+          <DropdownMenuContent align="end" className="w-48 bg-card border-border shadow-lg z-50">
             <div className="px-2 py-1.5 text-xs text-muted-foreground font-body truncate">
               {user?.email}
             </div>
-            <DropdownMenuSeparator className="bg-border/50" />
+            <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
               <Link to="/creditos" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -75,7 +75,7 @@ export function DashboardHeader() {
                 Configurações
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-border/50" />
+            <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem 
               onClick={signOut}
               className="text-destructive font-body text-sm cursor-pointer"

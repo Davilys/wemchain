@@ -82,7 +82,7 @@ export default function Home() {
                 asChild 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-secondary bg-secondary/80 text-foreground hover:bg-secondary font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
+                className="border-2 border-border bg-card text-foreground hover:bg-muted font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
               >
                 <Link to="/como-funciona">
                   Ver como funciona
@@ -91,7 +91,7 @@ export default function Home() {
             </div>
 
             {/* Trust Badge */}
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary/60 border border-border/50 mb-12 animate-fade-up delay-400">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted border border-border mb-12 animate-fade-up delay-400">
               <BadgeCheck className="h-4 w-4 text-green-500" />
               <span className="text-sm text-muted-foreground">
                 <span className="text-foreground font-medium">R$ 99/mês</span> com 3 créditos de registro inclusos
@@ -108,9 +108,9 @@ export default function Home() {
               ].map((item, index) => (
                 <div 
                   key={index} 
-                  className="relative flex flex-col items-center p-5 rounded-2xl bg-card border border-border/50 min-w-[140px] group hover:-translate-y-1 transition-all duration-300"
+                  className="relative flex flex-col items-center p-5 rounded-xl bg-card border border-border min-w-[140px] group hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-md"
                 >
-                  <div className={`absolute top-0 right-0 w-16 h-16 ${item.bg} rounded-bl-[60px] rounded-tr-2xl opacity-50`} />
+                  <div className={`absolute top-0 right-0 w-16 h-16 ${item.bg} rounded-bl-[60px] rounded-tr-xl opacity-50`} />
                   <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center mb-3 relative z-10`}>
                     <item.icon className={`h-6 w-6 ${item.color}`} />
                   </div>

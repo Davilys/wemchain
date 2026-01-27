@@ -90,7 +90,7 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col border-r border-border/50 bg-card/95 backdrop-blur-sm transition-all duration-300 relative",
+        "hidden lg:flex flex-col border-r border-border bg-card transition-all duration-300 relative shadow-sm",
         collapsed ? "w-16" : "w-60"
       )}
     >

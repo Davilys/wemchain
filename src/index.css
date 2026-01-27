@@ -8,58 +8,63 @@
 
 @layer base {
   :root {
-    /* Light Theme - Clean White Background like webpatentes.com.br light mode */
-    --background: 0 0% 100%;
+    /* Light Theme - Clean Professional #F8FAFC background */
+    --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
-    --card: 210 40% 98%;
+    /* Cards - Pure white #FFFFFF */
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Vibrant Blue - Main brand color #0080ff */
-    --primary: 210 100% 50%;
+    /* Primary: Institutional Blue #2563EB */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Deep Navy Blue */
-    --secondary: 222 47% 11%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary: Light gray for secondary buttons */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    /* Muted */
-    --muted: 210 20% 96%;
+    /* Muted - Subtle gray */
+    --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    /* Accent: Same as primary for consistency */
-    --accent: 210 100% 50%;
+    /* Accent: Same as primary */
+    --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* Destructive: #DC2626 */
+    --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    /* Success: #16A34A */
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
+    /* Warning: #F59E0B */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     --whatsapp: 142 70% 49%;
 
+    /* Border: #E2E8F0 */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 210 100% 50%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    /* Sidebar - Light version */
+    /* Sidebar - Light version with white bg */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
@@ -147,23 +152,23 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
-  /* Text gradients - Vibrant Blue matching WebMarcas */
+  /* Text gradients - Institutional Blue */
   .text-gradient-cyan {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 65%) 100%);
+    background-image: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 50%) 100%);
   }
 
   .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 60%) 100%);
+    background-image: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 50%) 100%);
   }
 
-  /* Background gradients - Premium dark theme matching webpatentes.com.br */
+  /* Background gradients - Light mode uses subtle backgrounds */
   .bg-gradient-hero {
     background: linear-gradient(180deg, 
-      hsl(222 47% 5%) 0%, 
-      hsl(222 47% 6%) 50%, 
-      hsl(222 40% 8%) 100%
+      hsl(210 40% 98%) 0%, 
+      hsl(210 40% 96%) 50%, 
+      hsl(210 40% 98%) 100%
     );
   }
 
@@ -180,14 +185,22 @@
   }
 
   .bg-gradient-primary {
-    background: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 60%) 100%);
+    background: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 55%) 100%);
   }
 
   .bg-gradient-radial {
+    background: radial-gradient(ellipse at center top, hsl(217 91% 60% / 0.05) 0%, transparent 60%);
+  }
+
+  .dark .bg-gradient-radial {
     background: radial-gradient(ellipse at center top, hsl(210 100% 50% / 0.08) 0%, transparent 60%);
   }
 
   .bg-gradient-radial-bottom {
+    background: radial-gradient(ellipse at center bottom, hsl(217 91% 60% / 0.03) 0%, transparent 60%);
+  }
+
+  .dark .bg-gradient-radial-bottom {
     background: radial-gradient(ellipse at center bottom, hsl(210 100% 50% / 0.06) 0%, transparent 60%);
   }
 
@@ -213,7 +226,7 @@
 
   /* Premium card effects - WebMarcas style */
   .card-premium {
-    @apply relative overflow-hidden transition-all duration-300 bg-card border border-border/50 rounded-2xl;
+    @apply relative overflow-hidden transition-all duration-300 bg-card border border-border rounded-xl shadow-sm;
   }
 
   .dark .card-premium {
@@ -223,6 +236,10 @@
   .card-premium::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(145deg, hsl(217 91% 60% / 0.03) 0%, transparent 100%);
+  }
+
+  .dark .card-premium::before {
     background: linear-gradient(145deg, hsl(210 100% 50% / 0.05) 0%, transparent 100%);
   }
 
@@ -231,16 +248,24 @@
   }
 
   .card-premium:hover {
-    @apply shadow-xl -translate-y-1;
+    @apply shadow-lg -translate-y-0.5;
+    box-shadow: 0 10px 25px -8px hsl(217 91% 60% / 0.1);
+  }
+
+  .dark .card-premium:hover {
     box-shadow: 0 20px 40px -12px hsl(210 100% 50% / 0.15);
   }
 
   /* Card shadow hover */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
   }
 
   .card-hover:hover {
+    box-shadow: 0 10px 25px -8px hsl(var(--primary) / 0.15);
+  }
+
+  .dark .card-hover:hover {
     box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.2);
   }
 
@@ -314,8 +339,13 @@
     -webkit-mask-composite: xor;
   }
 
-  /* Subtle pattern overlay */
+  /* Subtle pattern overlay - very subtle in light mode */
   .pattern-dots {
+    background-image: radial-gradient(circle at 1px 1px, hsl(217 91% 60% / 0.03) 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+
+  .dark .pattern-dots {
     background-image: radial-gradient(circle at 1px 1px, hsl(210 100% 50% / 0.02) 1px, transparent 0);
     background-size: 40px 40px;
   }

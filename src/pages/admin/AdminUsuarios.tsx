@@ -424,22 +424,22 @@ export default function AdminUsuarios() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold font-display">Gestão de Usuários</h1>
-            <p className="text-muted-foreground font-body">
+            <h1 className="text-2xl md:text-3xl font-bold font-display">Gestão de Usuários</h1>
+            <p className="text-muted-foreground font-body text-sm md:text-base">
               Visualize e gerencie usuários do sistema
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <Button onClick={() => setCreateDialogOpen(true)} className="w-full sm:w-auto">
             <UserPlus className="h-4 w-4 mr-2" />
             Novo Usuário
           </Button>
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -490,12 +490,13 @@ export default function AdminUsuarios() {
               <Badge variant="outline">{filteredUsers.length} usuários</Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -575,6 +576,7 @@ export default function AdminUsuarios() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

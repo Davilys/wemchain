@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react";
 import { formatDocumentForDisplay } from "@/lib/documentFormatters";
+import { TIPO_ATIVO_LABELS } from "@/pages/NovoRegistro";
 
 interface CertificatePreviewData {
   id: string;
@@ -146,8 +147,8 @@ export function CertificatePreviewModal({
                 <p className="font-body text-xs text-muted-foreground mb-1">
                   Tipo
                 </p>
-                <p className="font-body text-sm font-medium text-foreground capitalize">
-                  {data.tipo_ativo?.replace("_", " ")}
+                <p className="font-body text-sm font-medium text-foreground">
+                  {TIPO_ATIVO_LABELS[data.tipo_ativo] || data.tipo_ativo?.replace("_", " ")}
                 </p>
               </div>
             </div>

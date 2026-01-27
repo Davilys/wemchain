@@ -26,6 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import { downloadCertificate } from "@/services/certificateService";
 import { CertificatePreviewModal } from "@/components/certificates/CertificatePreviewModal";
+import { TIPO_ATIVO_LABELS } from "./NovoRegistro";
 
 interface TransacaoBlockchain {
   id: string;
@@ -305,8 +306,8 @@ export default function Certificado() {
                     </div>
                     <div>
                       <p className="font-body text-sm text-muted-foreground">Tipo</p>
-                      <p className="font-body font-medium text-foreground capitalize">
-                        {registro.tipo_ativo?.replace("_", " ")}
+                      <p className="font-body font-medium text-foreground">
+                        {TIPO_ATIVO_LABELS[registro.tipo_ativo] || registro.tipo_ativo?.replace("_", " ")}
                       </p>
                     </div>
                     <div>

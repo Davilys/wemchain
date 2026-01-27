@@ -6,6 +6,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Mapeamento de labels para exibição no certificado
+const TIPO_ATIVO_LABELS: Record<string, string> = {
+  audio: "Áudio",
+  video: "Vídeo",
+  imagem: "Imagem",
+  logotipo: "Marca/Logo",
+  obra_autoral: "Obra Autoral",
+  documento: "Documento",
+  evidencia: "Evidência Digital",
+  codigo: "Código",
+  planilha: "Planilha",
+  outro: "Outro",
+  marca: "Marca",
+  pdf: "PDF",
+  texto: "Texto"
+};
+
 // PDF Generation using base64 encoding
 function generatePDFContent(data: {
   registroId: string;
@@ -59,6 +76,9 @@ function generatePDFContent(data: {
     ? "Bitcoin"
     : data.network.charAt(0).toUpperCase() + data.network.slice(1);
 
+  // Usar label amigável para o tipo de ativo
+  const tipoAtivoLabel = TIPO_ATIVO_LABELS[data.tipoAtivo] || data.tipoAtivo.replace("_", " ").toUpperCase();
+
   // Create PDF content as text (will be rendered by jspdf on frontend)
   // This returns structured data for the frontend to render
   return JSON.stringify({
@@ -75,7 +95,7 @@ function generatePDFContent(data: {
     
     asset: {
       name: data.nomeAtivo,
-      type: data.tipoAtivo.replace("_", " ").toUpperCase(),
+      type: tipoAtivoLabel,
       fileName: data.arquivoNome,
     },
     

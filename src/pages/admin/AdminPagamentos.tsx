@@ -131,66 +131,66 @@ export default function AdminPagamentos() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Pagamentos ASAAS</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold font-display">Pagamentos ASAAS</h1>
+          <p className="text-muted-foreground font-body text-sm md:text-base">
             Visualize todos os pagamentos processados
           </p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 md:pt-4 md:p-6">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-500" />
                 <span className="text-sm text-muted-foreground">Total Confirmado</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-green-500">
+              <p className="text-xl md:text-2xl font-bold mt-1 text-green-500 truncate">
                 R$ {totalConfirmed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 md:pt-4 md:p-6">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-yellow-500" />
                 <span className="text-sm text-muted-foreground">Total Pendente</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-yellow-500">
+              <p className="text-xl md:text-2xl font-bold mt-1 text-yellow-500 truncate">
                 R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="col-span-2 lg:col-span-1">
+            <CardContent className="p-3 md:pt-4 md:p-6">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Total de Pagamentos</span>
               </div>
-              <p className="text-2xl font-bold mt-1">{payments.length}</p>
+              <p className="text-xl md:text-2xl font-bold mt-1">{payments.length}</p>
             </CardContent>
           </Card>
         </div>
 
         <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="relative flex-1 min-w-[200px] max-w-md">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por usuário, ID, plano..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 w-full"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Filtrar por status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border z-50">
                   <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="PENDING">Pendente</SelectItem>
                   <SelectItem value="CONFIRMED">Confirmado</SelectItem>
@@ -200,14 +200,14 @@ export default function AdminPagamentos() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6 sm:pt-0">
             {loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto -mx-6 sm:mx-0">
+                <Table className="min-w-[800px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Usuário</TableHead>

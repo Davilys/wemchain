@@ -513,3 +513,54 @@ img:not([loading]) {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Responsive table container - horizontal scroll on mobile */
+.table-responsive {
+  @apply w-full overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  @apply min-w-[600px] w-full;
+}
+
+/* Responsive stack - cards stack vertically on mobile */
+.stack-responsive {
+  @apply flex flex-col gap-4;
+}
+
+@media (min-width: 768px) {
+  .stack-responsive {
+    @apply flex-row;
+  }
+}
+
+/* Mobile-first button styles */
+.btn-mobile-full {
+  @apply w-full sm:w-auto;
+}
+
+/* Responsive text truncation */
+.text-truncate {
+  @apply truncate max-w-[200px] sm:max-w-none;
+}
+
+/* Admin filter stack */
+.filter-stack {
+  @apply flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3;
+}
+
+/* Responsive padding utility */
+.p-responsive {
+  @apply p-3 sm:p-4 md:p-6;
+}
+
+/* Card grid responsive */
+.grid-cards {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+}
+
+/* Stats grid responsive */
+.grid-stats {
+  @apply grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4;
+}

@@ -86,12 +86,6 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              to="/login"
-              className="px-3 xl:px-4 py-2 rounded-lg text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200"
-            >
-              Registrar
-            </Link>
           </nav>
 
           {/* Right side buttons */}
@@ -159,8 +153,8 @@ export function Header() {
                   <Link to="/login">Área do Cliente</Link>
                 </Button>
                 <Button size="sm" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl px-5">
-                  <Link to="/verificar">
-                    Consultar Marca
+                  <Link to="/verificar-registro">
+                    Verificar
                   </Link>
                 </Button>
               </>

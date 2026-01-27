@@ -38,8 +38,108 @@ import {
   EyeOff,
   Info,
   Building2,
-  User
+  User,
+  Music,
+  BookOpen,
+  Video,
+  Image,
+  FileText,
+  MessageSquare,
+  Code,
+  FileSpreadsheet,
+  Palette
 } from "lucide-react";
+
+// Categorias de conteúdo para registro
+const CONTENT_CATEGORIES = [
+  {
+    id: "audio",
+    label: "Áudios",
+    description: "Música, gravações de voz, narrações...",
+    icon: Music,
+    examples: "MP3, WAV, Podcasts, Jingles"
+  },
+  {
+    id: "video",
+    label: "Vídeos",
+    description: "Curtas, Animações, Filmes, Comerciais, Edições...",
+    icon: Video,
+    examples: "MP4, Curtas-metragens, Tutoriais"
+  },
+  {
+    id: "imagem",
+    label: "Imagens",
+    description: "Fotos, Ilustrações, Logotipos, Plantas...",
+    icon: Image,
+    examples: "JPG, PNG, Fotografias, Arte digital"
+  },
+  {
+    id: "logotipo",
+    label: "Marcas e Logos",
+    description: "Logotipos, Identidade Visual, Branding...",
+    icon: Palette,
+    examples: "Logos, Marcas registradas, Ícones"
+  },
+  {
+    id: "obra_autoral",
+    label: "Obras Autorais",
+    description: "Livros, Roteiros, Poesias, Letras de música...",
+    icon: BookOpen,
+    examples: "E-books, Manuscritos, Composições"
+  },
+  {
+    id: "documento",
+    label: "Documentos",
+    description: "Textos, Apresentações, Contratos...",
+    icon: FileText,
+    examples: "PDF, DOCX, Apresentações, Relatórios"
+  },
+  {
+    id: "evidencia",
+    label: "Evidências Digitais",
+    description: "Conversas de WhatsApp, E-mails, Prints...",
+    icon: MessageSquare,
+    examples: "Screenshots, Backups de conversas"
+  },
+  {
+    id: "codigo",
+    label: "Códigos",
+    description: "Qualquer código fonte de programação...",
+    icon: Code,
+    examples: "JavaScript, Python, Apps, Scripts"
+  },
+  {
+    id: "planilha",
+    label: "Planilhas",
+    description: "Contabilidade, Dados, Registros...",
+    icon: FileSpreadsheet,
+    examples: "Excel, CSV, Relatórios financeiros"
+  },
+  {
+    id: "outro",
+    label: "Outros",
+    description: "Qualquer outro formato de documento",
+    icon: File,
+    examples: "ZIP, Arquivos diversos"
+  }
+];
+
+// Mapeamento de labels para exibição
+export const TIPO_ATIVO_LABELS: Record<string, string> = {
+  audio: "Áudio",
+  video: "Vídeo",
+  imagem: "Imagem",
+  logotipo: "Marca/Logo",
+  obra_autoral: "Obra Autoral",
+  documento: "Documento",
+  evidencia: "Evidência Digital",
+  codigo: "Código",
+  planilha: "Planilha",
+  outro: "Outro",
+  marca: "Marca", // legacy
+  pdf: "PDF",
+  texto: "Texto"
+};
 
 const acceptedTypes = [
   "application/pdf",
@@ -53,21 +153,16 @@ const acceptedTypes = [
   "application/x-zip-compressed",
 ];
 
-const getFileCategory = (mimeType: string): string => {
+// Sugerir categoria baseado no tipo de arquivo
+const suggestCategoryFromFile = (mimeType: string): string => {
   if (mimeType.startsWith("image/")) return "imagem";
   if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.includes("spreadsheet") || mimeType.includes("excel") || mimeType.includes("csv")) return "planilha";
+  if (mimeType.includes("pdf")) return "documento";
   if (mimeType.includes("zip")) return "outro";
+  if (mimeType.includes("javascript") || mimeType.includes("python") || mimeType.includes("json") || mimeType.includes("xml")) return "codigo";
   return "documento";
-};
-
-const getTipoAtivo = (category: string): string => {
-  const map: Record<string, string> = {
-    documento: "documento",
-    imagem: "logotipo",
-    video: "obra_autoral",
-    outro: "outro",
-  };
-  return map[category] || "outro";
 };
 
 interface UserProfile {
@@ -92,6 +187,7 @@ export default function NovoRegistro() {
   
   const [file, setFile] = useState<File | null>(null);
   const [nomeAtivo, setNomeAtivo] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [hash, setHash] = useState<string | null>(null);
   const [hashLoading, setHashLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -237,6 +333,11 @@ export default function NovoRegistro() {
 
     setFile(selectedFile);
     setNomeAtivo(selectedFile.name.replace(/\.[^/.]+$/, ""));
+    
+    // Sugerir categoria baseado no tipo de arquivo
+    const suggestedCategory = suggestCategoryFromFile(selectedFile.type);
+    setSelectedCategory(suggestedCategory);
+    
     setHashLoading(true);
     setUploadProgress(0);
     
@@ -266,6 +367,7 @@ export default function NovoRegistro() {
     setFile(null);
     setHash(null);
     setNomeAtivo("");
+    setSelectedCategory("");
     setUploadProgress(0);
     setAcceptTerms(false);
   };
@@ -277,10 +379,10 @@ export default function NovoRegistro() {
   };
 
   const handleSubmit = async () => {
-    if (!file || !hash || !user || !acceptTerms || !nomeAtivo.trim()) {
+    if (!file || !hash || !user || !acceptTerms || !nomeAtivo.trim() || !selectedCategory) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha todos os campos e aceite os termos.",
+        description: "Preencha todos os campos, selecione a categoria e aceite os termos.",
         variant: "destructive"
       });
       return;
@@ -311,15 +413,13 @@ export default function NovoRegistro() {
 
       if (uploadError) throw uploadError;
 
-      const category = getFileCategory(file.type);
-
-      // Create registro
+      // Create registro com categoria selecionada
       const { data: registro, error: registroError } = await supabase
         .from("registros")
         .insert({
           user_id: user.id,
           nome_ativo: nomeAtivo.trim(),
-          tipo_ativo: getTipoAtivo(category) as any,
+          tipo_ativo: selectedCategory as any,
           arquivo_path: filePath,
           arquivo_nome: file.name,
           arquivo_tamanho: file.size,
@@ -644,11 +744,59 @@ export default function NovoRegistro() {
               )}
             </div>
 
+            {/* Category Selection */}
+            {file && hash && (
+              <div className="space-y-3">
+                <Label className="font-body font-medium">
+                  Tipo de Conteúdo <span className="text-destructive">*</span>
+                </Label>
+                <p className="font-body text-xs text-muted-foreground -mt-1">
+                  Selecione a categoria que melhor descreve o conteúdo registrado
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {CONTENT_CATEGORIES.map((category) => {
+                    const IconComponent = category.icon;
+                    const isSelected = selectedCategory === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`
+                          p-3 rounded-lg border text-left transition-all
+                          ${isSelected 
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
+                            : "border-border hover:border-primary/50 hover:bg-muted/30"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <IconComponent className={`h-4 w-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                          <span className={`font-body text-sm font-medium ${isSelected ? "text-primary" : "text-foreground"}`}>
+                            {category.label}
+                          </span>
+                        </div>
+                        <p className="font-body text-[10px] text-muted-foreground leading-tight">
+                          {category.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedCategory && (
+                  <p className="font-body text-xs text-success flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Categoria selecionada: <span className="font-medium">{TIPO_ATIVO_LABELS[selectedCategory]}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Asset Name */}
             {file && hash && (
               <div className="space-y-2">
                 <Label htmlFor="nome" className="font-body font-medium">
-                  Nome do ativo
+                  Nome do ativo <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="nome"
@@ -657,6 +805,9 @@ export default function NovoRegistro() {
                   placeholder="Ex: Logo da minha empresa"
                   className="font-body"
                 />
+                <p className="font-body text-xs text-muted-foreground">
+                  Arquivo: <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">{file.name}</span>
+                </p>
               </div>
             )}
 
@@ -713,7 +864,7 @@ export default function NovoRegistro() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || loading || !primaryAuthor}
+                disabled={!file || !hash || !acceptTerms || !nomeAtivo.trim() || !selectedCategory || loading || !primaryAuthor}
                 className={`flex-1 font-body font-semibold ${project ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
               >
                 {loading ? (

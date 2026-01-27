@@ -23,6 +23,7 @@ import {
 import { getBlockchainVerificationUrl } from "@/lib/blockchainUtils";
 import { downloadCertificate } from "@/services/certificateService";
 import { toast } from "sonner";
+import { TIPO_ATIVO_LABELS } from "./NovoRegistro";
 
 interface Registro {
   id: string;
@@ -274,7 +275,7 @@ export default function MeusRegistros() {
                             {registro.nome_ativo}
                           </p>
                           <p className="font-body text-xs text-muted-foreground">
-                            {registro.tipo_ativo.replace("_", " ")} • {formatDate(registro.created_at)}
+                            {TIPO_ATIVO_LABELS[registro.tipo_ativo] || registro.tipo_ativo.replace("_", " ")} • {formatDate(registro.created_at)}
                           </p>
                         </div>
                       </div>

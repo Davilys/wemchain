@@ -974,7 +974,20 @@ export type Database = {
       credit_operation: "ADD" | "CONSUME" | "REFUND" | "ADJUST" | "EXPIRE"
       registro_status: "pendente" | "processando" | "confirmado" | "falhou"
       timestamp_method: "OPEN_TIMESTAMP" | "BYTESTAMP" | "SMART_CONTRACT"
-      tipo_ativo: "marca" | "logotipo" | "obra_autoral" | "documento" | "outro"
+      tipo_ativo:
+        | "marca"
+        | "logotipo"
+        | "obra_autoral"
+        | "documento"
+        | "outro"
+        | "imagem"
+        | "video"
+        | "audio"
+        | "codigo"
+        | "planilha"
+        | "evidencia"
+        | "pdf"
+        | "texto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1113,7 +1126,21 @@ export const Constants = {
       credit_operation: ["ADD", "CONSUME", "REFUND", "ADJUST", "EXPIRE"],
       registro_status: ["pendente", "processando", "confirmado", "falhou"],
       timestamp_method: ["OPEN_TIMESTAMP", "BYTESTAMP", "SMART_CONTRACT"],
-      tipo_ativo: ["marca", "logotipo", "obra_autoral", "documento", "outro"],
+      tipo_ativo: [
+        "marca",
+        "logotipo",
+        "obra_autoral",
+        "documento",
+        "outro",
+        "imagem",
+        "video",
+        "audio",
+        "codigo",
+        "planilha",
+        "evidencia",
+        "pdf",
+        "texto",
+      ],
     },
   },
 } as const

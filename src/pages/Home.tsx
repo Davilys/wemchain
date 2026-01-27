@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CertificatePreview } from "@/components/home/CertificatePreview";
 import { 
   Shield, 
   Clock, 
@@ -342,13 +343,7 @@ export default function Home() {
                 </ul>
               </div>
               <div className="relative">
-                <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-8 flex flex-col items-center justify-center">
-                  <Award className="h-20 w-20 text-primary/50 mb-4" />
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-foreground mb-1">Certificado de Registro</p>
-                    <p className="text-sm text-muted-foreground">Blockchain • SHA-256</p>
-                  </div>
-                </div>
+                <CertificatePreview />
               </div>
             </div>
           </div>

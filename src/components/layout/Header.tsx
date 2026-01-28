@@ -4,7 +4,9 @@ import { Menu, User, LogOut, ChevronDown, Shield, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { MobileNav } from "./MobileNav";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import {
@@ -15,20 +17,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const navLinks = [
-  { href: "/", label: "Início" },
-  { href: "/vantagens", label: "Vantagens" },
-  { href: "/como-funciona", label: "Como Funciona" },
-  { href: "/servicos", label: "Preços" },
-  { href: "/verificar-registro", label: "Verificar" },
-];
-
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { href: "/", label: t("nav.home") },
+    { href: "/vantagens", label: t("nav.advantages") },
+    { href: "/como-funciona", label: t("nav.howItWorks") },
+    { href: "/servicos", label: t("nav.pricing") },
+    { href: "/verificar-registro", label: t("nav.verify") },
+  ];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -91,7 +94,7 @@ export function Header() {
           {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-3">
             {/* Language selector */}
-            <span className="text-sm font-medium text-muted-foreground">BR</span>
+            <LanguageSelector />
 
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -110,7 +113,7 @@ export function Header() {
                     {creditsLoading ? "..." : credits?.available_credits || 0}
                   </span>
                   <span className="hidden lg:inline text-xs text-muted-foreground">
-                    créditos
+                    {t("nav.credits")}
                   </span>
                 </Link>
 
@@ -118,31 +121,31 @@ export function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                       <User className="h-4 w-4" />
-                      <span className="hidden lg:inline">Área do Cliente</span>
+                      <span className="hidden lg:inline">{t("nav.login")}</span>
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-card border-border">
                     <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="cursor-pointer">
-                        Dashboard
+                        {t("nav.dashboard")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/creditos" className="cursor-pointer">
                         <Coins className="h-4 w-4 mr-2" />
-                        Meus Créditos
+                        {t("nav.myCredits")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/meus-registros" className="cursor-pointer">
-                        Meus Registros
+                        {t("nav.myRecords")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
                       <LogOut className="h-4 w-4 mr-2" />
-                      Sair
+                      {t("nav.logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -150,11 +153,11 @@ export function Header() {
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild className="font-medium text-muted-foreground hover:text-foreground">
-                  <Link to="/login">Área do Cliente</Link>
+                  <Link to="/login">{t("nav.login")}</Link>
                 </Button>
                 <Button size="sm" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl px-5">
                   <Link to="/verificar-registro">
-                    Verificar
+                    {t("nav.verify")}
                   </Link>
                 </Button>
               </>
@@ -163,6 +166,7 @@ export function Header() {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
+            <LanguageSelector />
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(true)}

@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export function Footer() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const whatsappNumber = "5511911120225";
-  const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre os serviços da WebMarcas.");
+  const whatsappMessage = encodeURIComponent(t("footer.whatsapp.message"));
 
   return (
     <footer className="bg-card border-t border-border/30">
@@ -22,8 +24,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Registro em blockchain para prova de anterioridade. 
-              Hash criptográfico + timestamp imutável para suas criações.
+              {t("footer.description")}
             </p>
             <a 
               href="https://www.webpatentes.com.br" 
@@ -31,54 +32,54 @@ export function Footer() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
             >
-              Uma empresa do grupo WebPatentes →
+              {t("footer.company")} →
             </a>
           </div>
 
           {/* Links Rápidos */}
           <div className="space-y-4">
-            <h4 className="text-lg font-bold">Links Rápidos</h4>
+            <h4 className="text-lg font-bold">{t("footer.quickLinks")}</h4>
             <nav className="flex flex-col gap-2">
               <Link to="/como-funciona" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Como Funciona
+                {t("footer.howItWorks")}
               </Link>
               <Link to="/servicos" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Serviços e Preços
+                {t("footer.services")}
               </Link>
               <Link to="/vantagens" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Vantagens Jurídicas
+                {t("footer.advantages")}
               </Link>
               <Link to="/verificar-registro" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Verificação Pública
+                {t("footer.publicVerification")}
               </Link>
               <Link to="/verificar" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Verificar por Hash/TXID
+                {t("footer.verifyHash")}
               </Link>
             </nav>
           </div>
 
           {/* Área do Cliente */}
           <div className="space-y-4">
-            <h4 className="text-lg font-bold">Área do Cliente</h4>
+            <h4 className="text-lg font-bold">{t("footer.clientArea")}</h4>
             <nav className="flex flex-col gap-2">
               <Link to="/login" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Acessar Conta
+                {t("footer.accessAccount")}
               </Link>
               <Link to="/cadastro" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Criar Conta
+                {t("footer.createAccount")}
               </Link>
               <Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Meus Registros
+                {t("footer.myRecords")}
               </Link>
               <Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                Privacidade e Dados (LGPD)
+                {t("footer.privacy")}
               </Link>
             </nav>
           </div>
 
           {/* Contato */}
           <div className="space-y-4">
-            <h4 className="text-lg font-bold">Contato</h4>
+            <h4 className="text-lg font-bold">{t("footer.contact")}</h4>
             <div className="flex flex-col gap-3">
               <a 
                 href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
@@ -114,7 +115,7 @@ export function Footer() {
         {/* Transparency Notice */}
         <div className="border-t border-border/30 mt-12 pt-6">
           <p className="text-center text-muted-foreground/60 text-xs italic max-w-2xl mx-auto leading-relaxed">
-            Funcionalidades avançadas de gestão poderão ser disponibilizadas futuramente. No momento, o plano contempla exclusivamente os recursos descritos acima.
+            {t("footer.disclaimer")}
           </p>
         </div>
 
@@ -122,7 +123,7 @@ export function Footer() {
         <div className="border-t border-border/30 mt-6 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
             <p className="text-muted-foreground/60 text-sm">
-              © {currentYear} WebMarcas. Todos os direitos reservados.
+              © {currentYear} WebMarcas. {t("footer.copyright")}
             </p>
             <span className="hidden md:inline text-muted-foreground/40">|</span>
             <a 
@@ -136,13 +137,13 @@ export function Footer() {
           </div>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <Link to="/termos-de-uso" className="text-muted-foreground/60 hover:text-primary transition-colors text-sm">
-              Termos de Uso
+              {t("footer.terms")}
             </Link>
             <Link to="/politica-privacidade" className="text-muted-foreground/60 hover:text-primary transition-colors text-sm">
-              Política de Privacidade
+              {t("footer.privacyPolicy")}
             </Link>
             <Link to="/politica-blockchain" className="text-muted-foreground/60 hover:text-primary transition-colors text-sm">
-              Política de Blockchain
+              {t("footer.blockchainPolicy")}
             </Link>
           </div>
         </div>

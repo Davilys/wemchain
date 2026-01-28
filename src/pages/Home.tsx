@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CertificatePreview } from "@/components/home/CertificatePreview";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Shield, 
   Clock, 
@@ -28,8 +29,9 @@ import {
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export default function Home() {
+  const { t } = useLanguage();
   const whatsappNumber = "5511911120225";
-  const whatsappMessage = encodeURIComponent("Olá! Gostaria de saber mais sobre o Plano Business da WebMarcas.");
+  const whatsappMessage = encodeURIComponent(t("home.whatsapp.message"));
 
   return (
     <Layout>
@@ -47,23 +49,21 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-10 animate-fade-up">
               <Shield className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-primary tracking-wide">
-                Registro de Propriedade Intelectual em Blockchain
+                {t("home.hero.badge")}
               </span>
             </div>
 
             {/* Main Title */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
-              <span className="text-foreground">Registro de Propriedade Intelectual</span>
+              <span className="text-foreground">{t("home.hero.title1")}</span>
               <br />
-              <span className="text-foreground">com Prova em </span>
-              <span className="text-primary text-shadow-glow">Blockchain</span>
+              <span className="text-foreground">{t("home.hero.title2")} </span>
+              <span className="text-primary text-shadow-glow">{t("home.hero.title3")}</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
-              Registre seus arquivos digitais com{" "}
-              <span className="text-foreground font-medium">prova de anterioridade</span>, certificado digital e{" "}
-              <span className="text-foreground font-medium">verificação pública em blockchain</span>.
+              {t("home.hero.subtitle")}
             </p>
 
             {/* CTA Buttons */}
@@ -74,7 +74,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Criar Conta Grátis
+                  {t("home.hero.cta")}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -85,7 +85,7 @@ export default function Home() {
                 className="border-2 border-border bg-card text-foreground hover:bg-muted font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
               >
                 <Link to="/como-funciona">
-                  Ver como funciona
+                  {t("home.hero.secondary")}
                 </Link>
               </Button>
             </div>
@@ -94,17 +94,17 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted border border-border mb-12 animate-fade-up delay-400">
               <BadgeCheck className="h-4 w-4 text-green-500" />
               <span className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">R$ 99/mês</span> com 3 créditos de registro inclusos
+                <span className="text-foreground font-medium">R$ 99/{t("home.business.period").replace("/ ", "")}</span> {t("home.hero.trustBadge")}
               </span>
             </div>
 
             {/* Feature Cards Row */}
             <div className="flex flex-wrap gap-4 justify-center items-center animate-fade-up delay-500 px-4 max-w-4xl mx-auto">
               {[
-                { icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10", label: "Prova de Propriedade" },
-                { icon: Lock, color: "text-purple-500", bg: "bg-purple-500/10", label: "Prova em Blockchain" },
-                { icon: Award, color: "text-green-500", bg: "bg-green-500/10", label: "Certificado Digital" },
-                { icon: Globe, color: "text-yellow-500", bg: "bg-yellow-500/10", label: "Verificação Pública" },
+                { icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10", label: t("home.hero.feature1") },
+                { icon: Lock, color: "text-purple-500", bg: "bg-purple-500/10", label: t("home.hero.feature2") },
+                { icon: Award, color: "text-green-500", bg: "bg-green-500/10", label: t("home.hero.feature3") },
+                { icon: Globe, color: "text-yellow-500", bg: "bg-yellow-500/10", label: t("home.hero.feature4") },
               ].map((item, index) => (
                 <div 
                   key={index} 
@@ -130,15 +130,13 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Shield className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Sobre a Plataforma</span>
+              <span className="text-sm font-semibold text-primary">{t("home.about.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              O que é a <span className="text-primary">WebMarcas</span>?
+              {t("home.about.title")} <span className="text-primary">WebMarcas</span>?
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-3xl mx-auto">
-              A WebMarcas é uma plataforma de <strong className="text-foreground">registro e comprovação de propriedade intelectual</strong>, 
-              que permite registrar arquivos digitais em blockchain para gerar prova técnica de anterioridade 
-              com emissão de certificado digital e verificação pública.
+              {t("home.about.description")}
             </p>
           </div>
         </div>
@@ -152,25 +150,25 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <FileCheck className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Tipos de Registros</span>
+              <span className="text-sm font-semibold text-primary">{t("home.types.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Registros de Propriedade em{" "}
+              {t("home.types.title")}{" "}
               <span className="text-primary">Blockchain</span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed px-4">
-              Qualquer arquivo digital pode ser registrado para comprovar existência, autoria e integridade em uma data específica.
+              {t("home.types.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
             {[
-              { icon: Image, title: "Imagens", desc: "Logos, artes, plantas", color: "text-blue-500", bg: "bg-blue-500/10" },
-              { icon: FileText, title: "PDFs e documentos", desc: "Contratos, projetos", color: "text-purple-500", bg: "bg-purple-500/10" },
-              { icon: Mail, title: "Evidências digitais", desc: "E-mails, WhatsApp", color: "text-green-500", bg: "bg-green-500/10" },
-              { icon: Video, title: "Vídeos e áudios", desc: "Gravações, podcasts", color: "text-yellow-500", bg: "bg-yellow-500/10" },
-              { icon: Code, title: "Códigos-fonte", desc: "Software, scripts", color: "text-orange-500", bg: "bg-orange-500/10" },
-              { icon: Table, title: "Planilhas e dados", desc: "Excel, CSV, datasets", color: "text-blue-500", bg: "bg-blue-500/10" },
+              { icon: Image, title: t("home.types.images"), desc: t("home.types.images.desc"), color: "text-blue-500", bg: "bg-blue-500/10" },
+              { icon: FileText, title: t("home.types.documents"), desc: t("home.types.documents.desc"), color: "text-purple-500", bg: "bg-purple-500/10" },
+              { icon: Mail, title: t("home.types.evidence"), desc: t("home.types.evidence.desc"), color: "text-green-500", bg: "bg-green-500/10" },
+              { icon: Video, title: t("home.types.videos"), desc: t("home.types.videos.desc"), color: "text-yellow-500", bg: "bg-yellow-500/10" },
+              { icon: Code, title: t("home.types.code"), desc: t("home.types.code.desc"), color: "text-orange-500", bg: "bg-orange-500/10" },
+              { icon: Table, title: t("home.types.data"), desc: t("home.types.data.desc"), color: "text-blue-500", bg: "bg-blue-500/10" },
             ].map((item, index) => (
               <Card key={index} className="card-premium group">
                 <CardContent className="p-4 md:p-6">
@@ -195,29 +193,29 @@ export default function Home() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
                 <Zap className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Plano Recomendado</span>
+                <span className="text-sm font-semibold text-primary">{t("home.business.badge")}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                Plano Business – <span className="text-primary">Registro de Propriedade Intelectual</span>
+                {t("home.business.title")} <span className="text-primary">{t("home.business.titleHighlight")}</span>
               </h2>
               <div className="flex items-baseline justify-center gap-2 mb-4">
-                <span className="text-5xl md:text-6xl font-bold text-foreground">R$ 99</span>
-                <span className="text-xl text-muted-foreground">/ mês</span>
+                <span className="text-5xl md:text-6xl font-bold text-foreground">{t("home.business.price")}</span>
+                <span className="text-xl text-muted-foreground">{t("home.business.period")}</span>
               </div>
               <p className="text-lg text-primary font-semibold mb-6">
-                3 créditos de registro inclusos por mês
+                {t("home.business.credits")}
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-10">
               {[
-                { icon: FileCheck, text: "3 créditos de registro em blockchain por mês" },
-                { icon: Zap, text: "Registros adicionais por R$ 39,00 cada" },
-                { icon: FileText, text: "Registro de arquivos digitais como prova de propriedade" },
-                { icon: Award, text: "Certificados digitais em PDF para cada registro" },
-                { icon: Globe, text: "Verificação pública em blockchain" },
-                { icon: LayoutDashboard, text: "Dashboard para acompanhamento dos registros" },
-                { icon: Clock, text: "Histórico completo dos registros realizados" },
+                { icon: FileCheck, text: t("home.business.feature1") },
+                { icon: Zap, text: t("home.business.feature2") },
+                { icon: FileText, text: t("home.business.feature3") },
+                { icon: Award, text: t("home.business.feature4") },
+                { icon: Globe, text: t("home.business.feature5") },
+                { icon: LayoutDashboard, text: t("home.business.feature6") },
+                { icon: Clock, text: t("home.business.feature7") },
               ].map((item, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -235,7 +233,7 @@ export default function Home() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg px-10 py-7 rounded-xl shadow-lg btn-premium group"
               >
                 <Link to="/cadastro">
-                  Criar Conta Grátis
+                  {t("home.hero.cta")}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -250,19 +248,19 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <CheckCircle2 className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Processo Simples</span>
+              <span className="text-sm font-semibold text-primary">{t("home.howItWorks.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Como <span className="text-primary">Funciona</span>
+              {t("home.howItWorks.title")} <span className="text-primary">{t("home.howItWorks.titleHighlight")}</span>
             </h2>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
             {[
-              { step: "1", title: "Faça o upload", desc: "Envie seu arquivo para a plataforma", icon: FileCheck },
-              { step: "2", title: "Confirme o registro", desc: "Revise os dados e confirme", icon: CheckCircle2 },
-              { step: "3", title: "Prova gerada", desc: "O registro é gravado em blockchain", icon: Lock },
-              { step: "4", title: "Baixe o certificado", desc: "Receba seu certificado digital PDF", icon: Award },
+              { step: "1", title: t("home.howItWorks.step1.title"), desc: t("home.howItWorks.step1.desc"), icon: FileCheck },
+              { step: "2", title: t("home.howItWorks.step2.title"), desc: t("home.howItWorks.step2.desc"), icon: CheckCircle2 },
+              { step: "3", title: t("home.howItWorks.step3.title"), desc: t("home.howItWorks.step3.desc"), icon: Lock },
+              { step: "4", title: t("home.howItWorks.step4.title"), desc: t("home.howItWorks.step4.desc"), icon: Award },
             ].map((item, index) => (
               <div key={index} className="relative text-center p-6 rounded-2xl bg-card border border-border/50 group hover:border-primary/30 transition-all">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
@@ -278,7 +276,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-muted-foreground max-w-xl mx-auto">
-            Todo o processo é <strong className="text-foreground">simples, rápido e com linguagem clara</strong>, sem complexidade técnica.
+            {t("home.howItWorks.note")}
           </p>
         </div>
       </section>

@@ -482,10 +482,10 @@ export default function Certificado() {
                           asChild
                           className="font-body btn-premium"
                         >
-                          <a href="/verificar-registro">
+                          <Link to={`/verificar?hash=${registro.hash_sha256}`}>
                             <Search className="h-4 w-4 mr-2" />
                             Verificação Pública
-                          </a>
+                          </Link>
                         </Button>
                       </div>
                     </div>

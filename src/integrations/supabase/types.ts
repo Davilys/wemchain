@@ -278,6 +278,13 @@ export type Database = {
             referencedRelation: "registros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "certificates_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: true
+            referencedRelation: "registros_verificacao_publica"
+            referencedColumns: ["id"]
+          },
         ]
       }
       credits: {
@@ -481,6 +488,13 @@ export type Database = {
             referencedRelation: "registros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pagamentos_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros_verificacao_publica"
+            referencedColumns: ["id"]
+          },
         ]
       }
       processing_logs: {
@@ -526,6 +540,13 @@ export type Database = {
             columns: ["registro_id"]
             isOneToOne: false
             referencedRelation: "registros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_logs_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros_verificacao_publica"
             referencedColumns: ["id"]
           },
         ]
@@ -679,6 +700,13 @@ export type Database = {
             referencedRelation: "registros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "record_authors_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros_verificacao_publica"
+            referencedColumns: ["id"]
+          },
         ]
       }
       registros: {
@@ -806,6 +834,13 @@ export type Database = {
             referencedRelation: "registros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "transacoes_blockchain_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: true
+            referencedRelation: "registros_verificacao_publica"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_consents: {
@@ -855,7 +890,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      registros_verificacao_publica: {
+        Row: {
+          arquivo_nome: string | null
+          created_at: string | null
+          hash_sha256: string | null
+          id: string | null
+          nome_ativo: string | null
+          status: Database["public"]["Enums"]["registro_status"] | null
+          tipo_ativo: Database["public"]["Enums"]["tipo_ativo"] | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          created_at?: string | null
+          hash_sha256?: string | null
+          id?: string | null
+          nome_ativo?: string | null
+          status?: Database["public"]["Enums"]["registro_status"] | null
+          tipo_ativo?: Database["public"]["Enums"]["tipo_ativo"] | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          created_at?: string | null
+          hash_sha256?: string | null
+          id?: string | null
+          nome_ativo?: string | null
+          status?: Database["public"]["Enums"]["registro_status"] | null
+          tipo_ativo?: Database["public"]["Enums"]["tipo_ativo"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_credits: {

@@ -20,8 +20,10 @@ import {
   Shield,
   AlertTriangle,
   Info,
-  HelpCircle
+  HelpCircle,
+  Download
 } from "lucide-react";
+import { downloadVerificationPDF } from "@/services/verificationPdfService";
 import { toast } from "@/hooks/use-toast";
 
 /**
@@ -98,6 +100,7 @@ export default function VerificarRegistro() {
   
   const originalFileRef = useRef<HTMLInputElement>(null);
   const otsFileRef = useRef<HTMLInputElement>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Generate SHA-256 hash from file
   const generateHash = async (file: File): Promise<string> => {
@@ -310,6 +313,47 @@ export default function VerificarRegistro() {
     if (otsFileRef.current) otsFileRef.current.value = "";
   };
 
+  // Download verification PDF
+  const handleDownloadVerificationPDF = async () => {
+    if (!result) return;
+    
+    setIsDownloadingPdf(true);
+    try {
+      await downloadVerificationPDF({
+        hash: result.hash || result.registro?.hash_sha256 || manualHash || fileHash,
+        registro: result.registro ? {
+          id: result.registro.id || "",
+          nome_ativo: result.registro.nome_ativo,
+          tipo_ativo: result.registro.tipo_ativo,
+          created_at: result.registro.created_at,
+        } : undefined,
+        blockchain: result.transacao ? {
+          network: result.transacao.network,
+          method: result.transacao.timestamp_method || "OPEN_TIMESTAMP",
+          methodDescription: result.transacao.timestamp_method === "OPEN_TIMESTAMP" ? "OpenTimestamps (.ots)" : result.transacao.timestamp_method || "",
+          tx_hash: result.transacao.tx_hash,
+          confirmed_at: result.transacao.timestamp_blockchain || "",
+          block_number: result.transacao.block_number || null,
+          confirmations: null,
+          bitcoin_anchored: result.transacao.network === "opentimestamps" || result.proof?.bitcoin_anchored || false,
+        } : undefined,
+      });
+      toast({
+        title: "PDF baixado!",
+        description: "O comprovante de verificação foi baixado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Não foi possível gerar o comprovante de verificação.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   // Render status-based result card
   const renderResultCard = () => {
     if (!result) return null;
@@ -444,16 +488,30 @@ export default function VerificarRegistro() {
               <p className="text-sm text-muted-foreground mb-4">
                 {result.verificationInstructions || "Para verificação completa e independente, use as ferramentas oficiais OpenTimestamps. A WebMarcas não controla nem pode alterar este resultado."}
               </p>
-              <Button variant="outline" asChild className="w-full md:w-auto">
-                <a 
-                  href="https://opentimestamps.org" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+              <div className="flex flex-col md:flex-row gap-3">
+                <Button variant="outline" asChild className="w-full md:w-auto">
+                  <a 
+                    href="https://opentimestamps.org" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Verificar em OpenTimestamps.org
+                  </a>
+                </Button>
+                <Button 
+                  onClick={handleDownloadVerificationPDF}
+                  disabled={isDownloadingPdf}
+                  className="w-full md:w-auto bg-primary hover:bg-primary/90"
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Verificar em OpenTimestamps.org
-                </a>
-              </Button>
+                  {isDownloadingPdf ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  Baixar PDF
+                </Button>
+              </div>
             </div>
 
             {/* Legal Notice */}

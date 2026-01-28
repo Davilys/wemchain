@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sheet,
   SheetContent,
@@ -31,27 +32,28 @@ interface MobileNavProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const publicLinks = [
-  { href: "/", label: "Início", icon: Home },
-  { href: "/vantagens", label: "Vantagens", icon: Star },
-  { href: "/como-funciona", label: "Como Funciona", icon: HelpCircle },
-  { href: "/servicos", label: "Preços", icon: DollarSign },
-  { href: "/verificar-registro", label: "Verificar Registro", icon: Search },
-];
-
-const dashboardLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/novo-registro", label: "Novo Registro", icon: Plus },
-  { href: "/meus-registros", label: "Meus Registros", icon: FileText },
-  { href: "/projetos", label: "Projetos", icon: FolderOpen },
-  { href: "/creditos", label: "Créditos", icon: Coins },
-  { href: "/meus-registros?status=confirmado", label: "Certificados", icon: Award },
-];
-
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
+  const { t } = useLanguage();
+
+  const publicLinks = [
+    { href: "/", label: t("nav.home"), icon: Home },
+    { href: "/vantagens", label: t("nav.advantages"), icon: Star },
+    { href: "/como-funciona", label: t("nav.howItWorks"), icon: HelpCircle },
+    { href: "/servicos", label: t("nav.pricing"), icon: DollarSign },
+    { href: "/verificar-registro", label: t("nav.verify"), icon: Search },
+  ];
+
+  const dashboardLinks = [
+    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { href: "/novo-registro", label: t("nav.register"), icon: Plus },
+    { href: "/meus-registros", label: t("nav.myRecords"), icon: FileText },
+    { href: "/projetos", label: "Projetos", icon: FolderOpen },
+    { href: "/creditos", label: t("nav.myCredits"), icon: Coins },
+    { href: "/meus-registros?status=confirmado", label: "Certificados", icon: Award },
+  ];
 
   const isActive = (path: string) => {
     if (path.includes("?")) {
@@ -111,13 +113,13 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                     <Coins className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground font-medium">Saldo disponível</p>
+                    <p className="text-xs text-muted-foreground font-medium">{t("nav.myCredits")}</p>
                     <p className="text-xl font-bold text-primary">
                       {creditsLoading ? "..." : credits?.available_credits || 0}
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-primary font-medium">Ver →</span>
+                <span className="text-xs text-primary font-medium">→</span>
               </Link>
             </div>
           )}
@@ -189,7 +191,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                 >
                   <Link to="/checkout" onClick={handleLinkClick}>
                     <Coins className="h-4 w-4 mr-2" />
-                    Comprar Créditos
+                    {t("nav.myCredits")}
                   </Link>
                 </Button>
                 <Button 
@@ -198,7 +200,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                   className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-11"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sair da conta
+                  {t("nav.logout")}
                 </Button>
               </>
             ) : (
@@ -209,7 +211,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                 >
                   <Link to="/verificar-registro" onClick={handleLinkClick}>
                     <Shield className="h-4 w-4 mr-2" />
-                    Verificar Registro
+                    {t("nav.verify")}
                   </Link>
                 </Button>
                 <Button 
@@ -219,7 +221,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                 >
                   <Link to="/login" onClick={handleLinkClick}>
                     <User className="h-4 w-4 mr-2" />
-                    Área do Cliente
+                    {t("nav.login")}
                   </Link>
                 </Button>
               </>

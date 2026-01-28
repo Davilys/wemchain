@@ -647,7 +647,13 @@ export default function VerificarRegistro() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Tabs value={verifyMode} onValueChange={(v) => { setVerifyMode(v as "file" | "hash"); resetForm(); }}>
+              <Tabs 
+                value={verifyMode} 
+                onValueChange={(v) => { 
+                  setVerifyMode(v as "file" | "hash"); 
+                  resetForm(); 
+                }}
+              >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="file" className="gap-2">
                     <Upload className="h-4 w-4" />

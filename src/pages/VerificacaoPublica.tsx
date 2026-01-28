@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
+import { downloadVerificationPDF } from "@/services/verificationPdfService";
 
 type VerificationStatus = 
   | 'VERIFICADO'
@@ -61,6 +62,7 @@ export default function VerificacaoPublica() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (hash) {
@@ -147,6 +149,25 @@ export default function VerificacaoPublica() {
       }
     } else {
       handleCopyLink();
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!result) return;
+    
+    setIsDownloading(true);
+    try {
+      await downloadVerificationPDF({
+        hash: result.hash,
+        registro: result.registro,
+        blockchain: result.blockchain,
+      });
+      toast.success("PDF de verificação baixado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF de verificação");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -300,7 +321,7 @@ export default function VerificacaoPublica() {
               </Card>
 
               {/* Actions */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Button variant="outline" onClick={handleCopyLink} className="w-full">
                   <Copy className="h-4 w-4 mr-2" />
                   Copiar Link
@@ -308,6 +329,18 @@ export default function VerificacaoPublica() {
                 <Button variant="outline" onClick={handleShare} className="w-full">
                   <Share2 className="h-4 w-4 mr-2" />
                   Compartilhar
+                </Button>
+                <Button 
+                  onClick={handleDownloadPDF} 
+                  disabled={isDownloading}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  Baixar PDF
                 </Button>
               </div>
 

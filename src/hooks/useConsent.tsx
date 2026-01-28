@@ -128,7 +128,7 @@ export function useConsent() {
     }
   };
 
-  const hasAllConsents = consentStatus.terms_of_use && consentStatus.privacy_policy;
+  const hasAllConsents = consentStatus.terms_of_use && consentStatus.privacy_policy && consentStatus.blockchain_policy;
 
   const getDocument = (type: string) => documents.find((d) => d.document_type === type);
 

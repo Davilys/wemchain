@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -96,12 +96,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
 
-    toast({
-      title: "Bem-vindo de volta!",
-      description: "Login realizado com sucesso.",
-    });
+    // Check if user has admin role
+    if (data.user) {
+      const { data: adminRole } = await supabase.rpc('get_user_admin_role', {
+        _user_id: data.user.id
+      });
 
-    navigate("/dashboard");
+      toast({
+        title: "Bem-vindo de volta!",
+        description: "Login realizado com sucesso.",
+      });
+
+      // Redirect to admin panel if user has admin role
+      if (adminRole) {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    }
   };
 
   const signOut = async () => {

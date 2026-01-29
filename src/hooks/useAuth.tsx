@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -20,29 +20,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  
+  // Track if user intentionally signed out
+  const isIntentionalSignOut = useRef(false);
+  // Track if initial session has been loaded
+  const initialSessionLoaded = useRef(false);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE checking session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    // First, get the initial session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (initialSession) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+        }
+        
+        initialSessionLoaded.current = true;
         setLoading(false);
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+        initialSessionLoaded.current = true;
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        // Only update state after initial session is loaded to prevent race conditions
+        if (!initialSessionLoaded.current) {
+          return;
+        }
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
         if (event === "SIGNED_IN") {
-          // User just signed in
+          // User just signed in - navigation is handled by signIn function
         } else if (event === "SIGNED_OUT") {
-          navigate("/");
+          // Only navigate if it was an intentional sign out
+          if (isIntentionalSignOut.current) {
+            isIntentionalSignOut.current = false;
+            navigate("/");
+          }
+        } else if (event === "TOKEN_REFRESHED") {
+          // Token was refreshed, session is still valid
+          console.log("Token refreshed successfully");
         }
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
 
     return () => {
       subscription.unsubscribe();
@@ -117,8 +147,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Mark this as intentional sign out before calling signOut
+    isIntentionalSignOut.current = true;
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
+      isIntentionalSignOut.current = false;
       throw error;
     }
 

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { LogOut, User, Settings, ChevronDown, ShieldCheck, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { HeaderCreditBadge } from "@/components/credits/HeaderCreditBadge";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export function DashboardHeader() {
   const { user, signOut } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdminPermissions();
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "US";
 
@@ -38,10 +40,25 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* Right: Credits + Theme + User */}
+      {/* Right: Credits + Admin Switch + Theme + User */}
       <div className="flex items-center gap-2 md:gap-3">
         {/* Credits Badge - Always Visible */}
         <HeaderCreditBadge showBuyButton={true} />
+
+        {/* Admin Panel Switch - Only visible for admins */}
+        {!adminLoading && isAdmin && (
+          <Link to="/admin/dashboard">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              <span className="hidden md:inline">Painel Admin</span>
+              <ShieldCheck className="h-4 w-4 md:hidden" />
+            </Button>
+          </Link>
+        )}
 
         {/* Theme Toggle */}
         <ThemeToggle />
@@ -75,6 +92,18 @@ export function DashboardHeader() {
                 Configurações
               </Link>
             </DropdownMenuItem>
+            {/* Admin Panel Link in Menu - Only for admins */}
+            {!adminLoading && isAdmin && (
+              <>
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
+                  <Link to="/admin/dashboard" className="flex items-center gap-2 text-primary">
+                    <ShieldCheck className="h-4 w-4" />
+                    Painel Admin
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem 
               onClick={signOut}

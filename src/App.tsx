@@ -32,6 +32,7 @@ import PoliticaBlockchain from "./pages/PoliticaBlockchain";
 import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
 // Admin pages
+import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminCreditos from "./pages/admin/AdminCreditos";
@@ -78,8 +79,9 @@ const App = () => (
               <Route path="/creditos" element={<Creditos />} />
               <Route path="/processando/:id" element={<Processando />} />
               <Route path="/certificado/:id" element={<Certificado />} />
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
+{/* Admin Routes */}
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/creditos" element={<AdminCreditos />} />
               <Route path="/admin/registros" element={<AdminRegistros />} />

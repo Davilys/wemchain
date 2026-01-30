@@ -141,17 +141,7 @@ export const TIPO_ATIVO_LABELS: Record<string, string> = {
   texto: "Texto"
 };
 
-const acceptedTypes = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/svg+xml",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "video/mp4",
-  "application/zip",
-  "application/x-zip-compressed",
-];
+// Aceitar qualquer tipo de arquivo digital - sem restrições
 
 // Sugerir categoria baseado no tipo de arquivo
 const suggestCategoryFromFile = (mimeType: string): string => {
@@ -313,24 +303,7 @@ export default function NovoRegistro() {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O tamanho máximo é 10MB.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!acceptedTypes.includes(selectedFile.type)) {
-      toast({
-        title: "Tipo de arquivo não suportado",
-        description: "Envie PDF, JPG, PNG, DOC, DOCX, MP4 ou ZIP.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    // Sem validação de tamanho no frontend - permitir qualquer arquivo digital
     setFile(selectedFile);
     setNomeAtivo(selectedFile.name.replace(/\.[^/.]+$/, ""));
     
@@ -680,12 +653,15 @@ export default function NovoRegistro() {
                       Clique ou arraste o arquivo
                     </p>
                     <p className="font-body text-xs text-muted-foreground">
-                      PDF, JPG, PNG, DOC, DOCX, MP4, ZIP (máx. 10MB)
+                      Você pode enviar qualquer tipo de arquivo digital.
+                    </p>
+                    <p className="font-body text-xs text-muted-foreground/70 mt-1">
+                      Apenas o hash criptográfico é registrado em blockchain.
                     </p>
                   </div>
                   <input
                     type="file"
-                    accept={acceptedTypes.join(",")}
+                    accept="*/*"
                     onChange={handleFileChange}
                     className="hidden"
                   />

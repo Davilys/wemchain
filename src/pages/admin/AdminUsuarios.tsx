@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdminAuditLog } from "@/hooks/useAdminAuditLog";
+import { useAdminActionLog } from "@/hooks/useAdminActionLog";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { 
   Search, 
@@ -74,7 +74,9 @@ interface UserProfile {
   phone: string | null;
   company_name: string | null;
   created_at: string;
-  is_blocked?: boolean;
+  is_blocked: boolean;
+  blocked_at: string | null;
+  blocked_reason: string | null;
 }
 
 interface UserCredits {
@@ -100,7 +102,7 @@ interface UserSubscription {
 
 export default function AdminUsuarios() {
   const { user: adminUser } = useAuth();
-  const { logAdminAction } = useAdminAuditLog();
+  const { logAction } = useAdminActionLog();
   const { can } = useAdminPermissions();
   
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -142,11 +144,11 @@ export default function AdminUsuarios() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, user_id, full_name, cpf_cnpj, phone, company_name, created_at, is_blocked, blocked_at, blocked_reason")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data || []) as UserProfile[]);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Erro ao carregar usuários");
@@ -212,10 +214,11 @@ export default function AdminUsuarios() {
 
       if (error) throw error;
 
-      await logAdminAction({
-        actionType: "admin_user_edited",
-        targetUserId: selectedUser.user_id,
-        metadata: {
+      await logAction({
+        actionType: "user_edited",
+        targetType: "user",
+        targetId: selectedUser.user_id,
+        details: {
           changes: editData,
           previous_name: selectedUser.full_name,
         },
@@ -239,27 +242,44 @@ export default function AdminUsuarios() {
 
   async function handleBlockUser() {
     if (!selectedUser || !blockReason.trim()) {
-      toast.error("Motivo é obrigatório para bloquear usuário");
+      toast.error("Motivo é obrigatório");
       return;
     }
     setBlocking(true);
 
     try {
-      // Note: In a real implementation, you'd have a blocked_users table or flag
-      // For now, we log the action and show feedback
-      await logAdminAction({
-        actionType: selectedUser.is_blocked ? "admin_user_unblocked" : "admin_user_blocked",
-        targetUserId: selectedUser.user_id,
-        metadata: {
+      const isBlocking = !selectedUser.is_blocked;
+      
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          is_blocked: isBlocking,
+          blocked_at: isBlocking ? new Date().toISOString() : null,
+          blocked_reason: isBlocking ? blockReason : null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", selectedUser.id);
+
+      if (error) throw error;
+
+      // Log usando o hook correto
+      await logAction({
+        actionType: isBlocking ? "user_blocked" : "user_unblocked",
+        targetType: "user",
+        targetId: selectedUser.user_id,
+        details: {
           reason: blockReason,
           user_name: selectedUser.full_name,
         },
       });
 
-      toast.success(selectedUser.is_blocked ? "Usuário desbloqueado" : "Usuário bloqueado");
+      toast.success(isBlocking ? "Usuário bloqueado com sucesso" : "Usuário desbloqueado com sucesso");
       setBlockDialogOpen(false);
+      setBlockReason("");
       fetchUsers();
     } catch (error: any) {
+      console.error("Error blocking user:", error);
       toast.error(error.message || "Erro ao bloquear/desbloquear usuário");
     } finally {
       setBlocking(false);
@@ -309,13 +329,14 @@ export default function AdminUsuarios() {
         throw new Error(result.error || "Erro ao criar usuário");
       }
 
-      await logAdminAction({
-        actionType: "admin_user_created",
-        metadata: {
+      await logAction({
+        actionType: "user_created",
+        targetType: "user",
+        targetId: result.user?.id,
+        details: {
           email: createData.email,
           full_name: createData.full_name,
           initial_credits: createData.initial_credits,
-          new_user_id: result.user?.id,
         },
       });
 

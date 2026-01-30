@@ -553,31 +553,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          blocked_at: string | null
+          blocked_reason: string | null
           company_name: string | null
           cpf_cnpj: string | null
           created_at: string
           full_name: string | null
           id: string
+          is_blocked: boolean
           phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
           company_name?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          is_blocked?: boolean
           phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
           company_name?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          is_blocked?: boolean
           phone?: string | null
           updated_at?: string
           user_id?: string

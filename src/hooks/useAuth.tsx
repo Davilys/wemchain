@@ -126,8 +126,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
 
-    // Check if user has admin role
     if (data.user) {
+      // Verificar se usuário está bloqueado
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_blocked, blocked_reason")
+        .eq("user_id", data.user.id)
+        .single();
+
+      if (profile?.is_blocked) {
+        // Fazer logout imediato
+        await supabase.auth.signOut();
+        throw new Error(
+          profile.blocked_reason 
+            ? `Sua conta está bloqueada. Motivo: ${profile.blocked_reason}`
+            : "Sua conta está bloqueada. Entre em contato com o suporte."
+        );
+      }
+
+      // Check if user has admin role
       const { data: adminRole } = await supabase.rpc('get_user_admin_role', {
         _user_id: data.user.id
       });

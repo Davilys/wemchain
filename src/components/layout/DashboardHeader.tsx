@@ -87,9 +87,9 @@ export function DashboardHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="font-body text-sm cursor-pointer">
-              <Link to="/configuracoes" className="flex items-center gap-2">
+              <Link to="/conta" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Configurações
+                Minha Conta
               </Link>
             </DropdownMenuItem>
             {/* Admin Panel Link in Menu - Only for admins */}

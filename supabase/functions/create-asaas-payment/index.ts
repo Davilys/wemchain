@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           customer: customerId,
-          billingType: "UNDEFINED", // Permite Pix, boleto ou cartão
+          billingType: "PIX", // Usar PIX para ter QR Code
           value: plan.value,
           cycle: "MONTHLY",
           description: `WebMarcas - Plano ${plan.name}`,
@@ -192,7 +192,41 @@ Deno.serve(async (req) => {
       }
 
       asaasSubscriptionId = subscriptionData.id;
-      asaasPaymentId = subscriptionData.id; // Para assinatura, usar o ID da assinatura
+
+      // Buscar o primeiro pagamento da assinatura para obter o QR Code
+      let pixQrCode = null;
+      let pixCopyPaste = null;
+      let firstPaymentId = null;
+
+      // Aguardar um pouco e buscar os pagamentos da assinatura
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const paymentsResponse = await fetch(
+        `${ASAAS_BASE_URL}/subscriptions/${asaasSubscriptionId}/payments`,
+        {
+          headers: { "access_token": asaasApiKey },
+        }
+      );
+
+      const paymentsData = await paymentsResponse.json();
+      
+      if (paymentsData.data?.[0]?.id) {
+        firstPaymentId = paymentsData.data[0].id;
+        
+        // Buscar QR Code Pix do primeiro pagamento
+        const pixResponse = await fetch(
+          `${ASAAS_BASE_URL}/payments/${firstPaymentId}/pixQrCode`,
+          {
+            headers: { "access_token": asaasApiKey },
+          }
+        );
+
+        const pixData = await pixResponse.json();
+        pixQrCode = pixData.encodedImage || null;
+        pixCopyPaste = pixData.payload || null;
+      }
+
+      asaasPaymentId = firstPaymentId || subscriptionData.id;
 
       // Registrar assinatura no banco
       const serviceClient = createClient(
@@ -212,8 +246,11 @@ Deno.serve(async (req) => {
       paymentData = {
         type: "subscription",
         subscriptionId: asaasSubscriptionId,
-        invoiceUrl: subscriptionData.invoiceUrl,
+        paymentId: firstPaymentId,
+        invoiceUrl: subscriptionData.invoiceUrl || `https://www.asaas.com/c/${subscriptionData.id}`,
         status: subscriptionData.status,
+        pixQrCode: pixQrCode,
+        pixCopyPaste: pixCopyPaste,
       };
 
     } else {

@@ -75,53 +75,76 @@ Deno.serve(async (req) => {
     if (action === "grant") {
       // Grant business plan to user
       const subscriptionId = `ADMIN_GRANTED_${user_id}_${Date.now()}`;
+      const targetPlanType = plan_type || "BUSINESS";
+      const targetCredits = credits_per_cycle || 5;
       
-      // Check if user already has an active subscription
+      // Check if user already has an active subscription of this plan
       const { data: existingSub } = await adminClient
         .from("asaas_subscriptions")
         .select("*")
         .eq("user_id", user_id)
-        .eq("plan_type", plan_type || "BUSINESS")
+        .eq("plan_type", targetPlanType)
         .eq("status", "ACTIVE")
         .maybeSingle();
 
+      let subscription;
+      let isRenewal = false;
+
       if (existingSub) {
-        return new Response(JSON.stringify({ 
-          error: "Usuário já possui uma assinatura ativa deste plano" 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        // RENOVAR: Atualizar assinatura existente
+        isRenewal = true;
+        const { data: updatedSub, error: updateError } = await adminClient
+          .from("asaas_subscriptions")
+          .update({
+            credits_per_cycle: targetCredits,
+            current_cycle: existingSub.current_cycle + 1,
+            last_credit_reset_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingSub.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          return new Response(JSON.stringify({ error: updateError.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        subscription = updatedSub;
+      } else {
+        // CRIAR: Nova assinatura
+        const { data: newSub, error: subError } = await adminClient
+          .from("asaas_subscriptions")
+          .insert({
+            user_id,
+            asaas_subscription_id: subscriptionId,
+            asaas_customer_id: `ADMIN_GRANTED_${callingUser.id}`,
+            plan_type: targetPlanType,
+            status: "ACTIVE",
+            credits_per_cycle: targetCredits,
+            current_cycle: 1,
+            next_billing_date: null, // Manual - no auto billing
+          })
+          .select()
+          .single();
+
+        if (subError) {
+          return new Response(JSON.stringify({ error: subError.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        subscription = newSub;
       }
 
-      // Create subscription
-      const { data: subscription, error: subError } = await adminClient
-        .from("asaas_subscriptions")
-        .insert({
-          user_id,
-          asaas_subscription_id: subscriptionId,
-          asaas_customer_id: `ADMIN_GRANTED_${callingUser.id}`,
-          plan_type: plan_type || "BUSINESS",
-          status: "ACTIVE",
-          credits_per_cycle: credits_per_cycle || 5,
-          current_cycle: 1,
-          next_billing_date: null, // Manual - no auto billing
-        })
-        .select()
-        .single();
-
-      if (subError) {
-        return new Response(JSON.stringify({ error: subError.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Add initial credits
+      // Add credits (both for new and renewal)
       await adminClient.rpc("add_credits_admin", {
         p_user_id: user_id,
-        p_amount: credits_per_cycle || 5,
-        p_reason: `Créditos do plano ${plan_type || "BUSINESS"} concedido pelo admin ${callingUser.email}`,
+        p_amount: targetCredits,
+        p_reason: isRenewal 
+          ? `Renovação do plano ${targetPlanType} pelo admin ${callingUser.email}`
+          : `Créditos do plano ${targetPlanType} concedido pelo admin ${callingUser.email}`,
         p_admin_id: callingUser.id,
       });
 
@@ -129,20 +152,24 @@ Deno.serve(async (req) => {
       await adminClient.from("admin_action_logs").insert({
         admin_id: callingUser.id,
         admin_role: adminRole,
-        action_type: "subscription_granted",
+        action_type: isRenewal ? "subscription_renewed" : "subscription_granted",
         target_type: "user",
         target_id: user_id,
         details: {
-          plan_type: plan_type || "BUSINESS",
-          credits_per_cycle: credits_per_cycle || 5,
+          plan_type: targetPlanType,
+          credits_per_cycle: targetCredits,
           subscription_id: subscription.id,
+          is_renewal: isRenewal,
         },
       });
 
       return new Response(JSON.stringify({
         success: true,
-        message: "Assinatura concedida com sucesso",
+        message: isRenewal 
+          ? "Assinatura renovada com sucesso" 
+          : "Assinatura concedida com sucesso",
         subscription,
+        renewed: isRenewal,
       }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

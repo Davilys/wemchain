@@ -25,10 +25,10 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.credits": "créditos",
     
     // Home Hero
-    "home.hero.badge": "Registro de Propriedade Intelectual em Blockchain",
-    "home.hero.title1": "Registro de Propriedade Intelectual",
-    "home.hero.title2": "com Prova em",
-    "home.hero.title3": "Blockchain",
+    "home.hero.badge": "Registre sua Marca, Logo, música e qualquer arquivo digital",
+    "home.hero.title1": "Apenas R$49,00 para proteger",
+    "home.hero.title2": "qualquer arquivo",
+    "home.hero.title3": "digital",
     "home.hero.subtitle": "Registre seus arquivos digitais com prova de anterioridade, certificado digital e verificação pública em blockchain.",
     "home.hero.subtitle.highlight1": "prova de anterioridade",
     "home.hero.subtitle.highlight2": "verificação pública em blockchain",
@@ -290,10 +290,10 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.credits": "credits",
     
     // Home Hero
-    "home.hero.badge": "Intellectual Property Registration on Blockchain",
-    "home.hero.title1": "Intellectual Property Registration",
-    "home.hero.title2": "with Proof on",
-    "home.hero.title3": "Blockchain",
+    "home.hero.badge": "Register your Brand, Logo, music and any digital file",
+    "home.hero.title1": "Only R$49.00 to protect",
+    "home.hero.title2": "any digital",
+    "home.hero.title3": "file",
     "home.hero.subtitle": "Register your digital files with proof of prior art, digital certificate and public blockchain verification.",
     "home.hero.subtitle.highlight1": "proof of prior art",
     "home.hero.subtitle.highlight2": "public blockchain verification",
@@ -555,10 +555,10 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.credits": "créditos",
     
     // Home Hero
-    "home.hero.badge": "Registro de Propiedad Intelectual en Blockchain",
-    "home.hero.title1": "Registro de Propiedad Intelectual",
-    "home.hero.title2": "con Prueba en",
-    "home.hero.title3": "Blockchain",
+    "home.hero.badge": "Registre su Marca, Logo, música y cualquier archivo digital",
+    "home.hero.title1": "Solo R$49,00 para proteger",
+    "home.hero.title2": "cualquier archivo",
+    "home.hero.title3": "digital",
     "home.hero.subtitle": "Registre sus archivos digitales con prueba de anterioridad, certificado digital y verificación pública en blockchain.",
     "home.hero.subtitle.highlight1": "prueba de anterioridad",
     "home.hero.subtitle.highlight2": "verificación pública en blockchain",

@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { trackAddToCart } from "@/lib/metaPixel";
 import { NoCreditModal } from "@/components/credits/NoCreditModal";
 import { CreditConsumptionInfo } from "@/components/credits/CreditConsumptionInfo";
 import { AuthorsList } from "@/components/registro/AuthorsList";
@@ -376,6 +377,9 @@ export default function NovoRegistro() {
     }
 
     setLoading(true);
+    
+    // Track AddToCart when user starts the registration process
+    trackAddToCart();
 
     try {
       // Upload file

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { trackViewPlan, trackInitiateCheckout } from "@/lib/metaPixel";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -99,9 +101,36 @@ export function PricingBlock() {
   };
 
   const content = getContent();
+  const sectionRef = useRef<HTMLElement>(null);
+  const hasTrackedView = useRef(false);
+
+  // Track ViewContent when pricing section becomes visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasTrackedView.current) {
+            trackViewPlan();
+            hasTrackedView.current = true;
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCTAClick = () => {
+    trackInitiateCheckout();
+  };
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
+    <section ref={sectionRef} className="py-16 md:py-24 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
       <div className="absolute top-1/4 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
@@ -161,7 +190,7 @@ export function PricingBlock() {
                 size="lg" 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 rounded-xl shadow-lg shadow-primary/30 group w-full sm:w-auto"
               >
-                <Link to="/cadastro">
+                <Link to="/cadastro" onClick={handleCTAClick}>
                   {content.cta}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>

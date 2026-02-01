@@ -6,8 +6,9 @@ import { CertificatePreview } from "@/components/home/CertificatePreview";
 import { RotatingText } from "@/components/home/RotatingText";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
+import { PricingBlock } from "@/components/home/PricingBlock";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { 
+import {
   Shield, 
   Clock, 
   FileCheck, 
@@ -128,8 +129,11 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-card to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
+
+      {/* Pricing Block - Right after Hero */}
+      <PricingBlock />
 
       {/* Benefits Section */}
       <BenefitsSection />

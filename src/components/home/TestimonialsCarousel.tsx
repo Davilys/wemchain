@@ -1,5 +1,8 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import useEmblaCarousel from "embla-carousel-react";
+import { useCallback, useEffect, useState } from "react";
 
 // Import testimonial photos
 import robertoAlmeida from "@/assets/testimonials/roberto-almeida.jpg";
@@ -168,7 +171,7 @@ const testimonials = [
 
 function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] }) {
   return (
-    <div className="flex-shrink-0 w-[280px] md:w-[320px] p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 select-none">
+    <div className="flex-shrink-0 w-full p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 select-none cursor-grab active:cursor-grabbing h-full">
       {/* Stars and Quote */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-0.5">
@@ -214,6 +217,37 @@ function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] 
 
 export function TestimonialsCarousel() {
   const { language } = useLanguage();
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    slidesToScroll: 1,
+    dragFree: true,
+    containScroll: "trimSnaps",
+  });
+
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
   const getTitle = () => {
     switch (language) {
@@ -226,12 +260,19 @@ export function TestimonialsCarousel() {
     }
   };
 
-  // Triple the testimonials for seamless infinite loop
-  const row1Testimonials = [...testimonials.slice(0, 10), ...testimonials.slice(0, 10), ...testimonials.slice(0, 10)];
-  const row2Testimonials = [...testimonials.slice(10, 20), ...testimonials.slice(10, 20), ...testimonials.slice(10, 20)];
+  const getSubtitle = () => {
+    switch (language) {
+      case "en":
+        return "Swipe or use the arrows to navigate";
+      case "es":
+        return "Desliza o usa las flechas para navegar";
+      default:
+        return "Arraste ou use as setas para navegar";
+    }
+  };
 
   return (
-    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4 mb-10">
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
@@ -240,59 +281,80 @@ export function TestimonialsCarousel() {
               {language === "en" ? "Testimonials" : language === "es" ? "Testimonios" : "Depoimentos"}
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4">
             {getTitle()}
           </h2>
+          <p className="text-muted-foreground text-sm md:text-base">
+            {getSubtitle()}
+          </p>
         </div>
       </div>
 
-      {/* Infinite Scroll Container */}
-      <div className="relative">
+      {/* Carousel Container */}
+      <div className="relative px-4 md:px-8">
+        {/* Navigation Arrows - Desktop */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={scrollPrev}
+          className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-card/90 backdrop-blur-sm border-border shadow-lg hover:bg-primary hover:text-primary-foreground transition-all hidden md:flex"
+          disabled={!canScrollPrev}
+        >
+          <ChevronLeft className="h-6 w-6" />
+          <span className="sr-only">Previous</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={scrollNext}
+          className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-card/90 backdrop-blur-sm border-border shadow-lg hover:bg-primary hover:text-primary-foreground transition-all hidden md:flex"
+          disabled={!canScrollNext}
+        >
+          <ChevronRight className="h-6 w-6" />
+          <span className="sr-only">Next</span>
+        </Button>
+
         {/* Gradient Overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-8 md:w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 md:w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-        {/* Row 1 - Left to Right - Continuous Animation */}
-        <div 
-          className="flex gap-4 mb-4 will-change-transform"
-          style={{
-            animation: 'scroll-left-seamless 30s linear infinite',
-            width: 'max-content',
-          }}
-        >
-          {row1Testimonials.map((testimonial, index) => (
-            <TestimonialCard key={`row1-${index}`} testimonial={testimonial} />
-          ))}
+        {/* Embla Carousel */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-4 touch-pan-y">
+            {testimonials.map((testimonial, index) => (
+              <div 
+                key={index} 
+                className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[340px]"
+              >
+                <TestimonialCard testimonial={testimonial} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Row 2 - Right to Left - Continuous Animation */}
-        <div 
-          className="flex gap-4 will-change-transform"
-          style={{
-            animation: 'scroll-right-seamless 35s linear infinite',
-            width: 'max-content',
-          }}
-        >
-          {row2Testimonials.map((testimonial, index) => (
-            <TestimonialCard key={`row2-${index}`} testimonial={testimonial} />
-          ))}
+        {/* Mobile Navigation */}
+        <div className="flex justify-center gap-4 mt-8 md:hidden">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollPrev}
+            className="h-12 w-12 rounded-full bg-card border-border shadow-md"
+            disabled={!canScrollPrev}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollNext}
+            className="h-12 w-12 rounded-full bg-card border-border shadow-md"
+            disabled={!canScrollNext}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </div>
       </div>
-
-      {/* CSS for seamless animations */}
-      <style>{`
-        @keyframes scroll-left-seamless {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.333%); }
-        }
-        @keyframes scroll-right-seamless {
-          0% { transform: translateX(-33.333%); }
-          100% { transform: translateX(0); }
-        }
-        .flex:hover {
-          animation-play-state: paused !important;
-        }
-      `}</style>
     </section>
   );
 }

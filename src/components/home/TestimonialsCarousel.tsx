@@ -243,61 +243,21 @@ export function TestimonialsCarousel() {
       </div>
 
       {/* Infinite Scroll Container */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {/* Gradient Overlays */}
         <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-        {/* Row 1 - Left to Right - Draggable */}
-        <div 
-          className="flex gap-4 mb-4 animate-scroll-left-fast overflow-x-auto scrollbar-hide hover:[animation-play-state:paused] cursor-grab active:cursor-grabbing"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          onMouseDown={(e) => {
-            const el = e.currentTarget;
-            el.style.animationPlayState = 'paused';
-            const startX = e.pageX - el.offsetLeft;
-            const scrollLeft = el.scrollLeft;
-            const onMouseMove = (e: MouseEvent) => {
-              const x = e.pageX - el.offsetLeft;
-              el.scrollLeft = scrollLeft - (x - startX);
-            };
-            const onMouseUp = () => {
-              document.removeEventListener('mousemove', onMouseMove);
-              document.removeEventListener('mouseup', onMouseUp);
-              el.style.animationPlayState = 'running';
-            };
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-          }}
-        >
-          {[...testimonials.slice(0, 10), ...testimonials.slice(0, 10), ...testimonials.slice(0, 10)].map((testimonial, index) => (
+        {/* Row 1 - Left to Right */}
+        <div className="flex gap-4 mb-4 animate-scroll-left-fast hover:[animation-play-state:paused]">
+          {[...testimonials.slice(0, 10), ...testimonials.slice(0, 10)].map((testimonial, index) => (
             <TestimonialCard key={`row1-${index}`} testimonial={testimonial} />
           ))}
         </div>
 
-        {/* Row 2 - Right to Left - Draggable */}
-        <div 
-          className="flex gap-4 animate-scroll-right-fast overflow-x-auto scrollbar-hide hover:[animation-play-state:paused] cursor-grab active:cursor-grabbing"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          onMouseDown={(e) => {
-            const el = e.currentTarget;
-            el.style.animationPlayState = 'paused';
-            const startX = e.pageX - el.offsetLeft;
-            const scrollLeft = el.scrollLeft;
-            const onMouseMove = (e: MouseEvent) => {
-              const x = e.pageX - el.offsetLeft;
-              el.scrollLeft = scrollLeft - (x - startX);
-            };
-            const onMouseUp = () => {
-              document.removeEventListener('mousemove', onMouseMove);
-              document.removeEventListener('mouseup', onMouseUp);
-              el.style.animationPlayState = 'running';
-            };
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-          }}
-        >
-          {[...testimonials.slice(10, 20), ...testimonials.slice(10, 20), ...testimonials.slice(10, 20)].map((testimonial, index) => (
+        {/* Row 2 - Right to Left */}
+        <div className="flex gap-4 animate-scroll-right-fast hover:[animation-play-state:paused]">
+          {[...testimonials.slice(10, 20), ...testimonials.slice(10, 20)].map((testimonial, index) => (
             <TestimonialCard key={`row2-${index}`} testimonial={testimonial} />
           ))}
         </div>

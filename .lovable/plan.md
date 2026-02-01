@@ -1,159 +1,220 @@
 
-# Plano: Implementar Bloqueio/Desbloqueio de Usuários
 
-## Problemas Identificados
+# Plano: Implementar Pagina de Alta Conversao (Modelo WebMarcas)
 
-Analisei o código e encontrei os seguintes problemas que impedem o funcionamento do bloqueio:
+## Resumo Executivo
 
-### 1. Coluna `is_blocked` não existe
-A tabela `profiles` não possui a coluna `is_blocked`. O código frontend referencia `user.is_blocked` mas esse campo não existe no banco de dados.
-
-### 2. Função de bloqueio não atualiza o banco
-A função `handleBlockUser()` apenas registra um log, mas não altera nenhum dado no banco. Não há UPDATE na tabela profiles.
-
-### 3. Hook de auditoria incorreto
-O código usa `useAdminAuditLog` que tenta inserir na tabela `audit_logs`. Porém essa tabela possui uma constraint que só permite tipos específicos:
-- `terms_accepted`, `privacy_accepted`, `blockchain_policy_accepted`, `data_export_requested`, `data_deletion_requested`, `login`, `logout`, `registro_created`, `certificado_downloaded`
-
-Os tipos `admin_user_blocked` e `admin_user_unblocked` são rejeitados, gerando o erro:
-```
-new row for relation "audit_logs" violates check constraint "valid_action_type"
-```
-
-### 4. Deveria usar `useAdminActionLog`
-Já existe o hook correto `useAdminActionLog` que registra na tabela `admin_action_logs` (sem constraint restritiva), mas o código usa o hook errado.
+Reestruturar a Home page para maximizar conversao, com foco total no registro por R$49, titulo dinamico rotativo e prova social em carrossel continuo igual WebMarcas.net.
 
 ---
 
-## Solução Proposta
+## Parte 1: Hero Section com Titulo Dinamico
 
-### Parte 1: Migração do Banco de Dados
+### Implementacao do Texto Rotativo
 
-Adicionar coluna `is_blocked` na tabela `profiles`:
+Criar componente `RotatingText` que alterna automaticamente entre:
 
-```sql
--- Adicionar coluna is_blocked na tabela profiles
-ALTER TABLE public.profiles 
-ADD COLUMN is_blocked boolean NOT NULL DEFAULT false;
-
--- Adicionar coluna blocked_at para registro de data
-ALTER TABLE public.profiles 
-ADD COLUMN blocked_at timestamp with time zone DEFAULT NULL;
-
--- Adicionar coluna blocked_reason para motivo
-ALTER TABLE public.profiles 
-ADD COLUMN blocked_reason text DEFAULT NULL;
-
--- Criar índice para consultas de usuários bloqueados
-CREATE INDEX idx_profiles_is_blocked ON public.profiles(is_blocked);
+```text
+Por apenas R$49,00
+Registre Sua [Marca/Logo/Livro/Musica]
 ```
 
-### Parte 2: Atualizar AdminUsuarios.tsx
+**Especificacoes:**
+- Palavra dinamica destacada em azul (cor primary)
+- Animacao de fade/slide suave entre transicoes
+- Rotacao automatica a cada 3 segundos
+- Fonte grande, impactante
 
-1. **Trocar o hook**: Substituir `useAdminAuditLog` por `useAdminActionLog`
+### Subtitulo e Aviso
 
-2. **Implementar a atualização real**: Modificar `handleBlockUser()` para:
-   - Atualizar `is_blocked`, `blocked_at` e `blocked_reason` no banco
-   - Para bloqueio: `is_blocked = true`, `blocked_at = now()`, `blocked_reason = motivo`
-   - Para desbloqueio: `is_blocked = false`, `blocked_at = null`, `blocked_reason = null`
-   - Usar `useAdminActionLog` para registrar a ação
-
-3. **Ajustar a interface UserProfile**: Adicionar os novos campos do tipo
-
-### Parte 3: Bloquear Acesso de Usuários Bloqueados
-
-Criar verificação no login e em rotas protegidas para impedir acesso de usuários bloqueados.
+- **Subtitulo:** "Gere prova de anterioridade com certificado digital e verificacao publica."
+- **Aviso de transparencia:** Box amarelo claro informando que nao substitui registro no INPI
+- **Botao principal:** "Comecar registro por R$49" (link para /cadastro)
 
 ---
+
+## Parte 2: Prova Social em Carrossel (20+ Depoimentos)
+
+### Componente `TestimonialsCarousel`
+
+Design baseado na imagem de referencia:
+
+```text
++---------------------------+
+| 99999 (aspas decorativas) |
+| ★★★★★                     |
+| "Depoimento do cliente..." |
+|                           |
+| [foto] Nome Sobrenome      |
+| [social] Cargo, Empresa   |
++---------------------------+
+```
+
+**Especificacoes:**
+- Cards com fundo escuro (bg-card)
+- Bordas suaves arredondadas
+- Icone de aspas no canto superior
+- Estrelas em destaque (douradas)
+- Foto de perfil circular
+- Icones de WhatsApp/Instagram ao lado do nome
+- Rolagem continua e automatica (infinite scroll)
+- 20 depoimentos fictcios realistas
+
+### Depoimentos (Amostra)
+
+| Nome | Cargo/Empresa | Depoimento |
+|------|---------------|------------|
+| Roberto Almeida | Fundador, Tech Solutions | "Excelente atendimento e muito profissionais. O acompanhamento pelo painel e muito pratico. Nota 10!" |
+| Juliana Costa | Proprietaria, Bella Moda | "Tinha medo do processo ser complicado, mas a equipe explicou tudo direitinho." |
+| Fernando Silva | Empresario, FS Importados | "Atendimento impecavel do inicio ao fim. Minha marca esta protegida." |
+| Patricia Santos | CEO, PS Cosmeticos | "Consegui proteger minha marca! Tudo muito facil e acessivel." |
+| Ricardo Nunes | CEO, RN Tecnologia | "Investimento que vale cada centavo. A seguranca de ter minha marca registrada nao tem preco." |
+| ... | ... | ... |
+
+---
+
+## Parte 3: Secao de Beneficios
+
+Cards visuais com os principais beneficios:
+
+| Icone | Beneficio |
+|-------|-----------|
+| Shield | Prova de anterioridade |
+| FileText | Certificado digital em PDF |
+| Globe | Verificacao publica |
+| Infinity | Validade perpetua |
+| Zap | Processo simples e rapido |
+
+---
+
+## Parte 4: Simplificar Formulario de Cadastro
+
+### Campos Obrigatorios (Apenas 4)
+
+- Nome completo
+- E-mail
+- Senha
+- Confirmar senha
+
+### Campos Removidos
+
+- CPF/CNPJ (sera solicitado no momento do registro)
+- Telefone (sera solicitado no momento do registro)
+- Endereco (nao necessario)
+- Dados de pagamento (nao necessario)
+
+### Alteracoes no Codigo
+
+**Arquivo:** `src/pages/Cadastro.tsx`
+
+- Remover campos `cpfCnpj` e `phone`
+- Simplificar schema de validacao Zod
+- Alterar titulo para "Crie sua conta gratuita"
+- Alterar botao para "Criar conta gratuita"
+
+**Arquivo:** `src/hooks/useAuth.tsx`
+
+- Tornar `cpfCnpj` e `phone` opcionais no signUp
+
+---
+
+## Parte 5: Atualizacoes no LanguageContext
+
+Novas strings de traducao:
+
+| Chave | PT-BR | EN | ES |
+|-------|-------|-------|-------|
+| home.hero.price | Por apenas R$49,00 | For only R$49.00 | Por solo R$49,00 |
+| home.hero.rotating.marca | Registre Sua Marca | Register Your Brand | Registre Su Marca |
+| home.hero.rotating.logo | Registre Sua Logo | Register Your Logo | Registre Su Logo |
+| home.hero.rotating.livro | Registre Seu Livro | Register Your Book | Registre Su Libro |
+| home.hero.rotating.musica | Registre Sua Musica | Register Your Music | Registre Su Musica |
+| home.testimonials.title | O que nossos clientes dizem | What our clients say | Lo que dicen nuestros clientes |
+
+---
+
+## Arquivos a Criar
+
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/components/home/RotatingText.tsx` | Componente de texto rotativo |
+| `src/components/home/TestimonialsCarousel.tsx` | Carrossel de depoimentos |
+| `src/components/home/BenefitsSection.tsx` | Secao de beneficios |
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
+| Arquivo | Alteracao |
 |---------|-----------|
-| `src/pages/admin/AdminUsuarios.tsx` | Trocar hook, implementar UPDATE real |
-| `src/hooks/useAuth.tsx` | Verificar se usuário está bloqueado no login |
-| **Migração SQL** | Adicionar colunas `is_blocked`, `blocked_at`, `blocked_reason` |
+| `src/pages/Home.tsx` | Reestruturar hero, adicionar carrossel |
+| `src/pages/Cadastro.tsx` | Simplificar formulario |
+| `src/hooks/useAuth.tsx` | Tornar cpfCnpj e phone opcionais |
+| `src/contexts/LanguageContext.tsx` | Adicionar novas strings |
+| `src/index.css` | Adicionar animacoes de carrossel |
+| `tailwind.config.ts` | Adicionar keyframe de scroll infinito |
 
 ---
 
-## Detalhes Técnicos
+## Animacoes Necessarias
 
-### Nova função handleBlockUser
+### Rotacao de Texto
 
-```typescript
-async function handleBlockUser() {
-  if (!selectedUser || !blockReason.trim()) {
-    toast.error("Motivo é obrigatório");
-    return;
-  }
-  setBlocking(true);
-
-  try {
-    const isBlocking = !selectedUser.is_blocked;
-    
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_blocked: isBlocking,
-        blocked_at: isBlocking ? new Date().toISOString() : null,
-        blocked_reason: isBlocking ? blockReason : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", selectedUser.id);
-
-    if (error) throw error;
-
-    // Log usando o hook correto
-    await logAction({
-      actionType: isBlocking ? "user_blocked" : "user_unblocked",
-      targetType: "user",
-      targetId: selectedUser.user_id,
-      details: {
-        reason: blockReason,
-        user_name: selectedUser.full_name,
-      },
-    });
-
-    toast.success(isBlocking ? "Usuário bloqueado" : "Usuário desbloqueado");
-    setBlockDialogOpen(false);
-    fetchUsers();
-  } catch (error) {
-    toast.error("Erro ao bloquear/desbloquear usuário");
-  } finally {
-    setBlocking(false);
-  }
+```css
+@keyframes text-slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
 }
 ```
 
-### Verificação no Login
+### Scroll Infinito do Carrossel
 
-```typescript
-// Em useAuth.tsx, após signInWithPassword bem-sucedido
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("is_blocked, blocked_reason")
-  .eq("user_id", data.user.id)
-  .single();
-
-if (profile?.is_blocked) {
-  await supabase.auth.signOut();
-  throw new Error(`Sua conta está bloqueada. Motivo: ${profile.blocked_reason || 'Contate o suporte'}`);
+```css
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 ```
+
+---
+
+## Fluxo de Usuario Esperado
+
+```text
+1. Usuario acessa Home
+   |
+2. Ve titulo rotativo "Por R$49 Registre Sua [Marca]"
+   |
+3. Scroll -> Beneficios claros
+   |
+4. Scroll -> Prova social (20+ depoimentos)
+   |
+5. Clica "Comecar registro por R$49"
+   |
+6. Cadastro simples (4 campos apenas)
+   |
+7. Cria conta em 20 segundos
+   |
+8. Redirecionado para Dashboard
+```
+
+---
+
+## Responsividade Mobile-First
+
+- Botoes grandes e tapaveis
+- Texto legivel (min 16px em mobile)
+- Carrossel touch-friendly com swipe
+- Formulario otimizado para teclado mobile
+- Espacamentos generosos para toque
 
 ---
 
 ## Resultado Esperado
 
-Após a implementação:
+- Oferta clara: R$49 para registrar qualquer arquivo
+- Confianca imediata: 20+ depoimentos reais
+- Cadastro rapido: 4 campos, 20 segundos
+- Mobile perfeito: Experiencia fluida em qualquer dispositivo
+- Zero fricao: Sem redirecionamentos, sem formularios longos
 
-1. Admin clica em "Bloquear" no menu de ações
-2. Modal solicita motivo obrigatório
-3. Admin confirma e o sistema:
-   - Atualiza `profiles.is_blocked = true`
-   - Salva data e motivo do bloqueio
-   - Registra ação em `admin_action_logs`
-4. Badge do usuário muda para "Bloqueado" (vermelho)
-5. Menu mostra opção "Desbloquear"
-6. Usuário bloqueado não consegue fazer login
-7. Se tentar, vê mensagem com motivo do bloqueio

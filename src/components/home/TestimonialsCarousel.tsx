@@ -168,7 +168,7 @@ const testimonials = [
 
 function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] }) {
   return (
-    <div className="flex-shrink-0 w-[300px] md:w-[340px] p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing select-none">
+    <div className="flex-shrink-0 w-[280px] md:w-[320px] p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 select-none">
       {/* Stars and Quote */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-0.5">
@@ -226,6 +226,10 @@ export function TestimonialsCarousel() {
     }
   };
 
+  // Triple the testimonials for seamless infinite loop
+  const row1Testimonials = [...testimonials.slice(0, 10), ...testimonials.slice(0, 10), ...testimonials.slice(0, 10)];
+  const row2Testimonials = [...testimonials.slice(10, 20), ...testimonials.slice(10, 20), ...testimonials.slice(10, 20)];
+
   return (
     <section className="py-16 md:py-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4 mb-10">
@@ -243,25 +247,52 @@ export function TestimonialsCarousel() {
       </div>
 
       {/* Infinite Scroll Container */}
-      <div className="relative overflow-hidden">
+      <div className="relative">
         {/* Gradient Overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-        {/* Row 1 - Left to Right */}
-        <div className="flex gap-4 mb-4 animate-scroll-left-fast hover:[animation-play-state:paused]">
-          {[...testimonials.slice(0, 10), ...testimonials.slice(0, 10)].map((testimonial, index) => (
+        {/* Row 1 - Left to Right - Continuous Animation */}
+        <div 
+          className="flex gap-4 mb-4 will-change-transform"
+          style={{
+            animation: 'scroll-left-seamless 30s linear infinite',
+            width: 'max-content',
+          }}
+        >
+          {row1Testimonials.map((testimonial, index) => (
             <TestimonialCard key={`row1-${index}`} testimonial={testimonial} />
           ))}
         </div>
 
-        {/* Row 2 - Right to Left */}
-        <div className="flex gap-4 animate-scroll-right-fast hover:[animation-play-state:paused]">
-          {[...testimonials.slice(10, 20), ...testimonials.slice(10, 20)].map((testimonial, index) => (
+        {/* Row 2 - Right to Left - Continuous Animation */}
+        <div 
+          className="flex gap-4 will-change-transform"
+          style={{
+            animation: 'scroll-right-seamless 35s linear infinite',
+            width: 'max-content',
+          }}
+        >
+          {row2Testimonials.map((testimonial, index) => (
             <TestimonialCard key={`row2-${index}`} testimonial={testimonial} />
           ))}
         </div>
       </div>
+
+      {/* CSS for seamless animations */}
+      <style>{`
+        @keyframes scroll-left-seamless {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+        @keyframes scroll-right-seamless {
+          0% { transform: translateX(-33.333%); }
+          100% { transform: translateX(0); }
+        }
+        .flex:hover {
+          animation-play-state: paused !important;
+        }
+      `}</style>
     </section>
   );
 }

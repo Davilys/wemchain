@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { trackCompleteRegistration, trackLead } from "@/lib/metaPixel";
 import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2, Shield, Sparkles } from "lucide-react";
 import { z } from "zod";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
@@ -60,8 +61,13 @@ export default function Cadastro() {
     }
 
     setLoading(true);
+    // Track Lead when user starts signup attempt
+    trackLead();
+    
     try {
       await signUp(email, password, fullName);
+      // Track CompleteRegistration after successful signup
+      trackCompleteRegistration();
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",

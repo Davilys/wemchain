@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
+import { trackPurchase } from "@/lib/metaPixel";
 import { toast } from "sonner";
 import { 
   CreditCard, 
@@ -226,6 +227,10 @@ export default function Checkout() {
           
           // Check if payment is confirmed
           if (data.payment?.status === "CONFIRMED" || data.payments?.[0]?.status === "CONFIRMED") {
+            // Track Purchase event (most important for Meta Ads!)
+            const purchaseValue = selectedPlan?.price || 49;
+            trackPurchase(purchaseValue, 'BRL');
+            
             toast.success("Pagamento confirmado! Créditos liberados.");
             refetchCredits();
             clearInterval(interval);

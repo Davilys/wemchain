@@ -8,6 +8,7 @@ import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
 import { PricingBlock } from "@/components/home/PricingBlock";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trackInitiateCheckout } from "@/lib/metaPixel";
 import {
   Shield, 
   Clock, 
@@ -95,7 +96,7 @@ export default function Home() {
                 size="lg" 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg md:text-xl px-10 md:px-12 py-7 md:py-8 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
-                <Link to="/cadastro">
+                <Link to="/cadastro" onClick={() => trackInitiateCheckout()}>
                   {language === "en" 
                     ? "Start registration for R$49" 
                     : language === "es" 

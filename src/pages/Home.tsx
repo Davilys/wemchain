@@ -3,6 +3,9 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CertificatePreview } from "@/components/home/CertificatePreview";
+import { RotatingText } from "@/components/home/RotatingText";
+import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
+import { BenefitsSection } from "@/components/home/BenefitsSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Shield, 
@@ -24,18 +27,19 @@ import {
   LayoutDashboard,
   BadgeCheck,
   HelpCircle,
-  MessageCircle
+  MessageCircle,
+  AlertTriangle
 } from "lucide-react";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const whatsappNumber = "5511911120225";
   const whatsappMessage = encodeURIComponent(t("home.whatsapp.message"));
 
   return (
     <Layout>
-      {/* Hero Section */}
+      {/* Hero Section - High Conversion */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
         <div className="absolute inset-0 bg-gradient-radial" />
         <div className="absolute inset-0 pattern-dots" />
@@ -49,53 +53,56 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-10 animate-fade-up">
               <Shield className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-primary tracking-wide">
-                {t("home.hero.badge")}
+                {language === "en" ? "Leader in Digital Registration" : language === "es" ? "Líder en Registro Digital" : "Líder em Registro Digital"}
               </span>
             </div>
 
-            {/* Main Title */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-8 leading-[1.1] animate-fade-up delay-100 tracking-tight">
-              <span className="text-foreground">{t("home.hero.title1")}</span>
-              <br />
-              <span className="text-foreground">{t("home.hero.title2")} </span>
-              <span className="text-primary text-shadow-glow">{t("home.hero.title3")}</span>
-            </h1>
+            {/* Rotating Title */}
+            <div className="mb-8 md:mb-10 animate-fade-up delay-100">
+              <RotatingText />
+            </div>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
-              {t("home.hero.subtitle")}
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed animate-fade-up delay-200 px-4">
+              {language === "en" 
+                ? "Generate proof of prior art with digital certificate and public verification."
+                : language === "es"
+                ? "Genere prueba de anterioridad con certificado digital y verificación pública."
+                : "Gere prova de anterioridade com certificado digital e verificação pública."}
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 animate-fade-up delay-300 px-4">
+            {/* Transparency Warning */}
+            <div className="max-w-2xl mx-auto mb-8 animate-fade-up delay-250 px-4">
+              <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground text-left">
+                    {language === "en"
+                      ? "This service generates blockchain proof of prior art and does not replace registration with INPI."
+                      : language === "es"
+                      ? "Este servicio genera prueba de anterioridad en blockchain y no sustituye el registro en el INPI."
+                      : "Este serviço gera prova de anterioridade em blockchain e não substitui registro no INPI."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-up delay-300 px-4">
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg md:text-xl px-10 md:px-12 py-7 md:py-8 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  {t("home.hero.cta")}
+                  {language === "en" 
+                    ? "Start registration for R$49" 
+                    : language === "es" 
+                    ? "Comenzar registro por R$49" 
+                    : "Começar registro por R$49"}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button 
-                asChild 
-                size="lg" 
-                variant="outline"
-                className="border-2 border-border bg-card text-foreground hover:bg-muted font-semibold text-base md:text-lg px-8 md:px-10 py-6 md:py-7 rounded-xl group w-full sm:w-auto"
-              >
-                <Link to="/como-funciona">
-                  {t("home.hero.secondary")}
-                </Link>
-              </Button>
-            </div>
-
-            {/* Trust Badge */}
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted border border-border mb-12 animate-fade-up delay-400">
-              <BadgeCheck className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">R$ 99/{t("home.business.period").replace("/ ", "")}</span> {t("home.hero.trustBadge")}
-              </span>
             </div>
 
             {/* Feature Cards Row */}
@@ -123,6 +130,12 @@ export default function Home() {
 
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-card to-transparent" />
       </section>
+
+      {/* Benefits Section */}
+      <BenefitsSection />
+
+      {/* Testimonials Carousel */}
+      <TestimonialsCarousel />
 
       {/* O que é a WebMarcas */}
       <section className="py-16 md:py-24 bg-card relative border-y border-border/30">
@@ -184,66 +197,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Plano Business - Destaque Principal */}
-      <section className="section-padding bg-primary/5 relative border-y border-primary/20">
-        <div className="absolute inset-0 bg-gradient-radial opacity-30" />
-        
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-                <Zap className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">{t("home.business.badge")}</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                {t("home.business.title")} <span className="text-primary">{t("home.business.titleHighlight")}</span>
-              </h2>
-              <div className="flex items-baseline justify-center gap-2 mb-4">
-                <span className="text-5xl md:text-6xl font-bold text-foreground">{t("home.business.price")}</span>
-                <span className="text-xl text-muted-foreground">{t("home.business.period")}</span>
-              </div>
-              <p className="text-lg text-primary font-semibold mb-6">
-                {t("home.business.credits")}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-10">
-              {[
-                { icon: FileCheck, text: t("home.business.feature1") },
-                { icon: Zap, text: t("home.business.feature2") },
-                { icon: FileText, text: t("home.business.feature3") },
-                { icon: Award, text: t("home.business.feature4") },
-                { icon: Globe, text: t("home.business.feature5") },
-                { icon: LayoutDashboard, text: t("home.business.feature6") },
-                { icon: Clock, text: t("home.business.feature7") },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="text-sm md:text-base text-foreground">{item.text}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Button 
-                asChild 
-                size="lg" 
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg px-10 py-7 rounded-xl shadow-lg btn-premium group"
-              >
-                <Link to="/cadastro">
-                  {t("home.hero.cta")}
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Como Funciona */}
-      <section className="section-padding bg-background relative">
+      <section className="section-padding bg-card relative border-y border-border/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
@@ -262,7 +217,7 @@ export default function Home() {
               { step: "3", title: t("home.howItWorks.step3.title"), desc: t("home.howItWorks.step3.desc"), icon: Lock },
               { step: "4", title: t("home.howItWorks.step4.title"), desc: t("home.howItWorks.step4.desc"), icon: Award },
             ].map((item, index) => (
-              <div key={index} className="relative text-center p-6 rounded-2xl bg-card border border-border/50 group hover:border-primary/30 transition-all">
+              <div key={index} className="relative text-center p-6 rounded-2xl bg-background border border-border/50 group hover:border-primary/30 transition-all">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
                   {item.step}
                 </div>
@@ -278,34 +233,6 @@ export default function Home() {
           <p className="text-center text-muted-foreground max-w-xl mx-auto">
             {t("home.howItWorks.note")}
           </p>
-        </div>
-      </section>
-
-      {/* Segurança e Validade */}
-      <section className="py-12 md:py-16 bg-card relative border-y border-border/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="relative p-6 md:p-8 rounded-2xl bg-green-500/5 border border-green-500/20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-3">Segurança e Validade</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    O registro em blockchain gera uma <strong className="text-foreground">prova técnica de anterioridade</strong>, 
-                    com timestamp imutável e verificação pública.
-                  </p>
-                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                    <p className="text-sm text-muted-foreground">
-                      <strong className="text-yellow-600">⚠️ Importante:</strong> Este serviço não substitui o registro de marca ou patente junto ao INPI. 
-                      Ele atua como prova complementar de existência e autoria.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -439,20 +366,20 @@ export default function Home() {
               />
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight">
-              Proteja e organize sua propriedade intelectual{" "}
-              <span className="text-primary">agora</span>
+              Proteja sua propriedade intelectual{" "}
+              <span className="text-primary">por R$49</span>
             </h2>
             <p className="text-muted-foreground text-base md:text-lg mb-4 leading-relaxed px-4">
-              Sem taxas ocultas. Cancele quando quiser.
+              Sem taxas ocultas. Processo simples e rápido.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 md:py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg px-10 py-7 rounded-xl shadow-lg btn-premium group w-full sm:w-auto"
               >
                 <Link to="/cadastro">
-                  Criar Conta Grátis
+                  Começar registro por R$49
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -460,7 +387,7 @@ export default function Home() {
                 asChild 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-border bg-card/50 text-foreground hover:bg-card font-semibold px-8 py-6 md:py-7 rounded-xl backdrop-blur-sm w-full sm:w-auto"
+                className="border-2 border-border bg-card/50 text-foreground hover:bg-card font-semibold px-8 py-7 rounded-xl backdrop-blur-sm w-full sm:w-auto"
               >
                 <a 
                   href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}

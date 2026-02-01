@@ -8,15 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2, Phone, Building2, Shield, Sparkles } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2, Shield, Sparkles } from "lucide-react";
 import { z } from "zod";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 
 const cadastroSchema = z.object({
   fullName: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100, "Nome muito longo"),
-  cpfCnpj: z.string().min(11, "CPF/CNPJ inválido").max(18, "CPF/CNPJ inválido"),
   email: z.string().email("E-mail inválido").max(255, "E-mail muito longo"),
-  phone: z.string().min(10, "Telefone inválido").max(15, "Telefone inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
   acceptTerms: z.boolean().refine(val => val === true, "Você deve aceitar os termos")
@@ -32,74 +30,21 @@ const benefits = [
   { text: "Suporte especializado", icon: User }
 ];
 
-// Format CPF/CNPJ as user types
-const formatCpfCnpj = (value: string) => {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length <= 11) {
-    // CPF format: 000.000.000-00
-    return numbers
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  } else {
-    // CNPJ format: 00.000.000/0000-00
-    return numbers
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
-  }
-};
-
-// Format phone as user types
-const formatPhone = (value: string) => {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length <= 10) {
-    // (00) 0000-0000
-    return numbers
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{4})(\d)/, "$1-$2");
-  } else {
-    // (00) 00000-0000
-    return numbers
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{5})(\d)/, "$1-$2");
-  }
-};
-
 export default function Cadastro() {
   const [fullName, setFullName] = useState("");
-  const [cpfCnpj, setCpfCnpj] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
 
-  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCpfCnpj(e.target.value);
-    if (formatted.length <= 18) {
-      setCpfCnpj(formatted);
-    }
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    if (formatted.length <= 15) {
-      setPhone(formatted);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const validation = cadastroSchema.safeParse({ 
       fullName, 
-      cpfCnpj: cpfCnpj.replace(/\D/g, ""),
       email, 
-      phone: phone.replace(/\D/g, ""),
       password, 
       confirmPassword, 
       acceptTerms 
@@ -116,7 +61,7 @@ export default function Cadastro() {
 
     setLoading(true);
     try {
-      await signUp(email, password, fullName, cpfCnpj.replace(/\D/g, ""), phone.replace(/\D/g, ""));
+      await signUp(email, password, fullName);
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
@@ -161,10 +106,10 @@ export default function Cadastro() {
                   </span>
                 </Link>
                 <h1 className="font-display text-4xl font-bold text-foreground mb-4">
-                  Proteja sua marca <span className="text-gradient-cyan">hoje</span>
+                  Crie sua conta <span className="text-gradient-cyan">gratuita</span>
                 </h1>
                 <p className="font-body text-lg text-muted-foreground leading-relaxed">
-                  Crie sua conta e comece a registrar suas marcas em blockchain com prova de anterioridade imutável.
+                  Cadastre-se em segundos e comece a registrar suas marcas em blockchain com prova de anterioridade imutável.
                 </p>
               </div>
               
@@ -208,14 +153,14 @@ export default function Cadastro() {
                     </span>
                   </Link>
                 </div>
-                <CardTitle className="font-display text-2xl">Criar Conta</CardTitle>
-                <CardDescription className="font-body">Comece a proteger sua marca hoje mesmo</CardDescription>
+                <CardTitle className="font-display text-2xl">Crie sua conta gratuita</CardTitle>
+                <CardDescription className="font-body">Comece a proteger sua marca em segundos</CardDescription>
               </CardHeader>
               
               <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4 pt-2">
+                <CardContent className="space-y-5 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="font-body font-semibold">Nome Completo *</Label>
+                    <Label htmlFor="fullName" className="font-body font-semibold">Nome Completo</Label>
                     <div className="relative group">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
@@ -224,48 +169,14 @@ export default function Cadastro() {
                         placeholder="Seu nome completo"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
+                        className="pl-11 h-12 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all text-base"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cpfCnpj" className="font-body font-semibold">CPF ou CNPJ *</Label>
-                      <div className="relative group">
-                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                        <Input
-                          id="cpfCnpj"
-                          type="text"
-                          placeholder="000.000.000-00"
-                          value={cpfCnpj}
-                          onChange={handleCpfCnpjChange}
-                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone" className="font-body font-semibold">Telefone *</Label>
-                      <div className="relative group">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                        <Input
-                          id="phone"
-                          type="tel"
-                          placeholder="(00) 00000-0000"
-                          value={phone}
-                          onChange={handlePhoneChange}
-                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="font-body font-semibold">E-mail *</Label>
+                    <Label htmlFor="email" className="font-body font-semibold">E-mail</Label>
                     <div className="relative group">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input
@@ -274,7 +185,7 @@ export default function Cadastro() {
                         placeholder="seu@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
+                        className="pl-11 h-12 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all text-base"
                         required
                       />
                     </div>
@@ -282,7 +193,7 @@ export default function Cadastro() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="font-body font-semibold">Senha *</Label>
+                      <Label htmlFor="password" className="font-body font-semibold">Senha</Label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
@@ -291,14 +202,14 @@ export default function Cadastro() {
                           placeholder="Mínimo 6 caracteres"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
+                          className="pl-11 h-12 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all text-base"
                           required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="font-body font-semibold">Confirmar Senha *</Label>
+                      <Label htmlFor="confirmPassword" className="font-body font-semibold">Confirmar Senha</Label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
@@ -307,7 +218,7 @@ export default function Cadastro() {
                           placeholder="Repita sua senha"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="pl-11 h-11 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all"
+                          className="pl-11 h-12 font-body bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background rounded-xl transition-all text-base"
                           required
                         />
                       </div>
@@ -337,18 +248,18 @@ export default function Cadastro() {
                 <CardFooter className="flex flex-col gap-5 pt-4">
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-bold rounded-xl shadow-lg btn-premium group"
+                    className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-body font-bold text-lg rounded-xl shadow-lg btn-premium group"
                     disabled={loading || !acceptTerms}
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Criando conta...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
-                        Criar Conta Grátis
+                        <Sparkles className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+                        Criar conta gratuita
                       </>
                     )}
                   </Button>

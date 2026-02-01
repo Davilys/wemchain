@@ -16,12 +16,22 @@ declare global {
  * @param params - Optional event parameters
  */
 export const trackEvent = (eventName: string, params?: Record<string, any>) => {
-  if (typeof window !== 'undefined' && window.fbq) {
-    if (params) {
-      window.fbq('track', eventName, params);
-    } else {
-      window.fbq('track', eventName);
-    }
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!window.fbq) {
+    console.warn('[Meta Pixel] fbq not loaded. Event not tracked:', eventName);
+    return;
+  }
+
+  if (params) {
+    window.fbq('track', eventName, params);
+  } else {
+    window.fbq('track', eventName);
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
     console.log(`[Meta Pixel] Event tracked: ${eventName}`, params || '');
   }
 };

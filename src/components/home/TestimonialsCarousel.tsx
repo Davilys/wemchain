@@ -1,145 +1,167 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Star, Quote } from "lucide-react";
 
+// Import testimonial photos
+import robertoAlmeida from "@/assets/testimonials/roberto-almeida.jpg";
+import julianaCosta from "@/assets/testimonials/juliana-costa.jpg";
+import fernandoSilva from "@/assets/testimonials/fernando-silva.jpg";
+import patriciaSantos from "@/assets/testimonials/patricia-santos.jpg";
+import ricardoNunes from "@/assets/testimonials/ricardo-nunes.jpg";
+import amandaRibeiro from "@/assets/testimonials/amanda-ribeiro.jpg";
+import brunoCardoso from "@/assets/testimonials/bruno-cardoso.jpg";
+import carlaMendes from "@/assets/testimonials/carla-mendes.jpg";
+import diegoOliveira from "@/assets/testimonials/diego-oliveira.jpg";
+import elenaFerreira from "@/assets/testimonials/elena-ferreira.jpg";
+import gabrielSantos from "@/assets/testimonials/gabriel-santos.jpg";
+import helenaLima from "@/assets/testimonials/helena-lima.jpg";
+import igorMartins from "@/assets/testimonials/igor-martins.jpg";
+import joanaPereira from "@/assets/testimonials/joana-pereira.jpg";
+import kleberRocha from "@/assets/testimonials/kleber-rocha.jpg";
+import larissaDias from "@/assets/testimonials/larissa-dias.jpg";
+import marcosTavares from "@/assets/testimonials/marcos-tavares.jpg";
+import nataliaGomes from "@/assets/testimonials/natalia-gomes.jpg";
+import otavioSilva from "@/assets/testimonials/otavio-silva.jpg";
+import paulaVieira from "@/assets/testimonials/paula-vieira.jpg";
+
 const testimonials = [
   {
     name: "Roberto Almeida",
     role: "Fundador, Tech Solutions",
     text: "Excelente atendimento e muito profissionais. O acompanhamento pelo painel do cliente é muito prático. Nota 10!",
-    avatar: "RA",
+    photo: robertoAlmeida,
     social: "instagram",
   },
   {
     name: "Juliana Costa",
     role: "Proprietária, Bella Moda",
     text: "Tinha medo do processo ser complicado, mas a equipe explicou tudo direitinho. Minha marca foi aprovada sem problemas!",
-    avatar: "JC",
+    photo: julianaCosta,
     social: "whatsapp",
   },
   {
     name: "Fernando Silva",
     role: "Empresário, FS Importados",
     text: "Atendimento impecável do início ao fim. Minha marca está protegida e posso expandir meu negócio com tranquilidade.",
-    avatar: "FS",
+    photo: fernandoSilva,
     social: "instagram",
   },
   {
     name: "Patricia Santos",
     role: "CEO, PS Cosméticos",
     text: "Consegui proteger minha marca! A plataforma é tudo muito fácil e acessível.",
-    avatar: "PS",
+    photo: patriciaSantos,
     social: "whatsapp",
   },
   {
     name: "Ricardo Nunes",
     role: "CEO, RN Tecnologia",
     text: "Investimento que vale cada centavo. A segurança de ter minha marca registrada não tem preço.",
-    avatar: "RN",
+    photo: ricardoNunes,
     social: "whatsapp",
   },
   {
     name: "Amanda Ribeiro",
     role: "Proprietária, AR Boutique",
     text: "Equipe muito atenciosa e competente. Me senti segura durante todo o processo de registro.",
-    avatar: "AR",
+    photo: amandaRibeiro,
     social: "whatsapp",
   },
   {
     name: "Bruno Cardoso",
     role: "Empreendedor",
     text: "O melhor custo-benefício do mercado. Processo rápido, transparente e sem burocracia.",
-    avatar: "BC",
+    photo: brunoCardoso,
     social: "instagram",
   },
   {
     name: "Carla Mendes",
     role: "Designer, CM Studio",
     text: "Como designer, preciso proteger meus trabalhos. A WebMarcas me deu essa segurança de forma simples e rápida.",
-    avatar: "CM",
+    photo: carlaMendes,
     social: "instagram",
   },
   {
     name: "Diego Oliveira",
     role: "CEO, DO Tech",
     text: "Registro em blockchain é o futuro. Parabéns à equipe pela inovação e praticidade.",
-    avatar: "DO",
+    photo: diegoOliveira,
     social: "whatsapp",
   },
   {
     name: "Elena Ferreira",
     role: "Advogada, EF Advocacia",
     text: "Recomendo aos meus clientes. A prova de anterioridade em blockchain é muito sólida juridicamente.",
-    avatar: "EF",
+    photo: elenaFerreira,
     social: "instagram",
   },
   {
     name: "Gabriel Santos",
     role: "Músico Independente",
     text: "Finalmente posso registrar minhas músicas de forma acessível. Antes era muito caro e burocrático.",
-    avatar: "GS",
+    photo: gabrielSantos,
     social: "instagram",
   },
   {
     name: "Helena Lima",
     role: "Escritora",
     text: "Registrei meu livro antes de publicar. Agora tenho prova oficial da minha autoria.",
-    avatar: "HL",
+    photo: helenaLima,
     social: "whatsapp",
   },
   {
     name: "Igor Martins",
     role: "Desenvolvedor, IM Software",
     text: "Uso para registrar meus códigos-fonte. Proteção essencial para quem desenvolve software.",
-    avatar: "IM",
+    photo: igorMartins,
     social: "whatsapp",
   },
   {
     name: "Joana Pereira",
     role: "Fotógrafa Profissional",
     text: "Minhas fotos agora estão protegidas. O certificado digital é muito profissional.",
-    avatar: "JP",
+    photo: joanaPereira,
     social: "instagram",
   },
   {
     name: "Kleber Rocha",
     role: "Arquiteto, KR Projetos",
     text: "Registro todos os meus projetos arquitetônicos. Indispensável para proteger propriedade intelectual.",
-    avatar: "KR",
+    photo: kleberRocha,
     social: "whatsapp",
   },
   {
     name: "Larissa Dias",
     role: "Youtuber",
     text: "Protejo meus roteiros e conteúdos antes de publicar. Nunca mais terei problema com cópias.",
-    avatar: "LD",
+    photo: larissaDias,
     social: "instagram",
   },
   {
     name: "Marcos Tavares",
     role: "Inventor",
     text: "Antes de patentear, registro aqui para ter prova de anterioridade. Estratégia perfeita!",
-    avatar: "MT",
+    photo: marcosTavares,
     social: "whatsapp",
   },
   {
     name: "Natália Gomes",
     role: "Designer de Moda",
     text: "Minhas coleções agora têm data comprovada de criação. Essencial para o mundo da moda.",
-    avatar: "NG",
+    photo: nataliaGomes,
     social: "instagram",
   },
   {
     name: "Otávio Silva",
     role: "Produtor Musical",
     text: "A cada beat que crio, já registro. Proteção instantânea e certificado profissional.",
-    avatar: "OS",
+    photo: otavioSilva,
     social: "whatsapp",
   },
   {
     name: "Paula Vieira",
     role: "Empreendedora Digital",
     text: "Registro meus cursos online antes de lançar. Segurança total para meu negócio digital.",
-    avatar: "PV",
+    photo: paulaVieira,
     social: "instagram",
   },
 ];
@@ -164,9 +186,11 @@ function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] 
 
       {/* Author */}
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-          {testimonial.avatar}
-        </div>
+        <img 
+          src={testimonial.photo} 
+          alt={testimonial.name}
+          className="w-12 h-12 rounded-full object-cover border-2 border-border"
+        />
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground text-sm">{testimonial.name}</span>

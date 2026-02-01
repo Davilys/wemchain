@@ -133,6 +133,14 @@ export default {
           "0%": { transform: "translateX(-50%)" },
           "100%": { transform: "translateX(0)" },
         },
+        "scroll-left-fast": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-33.33%)" },
+        },
+        "scroll-right-fast": {
+          "0%": { transform: "translateX(-33.33%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -148,6 +156,8 @@ export default {
         "bounce-soft": "bounce-soft 2s ease-in-out infinite",
         "scroll-left": "scroll-left 40s linear infinite",
         "scroll-right": "scroll-right 40s linear infinite",
+        "scroll-left-fast": "scroll-left-fast 20s linear infinite",
+        "scroll-right-fast": "scroll-right-fast 20s linear infinite",
       },
     },
   },

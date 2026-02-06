@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { 
@@ -25,12 +25,38 @@ export function useAdminPermissions() {
     loading: true,
     isAdmin: false,
   });
+  
+  // Track if we've already fetched for the current user to avoid race conditions
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchAdminRole() {
+      // If no user, clear state and stop loading
       if (!user) {
-        setState({ role: null, loading: false, isAdmin: false });
+        if (isMounted.current) {
+          setState({ role: null, loading: false, isAdmin: false });
+          lastFetchedUserId.current = null;
+        }
         return;
+      }
+
+      // Skip if we already fetched for this user
+      if (lastFetchedUserId.current === user.id && !state.loading) {
+        return;
+      }
+
+      // Set loading state
+      if (isMounted.current) {
+        setState(prev => ({ ...prev, loading: true }));
       }
 
       try {
@@ -39,6 +65,8 @@ export function useAdminPermissions() {
           _user_id: user.id
         });
 
+        if (!isMounted.current) return;
+
         if (error) {
           console.error("Error fetching admin role:", error);
           setState({ role: null, loading: false, isAdmin: false });
@@ -46,6 +74,7 @@ export function useAdminPermissions() {
         }
 
         const role = data as string | null;
+        lastFetchedUserId.current = user.id;
         
         if (role && isAdminRole(role)) {
           setState({ role, loading: false, isAdmin: true });
@@ -54,14 +83,17 @@ export function useAdminPermissions() {
         }
       } catch (err) {
         console.error("Error in admin role check:", err);
-        setState({ role: null, loading: false, isAdmin: false });
+        if (isMounted.current) {
+          setState({ role: null, loading: false, isAdmin: false });
+        }
       }
     }
 
+    // Only fetch when auth is done loading
     if (!authLoading) {
       fetchAdminRole();
     }
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]);
 
   // Verificar permissão específica
   const can = useCallback((permission: Permission): boolean => {
@@ -97,6 +129,7 @@ export function useAdminPermissions() {
     canAll,
     getRoleLabel,
     getRoleColors,
-    loading: state.loading || authLoading,
+    // Loading should be true if auth is loading OR if permissions are loading
+    loading: authLoading || state.loading,
   };
 }

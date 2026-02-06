@@ -1,9 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { Permission } from "@/lib/adminPermissions";
 import { Loader2, ShieldAlert, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminGuardProps {
   children: ReactNode;
@@ -16,9 +17,24 @@ export function AdminGuard({
   requiredPermissions = [], 
   requireAll = false 
 }: AdminGuardProps) {
-  const { isAdmin, loading, can, canAny, canAll, getRoleLabel } = useAdminPermissions();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: permissionsLoading, can, canAny, canAll, getRoleLabel } = useAdminPermissions();
+  
+  // Track if we've completed the initial check
+  const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
+  
+  // Combined loading state - wait for both auth AND permissions
+  const isLoading = authLoading || permissionsLoading;
+  
+  // Mark as checked only after loading completes
+  useEffect(() => {
+    if (!isLoading && !hasCheckedPermissions) {
+      setHasCheckedPermissions(true);
+    }
+  }, [isLoading, hasCheckedPermissions]);
 
-  if (loading) {
+  // Show loading while checking auth or permissions
+  if (isLoading || !hasCheckedPermissions) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -27,6 +43,11 @@ export function AdminGuard({
         </div>
       </div>
     );
+  }
+
+  // Não está logado - redirecionar para login
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   // Não é admin de nenhum tipo
@@ -39,7 +60,9 @@ export function AdminGuard({
           <p className="text-muted-foreground mb-6">
             Você não tem permissão para acessar esta área. Esta seção é restrita a administradores.
           </p>
-          <Navigate to="/dashboard" replace />
+          <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+            Ir para Dashboard
+          </Button>
         </div>
       </div>
     );

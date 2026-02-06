@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { trackPurchase } from "@/lib/metaPixel";
+import { validateDocument } from "@/lib/cpfValidator";
 import { toast } from "sonner";
 import { 
   CreditCard, 
@@ -27,7 +28,8 @@ import {
   Users,
   BarChart3,
   FileText,
-  FolderKanban
+  FolderKanban,
+  AlertCircle
 } from "lucide-react";
 
 interface Plan {
@@ -135,6 +137,7 @@ export default function Checkout() {
   const [customerName, setCustomerName] = useState("");
   const [customerCpfCnpj, setCustomerCpfCnpj] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [cpfCnpjError, setCpfCnpjError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -279,6 +282,15 @@ export default function Checkout() {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
+
+    // Validar CPF/CNPJ antes de enviar
+    const validation = validateDocument(customerCpfCnpj);
+    if (!validation.isValid) {
+      setCpfCnpjError(validation.error || "Documento inválido");
+      toast.error(validation.error || "CPF/CNPJ inválido");
+      return;
+    }
+    setCpfCnpjError(null);
 
     setLoading(true);
 
@@ -561,13 +573,35 @@ export default function Checkout() {
                   <Input
                     id="cpfCnpj"
                     value={customerCpfCnpj}
-                    onChange={(e) => setCustomerCpfCnpj(formatCpfCnpj(e.target.value))}
+                    onChange={(e) => {
+                      const formatted = formatCpfCnpj(e.target.value);
+                      setCustomerCpfCnpj(formatted);
+                      // Limpar erro ao digitar
+                      if (cpfCnpjError) setCpfCnpjError(null);
+                    }}
+                    onBlur={() => {
+                      // Validar ao perder o foco
+                      if (customerCpfCnpj) {
+                        const validation = validateDocument(customerCpfCnpj);
+                        if (!validation.isValid) {
+                          setCpfCnpjError(validation.error || "Documento inválido");
+                        } else {
+                          setCpfCnpjError(null);
+                        }
+                      }
+                    }}
                     placeholder="000.000.000-00"
                     maxLength={18}
                     required
-                    className="h-12 sm:h-10 text-base sm:text-sm"
+                    className={`h-12 sm:h-10 text-base sm:text-sm ${cpfCnpjError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     inputMode="numeric"
                   />
+                  {cpfCnpjError && (
+                    <div className="flex items-center gap-2 text-destructive text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{cpfCnpjError}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">

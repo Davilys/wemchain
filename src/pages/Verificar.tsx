@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,9 +60,18 @@ interface VerificationResult {
 }
 
 export default function Verificar() {
+  const [searchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VerificationResult | null>(null);
+  
+  // Load hash from URL on mount
+  useEffect(() => {
+    const hashFromUrl = searchParams.get('hash');
+    if (hashFromUrl) {
+      setSearchValue(hashFromUrl);
+    }
+  }, [searchParams]);
 
   const handleSearch = async () => {
     if (!searchValue.trim()) {

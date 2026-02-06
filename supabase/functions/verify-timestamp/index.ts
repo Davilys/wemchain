@@ -34,8 +34,9 @@ interface TransacaoBlockchain {
  * REGRA CRÍTICA: Nunca retornar erro falso para registro CONFIRMED
  */
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   console.log(`[VERIFY-TIMESTAMP] Request at ${new Date().toISOString()}`);

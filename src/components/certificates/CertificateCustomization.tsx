@@ -43,24 +43,8 @@ export function CertificateCustomization() {
   const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Load profile data for pre-fill
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
-      
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, cpf_cnpj, company_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (profile && !settings) {
-        setDisplayName(profile.company_name || profile.full_name || "");
-        setDocumentNumber(profile.cpf_cnpj || "");
-      }
-    }
-    loadProfile();
-  }, [user, settings]);
+  // DO NOT pre-fill from profile - user must explicitly configure branding
+  // This ensures certificates default to WebMarcas until user opts in
 
   // Load settings when available
   useEffect(() => {
@@ -237,7 +221,7 @@ export function CertificateCustomization() {
               Configure como seus certificados serão emitidos
             </CardDescription>
           </div>
-          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+          <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/20">
             <Crown className="h-3 w-3 mr-1" />
             Business
           </Badge>
@@ -245,14 +229,15 @@ export function CertificateCustomization() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Info alert */}
+        {/* Info alert - explain default WebMarcas behavior */}
         {!settings && (
           <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
-            <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-primary">Configure sua identidade</p>
+              <p className="text-sm font-medium text-foreground">Certificados Padrão WebMarcas</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Os certificados de todos os seus registros serão emitidos com sua marca.
+                Seus certificados serão emitidos em nome da <strong>WebMarcas</strong> até você 
+                configurar sua personalização abaixo. Preencha os campos e salve para usar sua identidade.
               </p>
             </div>
           </div>

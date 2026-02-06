@@ -38,6 +38,13 @@ function generatePDFContent(data: {
   timestampMethod: string;
   confirmedAt: string;
   blockNumber?: number;
+  branding?: {
+    logoPath: string | null;
+    primaryColor: string;
+    secondaryColor: string;
+    displayName: string;
+    documentNumber: string;
+  } | null;
 }): string {
   const now = new Date();
   const emissionDate = now.toLocaleDateString("pt-BR", {
@@ -119,6 +126,9 @@ function generatePDFContent(data: {
       contact: "www.webmarcas.net • ola@webmarcas.net • (11) 91112-0225",
       certificateId: data.registroId,
     },
+    
+    // Branding data for frontend PDF customization
+    branding: data.branding || null,
   });
 }
 
@@ -230,12 +240,34 @@ serve(async (req) => {
       );
     }
 
-    // Fetch user profile
+    // Fetch user profile (kept for reference but not used for certificate identity)
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('full_name, cpf_cnpj')
       .eq('user_id', userId)
       .single();
+
+    // Check if user has active Business branding configured
+    const { data: brandingSettings } = await supabaseAdmin
+      .from('business_branding_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    // Decide which identity to use:
+    // Only use custom branding if Business user has EXPLICITLY configured it
+    const useBranding = brandingSettings && 
+      brandingSettings.display_name && 
+      brandingSettings.display_name.trim() !== '' &&
+      brandingSettings.document_number &&
+      brandingSettings.document_number.trim() !== '';
+
+    console.log(`[GENERATE-CERTIFICATE] Using branding: ${useBranding}, Settings: ${JSON.stringify(brandingSettings)}`);
+
+    // Default WebMarcas data
+    const WEBMARCAS_NAME = "WebMarcas";
+    const WEBMARCAS_CNPJ = "55.772.928/0001-50";
 
     // Generate certificate data
     const certificateData = generatePDFContent({
@@ -245,13 +277,22 @@ serve(async (req) => {
       arquivoNome: registro.arquivo_nome,
       hashSha256: registro.hash_sha256,
       createdAt: registro.created_at,
-      userName: profile?.full_name || '',
-      userDocument: profile?.cpf_cnpj || '',
+      // Use custom branding if configured, otherwise WebMarcas
+      userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
+      userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
       txHash: txData.tx_hash,
       network: txData.network,
       timestampMethod: txData.timestamp_method || 'SMART_CONTRACT',
       confirmedAt: txData.confirmed_at || registro.updated_at,
       blockNumber: txData.block_number,
+      // Pass branding for frontend to apply custom colors/logo
+      branding: useBranding ? {
+        logoPath: brandingSettings.logo_path,
+        primaryColor: brandingSettings.primary_color || '#0a3d6e',
+        secondaryColor: brandingSettings.secondary_color || '#0066cc',
+        displayName: brandingSettings.display_name,
+        documentNumber: brandingSettings.document_number,
+      } : null,
     });
 
     // Check if certificate already exists

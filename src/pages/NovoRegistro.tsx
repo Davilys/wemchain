@@ -144,6 +144,35 @@ export const TIPO_ATIVO_LABELS: Record<string, string> = {
 
 // Aceitar qualquer tipo de arquivo digital - sem restrições
 
+/**
+ * Sanitiza nome de arquivo para upload no Supabase Storage
+ * - Remove acentos e caracteres especiais
+ * - Substitui espaços por underscores
+ * - Mantém apenas letras, números, underscores, hífens e pontos
+ */
+const sanitizeFileName = (fileName: string): string => {
+  // Normaliza caracteres acentuados (NFD) e remove diacríticos
+  const normalized = fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  
+  // Extrai nome e extensão
+  const lastDot = normalized.lastIndexOf(".");
+  const name = lastDot > 0 ? normalized.substring(0, lastDot) : normalized;
+  const ext = lastDot > 0 ? normalized.substring(lastDot) : "";
+  
+  // Sanitiza o nome: substitui espaços e caracteres inválidos
+  const safeName = name
+    .toLowerCase()
+    .replace(/\s+/g, "_")           // espaços -> underscores
+    .replace(/[^a-z0-9_-]/g, "");   // remove caracteres inválidos
+  
+  // Fallback se o nome ficar vazio
+  const finalName = safeName || "file";
+  
+  return finalName + ext.toLowerCase();
+};
+
 // Sugerir categoria baseado no tipo de arquivo
 const suggestCategoryFromFile = (mimeType: string): string => {
   if (mimeType.startsWith("image/")) return "imagem";
@@ -382,8 +411,9 @@ export default function NovoRegistro() {
     trackAddToCart();
 
     try {
-      // Upload file
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      // Upload file - sanitiza nome para evitar erro "Invalid key"
+      const safeFileName = sanitizeFileName(file.name);
+      const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
       const { error: uploadError } = await supabase.storage
         .from("registros")
         .upload(filePath, file);

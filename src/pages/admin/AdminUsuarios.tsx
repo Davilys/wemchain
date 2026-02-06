@@ -60,7 +60,9 @@ import {
   LogOut,
   Users,
   Crown,
-  CrownIcon
+  CrownIcon,
+  Plus,
+  Minus
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -134,6 +136,12 @@ export default function AdminUsuarios() {
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const [subscriptionAction, setSubscriptionAction] = useState<"grant" | "revoke" | "update">("grant");
   const [subscriptionData, setSubscriptionData] = useState({ credits_per_cycle: 5 });
+
+  // Grant credits dialog
+  const [grantCreditsDialogOpen, setGrantCreditsDialogOpen] = useState(false);
+  const [grantCreditsAmount, setGrantCreditsAmount] = useState(1);
+  const [grantCreditsReason, setGrantCreditsReason] = useState("");
+  const [grantingCredits, setGrantingCredits] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
 
   useEffect(() => {
@@ -423,6 +431,67 @@ export default function AdminUsuarios() {
     }
   }
 
+  function openGrantCreditsDialog(user: UserProfile) {
+    setSelectedUser(user);
+    setGrantCreditsAmount(1);
+    setGrantCreditsReason("");
+    setGrantCreditsDialogOpen(true);
+  }
+
+  async function handleGrantCredits() {
+    if (!selectedUser || !adminUser) return;
+    
+    if (grantCreditsAmount < 1 || grantCreditsAmount > 100) {
+      toast.error("Quantidade deve ser entre 1 e 100 créditos");
+      return;
+    }
+    
+    if (!grantCreditsReason.trim() || grantCreditsReason.trim().length < 10) {
+      toast.error("Motivo é obrigatório (mínimo 10 caracteres)");
+      return;
+    }
+    
+    setGrantingCredits(true);
+
+    try {
+      const { data, error } = await supabase.rpc("add_credits_admin", {
+        p_user_id: selectedUser.user_id,
+        p_amount: grantCreditsAmount,
+        p_reason: grantCreditsReason.trim(),
+        p_admin_id: adminUser.id,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; new_balance?: number };
+
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao conceder créditos");
+      }
+
+      await logAction({
+        actionType: "credits_added",
+        targetType: "user",
+        targetId: selectedUser.user_id,
+        details: {
+          amount: grantCreditsAmount,
+          reason: grantCreditsReason,
+          new_balance: result.new_balance,
+          user_name: selectedUser.full_name,
+        },
+      });
+
+      toast.success(`${grantCreditsAmount} crédito(s) concedido(s) para ${selectedUser.full_name || "usuário"}`);
+      setGrantCreditsDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error granting credits:", error);
+      toast.error(error.message || "Erro ao conceder créditos");
+    } finally {
+      setGrantingCredits(false);
+    }
+  }
+
   const filteredUsers = users.filter((user) => {
     const search = searchTerm.toLowerCase();
     return (
@@ -562,6 +631,10 @@ export default function AdminUsuarios() {
                             <DropdownMenuItem onClick={() => openEditDialog(user)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar Dados
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openGrantCreditsDialog(user)}>
+                              <Coins className="h-4 w-4 mr-2 text-yellow-500" />
+                              Conceder Créditos
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openSubscriptionDialog(user, "grant")}>
@@ -919,6 +992,103 @@ export default function AdminUsuarios() {
                 {subscriptionAction === "grant" && "Conceder Plano"}
                 {subscriptionAction === "revoke" && "Revogar Plano"}
                 {subscriptionAction === "update" && "Salvar Alterações"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Grant Credits Dialog */}
+        <Dialog open={grantCreditsDialogOpen} onOpenChange={setGrantCreditsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Coins className="h-5 w-5 text-yellow-500" />
+                Conceder Créditos
+              </DialogTitle>
+              <DialogDescription>
+                Conceder créditos para: <strong>{selectedUser?.full_name || "usuário selecionado"}</strong>
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6 py-4">
+              {/* Quantidade de créditos */}
+              <div className="space-y-3">
+                <Label>Quantidade de créditos</Label>
+                
+                {/* Botões predefinidos */}
+                <div className="flex gap-2 flex-wrap">
+                  {[1, 5, 10, 20].map((qty) => (
+                    <Button
+                      key={qty}
+                      variant={grantCreditsAmount === qty ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setGrantCreditsAmount(qty)}
+                      className="w-12"
+                    >
+                      {qty}
+                    </Button>
+                  ))}
+                </div>
+                
+                {/* Input com +/- */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setGrantCreditsAmount(Math.max(1, grantCreditsAmount - 1))}
+                    disabled={grantCreditsAmount <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={grantCreditsAmount}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      setGrantCreditsAmount(Math.max(1, Math.min(100, val)));
+                    }}
+                    className="w-20 text-center"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setGrantCreditsAmount(Math.min(100, grantCreditsAmount + 1))}
+                    disabled={grantCreditsAmount >= 100}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">crédito(s)</span>
+                </div>
+              </div>
+              
+              {/* Motivo */}
+              <div className="space-y-2">
+                <Label htmlFor="grant_reason">Motivo (obrigatório)</Label>
+                <Textarea
+                  id="grant_reason"
+                  placeholder="Ex: Bonificação por indicação, compensação por problema técnico..."
+                  value={grantCreditsReason}
+                  onChange={(e) => setGrantCreditsReason(e.target.value)}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Mínimo de 10 caracteres. Este motivo será registrado no histórico de auditoria.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGrantCreditsDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleGrantCredits} 
+                disabled={grantingCredits || grantCreditsAmount < 1 || grantCreditsReason.trim().length < 10}
+              >
+                {grantingCredits && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Conceder {grantCreditsAmount} Crédito(s)
               </Button>
             </DialogFooter>
           </DialogContent>

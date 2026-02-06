@@ -29,7 +29,9 @@ import {
   BarChart3,
   FileText,
   FolderKanban,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Minus
 } from "lucide-react";
 
 interface Plan {
@@ -138,6 +140,7 @@ export default function Checkout() {
   const [customerCpfCnpj, setCustomerCpfCnpj] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [cpfCnpjError, setCpfCnpjError] = useState<string | null>(null);
+  const [creditQuantity, setCreditQuantity] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -250,7 +253,26 @@ export default function Checkout() {
 
   const handleSelectPlan = (plan: Plan) => {
     setSelectedPlan(plan);
+    // Reset quantity when changing plans
+    if (plan.id !== "BASICO") {
+      setCreditQuantity(1);
+    }
     setStep("form");
+  };
+
+  // Calculate dynamic price and credits for BASICO plan
+  const getCalculatedPrice = () => {
+    if (selectedPlan?.id === "BASICO") {
+      return selectedPlan.price * creditQuantity;
+    }
+    return selectedPlan?.price || 0;
+  };
+
+  const getCalculatedCredits = () => {
+    if (selectedPlan?.id === "BASICO") {
+      return creditQuantity;
+    }
+    return selectedPlan?.credits || 0;
   };
 
   const formatCpfCnpj = (value: string) => {
@@ -305,6 +327,7 @@ export default function Checkout() {
       const response = await supabase.functions.invoke("create-asaas-payment", {
         body: {
           planType: selectedPlan.id,
+          quantity: selectedPlan.id === "BASICO" ? creditQuantity : undefined,
           customerName,
           customerEmail: user?.email,
           customerCpfCnpj: customerCpfCnpj.replace(/\D/g, ""),
@@ -393,7 +416,7 @@ export default function Checkout() {
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground font-body truncate">
               {step === "plans" && "Escolha a melhor opção para seus registros"}
-              {step === "form" && `${selectedPlan?.name} - R$ ${selectedPlan?.price}${selectedPlan?.isSubscription ? '/mês' : ''}`}
+              {step === "form" && `${selectedPlan?.name}${selectedPlan?.id === "BASICO" && creditQuantity > 1 ? ` (${creditQuantity} créditos)` : ""} - R$ ${getCalculatedPrice()}${selectedPlan?.isSubscription ? '/mês' : ''}`}
               {step === "payment" && "Escaneie ou copie o código Pix"}
             </p>
           </div>
@@ -419,14 +442,14 @@ export default function Checkout() {
               {PLANS.map((plan) => (
                 <Card
                   key={plan.id}
-                  className={`relative cursor-pointer transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] hover:shadow-xl touch-manipulation ${
+                  className={`relative transition-all duration-300 ${
                     plan.id === "BUSINESS" 
                       ? "border-primary shadow-lg shadow-primary/20" 
                       : plan.popular 
                         ? "border-primary/50"
                         : "border-border/50"
-                  }`}
-                  onClick={() => handleSelectPlan(plan)}
+                  } ${plan.id !== "BASICO" ? "cursor-pointer active:scale-[0.98] hover:scale-[1.02] hover:shadow-xl touch-manipulation" : ""}`}
+                  onClick={() => plan.id !== "BASICO" && handleSelectPlan(plan)}
                 >
                   {plan.id === "BUSINESS" && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs">
@@ -461,12 +484,86 @@ export default function Checkout() {
                         )}
                       </div>
                       <p className="text-xs sm:text-sm text-primary font-medium mt-1">
-                        {plan.credits} crédito{plan.credits > 1 ? "s" : ""} {plan.isSubscription ? "por mês" : ""}
+                        {plan.id === "BASICO" ? "por crédito" : `${plan.credits} crédito${plan.credits > 1 ? "s" : ""} ${plan.isSubscription ? "por mês" : ""}`}
                       </p>
                     </div>
 
+                    {/* Quantity selector for BASICO plan */}
+                    {plan.id === "BASICO" && (
+                      <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                        <p className="text-xs sm:text-sm font-medium text-foreground text-center">
+                          Quantos créditos você quer?
+                        </p>
+                        <div className="flex items-center justify-center gap-2">
+                          {[1, 3, 5, 10].map((qty) => (
+                            <Button
+                              key={qty}
+                              type="button"
+                              variant={creditQuantity === qty ? "default" : "outline"}
+                              size="sm"
+                              className={`w-10 h-10 p-0 ${creditQuantity === qty ? "bg-primary text-primary-foreground" : ""}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCreditQuantity(qty);
+                              }}
+                            >
+                              {qty}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCreditQuantity(Math.max(1, creditQuantity - 1));
+                            }}
+                            disabled={creditQuantity <= 1}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={creditQuantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 1;
+                              setCreditQuantity(Math.max(1, Math.min(50, val)));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-16 h-8 text-center text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCreditQuantity(Math.min(50, creditQuantity + 1));
+                            }}
+                            disabled={creditQuantity >= 50}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="text-center pt-2 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground">
+                            {creditQuantity} crédito{creditQuantity > 1 ? "s" : ""} × R$ 49,00
+                          </p>
+                          <p className="text-lg font-bold text-primary">
+                            Total: R$ {(creditQuantity * 49).toLocaleString('pt-BR')},00
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     <ul className="space-y-2">
-                      {plan.features.slice(0, 5).map((feature, index) => (
+                      {plan.features.slice(0, plan.id === "BASICO" ? 3 : 5).map((feature, index) => (
                         <li key={index} className="flex items-start gap-2 text-xs sm:text-sm font-body">
                           <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0 mt-0.5" />
                           <span className="text-muted-foreground">{feature}</span>
@@ -482,8 +579,12 @@ export default function Checkout() {
                             ? "bg-primary/80 text-primary-foreground hover:bg-primary/70"
                             : "bg-muted hover:bg-muted/80"
                       }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectPlan(plan);
+                      }}
                     >
-                      Selecionar
+                      {plan.id === "BASICO" ? `Comprar ${creditQuantity} crédito${creditQuantity > 1 ? "s" : ""}` : "Selecionar"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -639,6 +740,18 @@ export default function Checkout() {
                     <span className="text-muted-foreground">Plano selecionado:</span>
                     <span className="font-medium">{selectedPlan.name}</span>
                   </div>
+                  {selectedPlan.id === "BASICO" && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Quantidade:</span>
+                      <span className="font-medium">{creditQuantity} crédito{creditQuantity > 1 ? "s" : ""}</span>
+                    </div>
+                  )}
+                  {selectedPlan.id === "BASICO" && creditQuantity > 1 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Cálculo:</span>
+                      <span className="font-medium">{creditQuantity} × R$ 49,00</span>
+                    </div>
+                  )}
                   {selectedPlan.isSubscription && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tipo:</span>
@@ -648,7 +761,7 @@ export default function Checkout() {
                   <div className="flex justify-between text-lg font-bold pt-2">
                     <span>Total:</span>
                     <span className="text-primary">
-                      R$ {selectedPlan.price},00
+                      R$ {getCalculatedPrice().toLocaleString('pt-BR')},00
                       {selectedPlan.isSubscription && <span className="text-sm font-normal">/mês</span>}
                     </span>
                   </div>

@@ -47,6 +47,7 @@ const PLANS: Record<string, {
 
 interface CreatePaymentRequest {
   planType: "BASICO" | "PROFISSIONAL" | "BUSINESS" | "ADICIONAL";
+  quantity?: number; // Quantidade de créditos (apenas para BASICO)
   customerName: string;
   customerEmail: string;
   customerCpfCnpj: string;
@@ -104,7 +105,7 @@ Deno.serve(async (req) => {
 
   try {
     const body: CreatePaymentRequest = await req.json();
-    const { planType, customerName, customerEmail, customerCpfCnpj, customerPhone } = body;
+    const { planType, quantity, customerName, customerEmail, customerCpfCnpj, customerPhone } = body;
 
     const plan = PLANS[planType];
     if (!plan) {
@@ -112,6 +113,19 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Invalid plan type" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Calculate dynamic values for BASICO plan with quantity
+    let finalValue = plan.value;
+    let finalCredits = plan.credits;
+    let finalDescription = plan.description;
+
+    if (planType === "BASICO" && quantity && quantity > 1) {
+      // Validate quantity (1-50)
+      const validQuantity = Math.max(1, Math.min(50, Math.floor(quantity)));
+      finalValue = validQuantity * 49.00;
+      finalCredits = validQuantity;
+      finalDescription = `${validQuantity} Registros de Propriedade em Blockchain`;
     }
 
     // ASAAS API Base URL (Produção)
@@ -267,9 +281,9 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           customer: customerId,
           billingType: "PIX",
-          value: plan.value,
+          value: finalValue,
           dueDate: dueDate.toISOString().split("T")[0],
-          description: `WebMarcas - Plano ${plan.name} (${plan.credits} crédito${plan.credits > 1 ? "s" : ""})`,
+          description: `WebMarcas - ${finalDescription}`,
           externalReference: userId,
         }),
       });
@@ -315,8 +329,8 @@ Deno.serve(async (req) => {
       asaas_payment_id: asaasPaymentId,
       asaas_subscription_id: asaasSubscriptionId,
       plan_type: planType,
-      valor: plan.value,
-      credits_amount: plan.credits,
+      valor: finalValue,
+      credits_amount: finalCredits,
       status: "PENDING",
       payment_method: plan.isSubscription ? "SUBSCRIPTION" : "PIX",
       pix_qr_code: paymentData.pixQrCode as string || null,
@@ -331,8 +345,8 @@ Deno.serve(async (req) => {
         plan: {
           type: planType,
           name: plan.name,
-          value: plan.value,
-          credits: plan.credits,
+          value: finalValue,
+          credits: finalCredits,
         },
         payment: paymentData,
       }),

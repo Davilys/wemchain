@@ -1,107 +1,162 @@
 
-# Plano: Corrigir Erro "Invalid Key" no Upload de Arquivos
+# Plano: Corrigir Titular do Certificado para Usar Dados do Cliente
 
 ## Problema Identificado
 
-O Supabase Storage está rejeitando uploads de arquivos que contêm caracteres especiais no nome:
-- **Erro**: `Invalid key: 38600758-12b7-4332-abd9-f91e74b0b514/1770409349411-Dãozin Teixeira - Só Jesus.wav`
-- **Causa**: O nome do arquivo contém acentos (ã, ó), espaços e caracteres não permitidos
-- **Impacto**: Usuários não conseguem registrar arquivos com nomes contendo acentos ou espaços
+O certificado de prova de anterioridade está exibindo os dados da WebMarcas como titular em vez dos dados do cliente que fez o registro:
+
+**Atualmente:**
+- Titular: "Webmarcas Patentes Ltda"
+- CNPJ: "39.528.012/0001-29"
+
+**Deveria ser:**
+- Titular: Nome do cliente (ex: "DAVILYS DANQUES DE OLIVEIRA CUNHA")
+- CPF/CNPJ: Documento do cliente (ex: "39323911879")
+
+## Causa Raiz
+
+A edge function `generate-certificate` ignora os campos `titular_name`, `titular_document` e `titular_type` que já existem na tabela `registros` e foram preenchidos durante o cadastro.
+
+A lógica atual (linhas 268-282) usa WebMarcas como fallback:
+```typescript
+const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
+const WEBMARCAS_CNPJ = "39.528.012/0001-29";
+userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
+userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
+```
 
 ## Solução
 
-Criar uma função de sanitização que normalize o nome do arquivo para o storage, enquanto preserva o nome original para exibição.
-
-## Fluxo da Correção
-
-```text
-+---------------------------+        +---------------------------+
-|  Nome Original            |   -->  |  Nome Sanitizado          |
-|  (arquivo_nome no BD)     |        |  (filePath no Storage)    |
-+---------------------------+        +---------------------------+
-| Dãozin Teixeira - Só.wav  |   -->  | daozin_teixeira_so.wav    |
-+---------------------------+        +---------------------------+
-```
+Usar os dados do registro (`titular_name`, `titular_document`) como fonte primária para o titular do certificado.
 
 ## Mudanças Necessárias
 
-### 1. NovoRegistro.tsx - Adicionar Função de Sanitização
+### 1. Edge Function - generate-certificate/index.ts
 
-**Nova função utilitária:**
+**Lógica de Prioridade para Dados do Titular:**
+
+1. Se Business com branding configurado → usar branding
+2. Senão → usar dados do registro (`titular_name`, `titular_document`)
+3. Fallback (só se registro não tiver dados) → usar perfil do usuário
+
+**Código Atual (linhas 268-282):**
 ```typescript
-/**
- * Sanitiza nome de arquivo para upload no Supabase Storage
- * - Remove acentos e caracteres especiais
- * - Substitui espaços por underscores
- * - Mantém apenas letras, números, underscores, hífens e pontos
- */
-const sanitizeFileName = (fileName: string): string => {
-  // Normaliza caracteres acentuados (NFD) e remove diacríticos
-  const normalized = fileName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  
-  // Extrai nome e extensão
-  const lastDot = normalized.lastIndexOf(".");
-  const name = lastDot > 0 ? normalized.substring(0, lastDot) : normalized;
-  const ext = lastDot > 0 ? normalized.substring(lastDot) : "";
-  
-  // Sanitiza o nome: substitui espaços e caracteres inválidos
-  const safeName = name
-    .toLowerCase()
-    .replace(/\s+/g, "_")           // espaços -> underscores
-    .replace(/[^a-z0-9_-]/g, "");   // remove caracteres inválidos
-  
-  return safeName + ext.toLowerCase();
-};
+const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
+const WEBMARCAS_CNPJ = "39.528.012/0001-29";
+
+userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
+userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
 ```
 
-### 2. Modificar handleSubmit
-
-**Antes (linha 386):**
+**Novo Código:**
 ```typescript
-const filePath = `${user.id}/${Date.now()}-${file.name}`;
+// Determinar dados do titular do certificado
+// Prioridade: 1) Branding Business, 2) Dados do Registro, 3) Perfil do usuário
+let certificateHolderName: string;
+let certificateHolderDocument: string;
+
+if (useBranding) {
+  // Business com branding customizado
+  certificateHolderName = brandingSettings.display_name;
+  certificateHolderDocument = brandingSettings.document_number;
+} else if (registro.titular_name && registro.titular_document) {
+  // Usar dados do titular informados no registro
+  certificateHolderName = registro.titular_name;
+  certificateHolderDocument = formatDocument(
+    registro.titular_document, 
+    registro.titular_type
+  );
+} else if (profile?.full_name && profile?.cpf_cnpj) {
+  // Fallback: usar perfil do usuário
+  certificateHolderName = profile.full_name;
+  certificateHolderDocument = profile.cpf_cnpj;
+} else {
+  // Último fallback: WebMarcas (não deveria acontecer)
+  certificateHolderName = "Webmarcas Patentes Ltda";
+  certificateHolderDocument = "39.528.012/0001-29";
+}
+
+// Usar no certificado
+userName: certificateHolderName,
+userDocument: certificateHolderDocument,
 ```
 
-**Depois:**
+### 2. Adicionar Função de Formatação de Documento
+
+Formatar CPF/CNPJ para exibição no certificado:
+
 ```typescript
-const safeFileName = sanitizeFileName(file.name);
-const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
+function formatDocument(doc: string, type: string): string {
+  const cleaned = doc.replace(/\D/g, '');
+  if (type === 'CNPJ' || cleaned.length === 14) {
+    // CNPJ: XX.XXX.XXX/XXXX-XX
+    return cleaned.replace(
+      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+      '$1.$2.$3/$4-$5'
+    );
+  } else {
+    // CPF: XXX.XXX.XXX-XX
+    return cleaned.replace(
+      /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+      '$1.$2.$3-$4'
+    );
+  }
+}
 ```
 
-### 3. Preservar Nome Original
+## Fluxo Corrigido
 
-O nome original do arquivo já é salvo corretamente no banco de dados:
-```typescript
-arquivo_nome: file.name,  // Nome original preservado para exibição
+```text
++---------------------------+
+|  Certificado Gerado       |
++---------------------------+
+            |
+            v
++---------------------------+
+|  1. Usuário Business      |
+|     com branding ativo?   |
+|---------------------------+
+|  SIM → Usar branding      |
++---------------------------+
+            | NÃO
+            v
++---------------------------+
+|  2. Registro tem          |
+|     titular_name?         |
+|---------------------------+
+|  SIM → Usar dados         |
+|        do registro        |
++---------------------------+
+            | NÃO
+            v
++---------------------------+
+|  3. Fallback: perfil      |
+|     do usuário            |
++---------------------------+
 ```
-
-Nenhuma alteração necessária nessa parte.
-
-## Exemplos de Transformação
-
-| Nome Original | Nome Sanitizado |
-|---------------|-----------------|
-| Dãozin Teixeira - Só Jesus.wav | daozin_teixeira_-_so_jesus.wav |
-| Minha Música #1 (Final).mp3 | minha_musica_1_final.mp3 |
-| Contrato João & Maria.pdf | contrato_joao__maria.pdf |
-| 日本語ファイル.png | .png → fallback para file.png |
-
-## Tratamento de Edge Cases
-
-1. **Nome vira vazio**: Se o nome sanitizado ficar vazio (só caracteres especiais), usar "file" como fallback
-2. **Extensão preservada**: A extensão do arquivo é sempre mantida
-3. **Lowercase**: Tudo convertido para minúsculas para evitar problemas de case-sensitivity
-
-## Arquivo a Modificar
-
-- `src/pages/NovoRegistro.tsx`
-  - Adicionar função `sanitizeFileName`
-  - Atualizar linha do `filePath` no `handleSubmit`
 
 ## Resultado Esperado
 
-- Qualquer arquivo pode ser registrado independente do nome
-- Nomes com acentos, espaços, caracteres especiais funcionam
-- O nome original é preservado para exibição ao usuário
-- O storage recebe apenas nomes válidos (ASCII, sem espaços)
+**Antes:** O certificado mostrava "Webmarcas Patentes Ltda" como titular
+
+**Depois:** O certificado mostra os dados reais do cliente:
+- Nome: "DAVILYS DANQUES DE OLIVEIRA CUNHA"
+- CPF: "393.239.118-79"
+
+## Arquivo a Modificar
+
+- `supabase/functions/generate-certificate/index.ts`
+  - Adicionar função `formatDocument()`
+  - Modificar lógica de seleção do titular (linhas 268-282)
+  - Usar dados do registro como fonte primária
+
+## Validações
+
+- Registro com titular preenchido → mostra dados do cliente
+- Registro sem titular → usa perfil do usuário
+- Business com branding → usa branding (mantém comportamento atual)
+- Todos casos → nunca mostrar dados da WebMarcas como titular
+
+## Deploy
+
+Após modificação, a edge function será automaticamente redeployada.

@@ -1,162 +1,192 @@
 
-# Plano: Corrigir Titular do Certificado para Usar Dados do Cliente
+# Plano: Corrigir Consumo de Créditos no Registro
 
 ## Problema Identificado
 
-O certificado de prova de anterioridade está exibindo os dados da WebMarcas como titular em vez dos dados do cliente que fez o registro:
+O cliente conseguiu fazer **5 registros confirmados** tendo apenas **4 créditos** disponíveis. A análise revelou:
 
-**Atualmente:**
-- Titular: "Webmarcas Patentes Ltda"
-- CNPJ: "39.528.012/0001-29"
-
-**Deveria ser:**
-- Titular: Nome do cliente (ex: "DAVILYS DANQUES DE OLIVEIRA CUNHA")
-- CPF/CNPJ: Documento do cliente (ex: "39323911879")
+1. **Tabela credits (cache)**: `used_credits=5`, `available_credits=1`, `total_credits=4` - **inconsistente!**
+2. **Tabela credits_ledger**: Apenas 2 operações ADD (2+2=4), **NENHUMA operação CONSUME**
+3. **A função `consume_credit_safe`** atualiza apenas a tabela cache, mas **NÃO insere no ledger**
+4. **NÃO há validação de créditos ANTES do processamento** - o crédito só é consumido APÓS o registro ser confirmado
 
 ## Causa Raiz
 
-A edge function `generate-certificate` ignora os campos `titular_name`, `titular_document` e `titular_type` que já existem na tabela `registros` e foram preenchidos durante o cadastro.
-
-A lógica atual (linhas 268-282) usa WebMarcas como fallback:
-```typescript
-const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
-const WEBMARCAS_CNPJ = "39.528.012/0001-29";
-userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
-userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
+```text
+FLUXO ATUAL (PROBLEMÁTICO):
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Frontend: hasCredits = true (pode estar desatualizado)      │
+│ 2. Edge function: process-registro inicia                      │
+│ 3. Processamento completo (OTS timestamp, etc)                 │
+│ 4. Status = CONFIRMED                                          │
+│ 5. DEPOIS: consume_credit_safe() ← Só agora tenta consumir!    │
+│    └── Se saldo zerou entre 1-4, registro já foi feito         │
+│    └── Função não insere no ledger = sem auditoria             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Solução
 
-Usar os dados do registro (`titular_name`, `titular_document`) como fonte primária para o titular do certificado.
+Implementar validação e consumo de crédito **ANTES** de processar o registro:
+
+```text
+FLUXO CORRIGIDO:
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Edge function: VALIDA créditos direto no banco (fresh)      │
+│ 2. SE saldo < 1 → REJEITA com erro "Créditos insuficientes"    │
+│ 3. SE ok → CONSUME crédito usando consume_credit_atomic        │
+│    └── Insere no ledger com idempotência (reference=registro)  │
+│ 4. Processamento (OTS timestamp, etc)                          │
+│ 5. Status = CONFIRMED (crédito já foi consumido)               │
+│ 6. SE falhar → crédito pode ser estornado por admin            │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Mudanças Necessárias
 
-### 1. Edge Function - generate-certificate/index.ts
+### 1. Edge Function - process-registro/index.ts
 
-**Lógica de Prioridade para Dados do Titular:**
-
-1. Se Business com branding configurado → usar branding
-2. Senão → usar dados do registro (`titular_name`, `titular_document`)
-3. Fallback (só se registro não tiver dados) → usar perfil do usuário
-
-**Código Atual (linhas 268-282):**
-```typescript
-const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
-const WEBMARCAS_CNPJ = "39.528.012/0001-29";
-
-userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
-userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
-```
-
-**Novo Código:**
-```typescript
-// Determinar dados do titular do certificado
-// Prioridade: 1) Branding Business, 2) Dados do Registro, 3) Perfil do usuário
-let certificateHolderName: string;
-let certificateHolderDocument: string;
-
-if (useBranding) {
-  // Business com branding customizado
-  certificateHolderName = brandingSettings.display_name;
-  certificateHolderDocument = brandingSettings.document_number;
-} else if (registro.titular_name && registro.titular_document) {
-  // Usar dados do titular informados no registro
-  certificateHolderName = registro.titular_name;
-  certificateHolderDocument = formatDocument(
-    registro.titular_document, 
-    registro.titular_type
-  );
-} else if (profile?.full_name && profile?.cpf_cnpj) {
-  // Fallback: usar perfil do usuário
-  certificateHolderName = profile.full_name;
-  certificateHolderDocument = profile.cpf_cnpj;
-} else {
-  // Último fallback: WebMarcas (não deveria acontecer)
-  certificateHolderName = "Webmarcas Patentes Ltda";
-  certificateHolderDocument = "39.528.012/0001-29";
-}
-
-// Usar no certificado
-userName: certificateHolderName,
-userDocument: certificateHolderDocument,
-```
-
-### 2. Adicionar Função de Formatação de Documento
-
-Formatar CPF/CNPJ para exibição no certificado:
+**Adicionar validação de créditos no INÍCIO (após autenticação):**
 
 ```typescript
-function formatDocument(doc: string, type: string): string {
-  const cleaned = doc.replace(/\D/g, '');
-  if (type === 'CNPJ' || cleaned.length === 14) {
-    // CNPJ: XX.XXX.XXX/XXXX-XX
-    return cleaned.replace(
-      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-      '$1.$2.$3/$4-$5'
-    );
-  } else {
-    // CPF: XXX.XXX.XXX-XX
-    return cleaned.replace(
-      /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
-      '$1.$2.$3-$4'
+// === VALIDAÇÃO DE CRÉDITOS (ANTES de processar) ===
+// Verificar se é super_admin (créditos ilimitados)
+const { data: isSuperAdmin } = await supabaseAdmin.rpc('is_super_admin', {
+  _user_id: userId
+});
+
+if (!isSuperAdmin) {
+  // Buscar saldo FRESH do ledger (fonte da verdade)
+  const { data: balance } = await supabaseAdmin.rpc('get_ledger_balance', {
+    p_user_id: userId
+  });
+
+  if ((balance || 0) < 1) {
+    console.log(`[PROCESS-REGISTRO] Créditos insuficientes. Saldo: ${balance}`);
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        registroId,
+        status: 'falhou',
+        error: 'Créditos insuficientes. Adquira mais créditos para continuar.'
+      }),
+      { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 }
 ```
 
-## Fluxo Corrigido
+**Substituir consume_credit_safe por consume_credit_atomic:**
 
-```text
-+---------------------------+
-|  Certificado Gerado       |
-+---------------------------+
-            |
-            v
-+---------------------------+
-|  1. Usuário Business      |
-|     com branding ativo?   |
-|---------------------------+
-|  SIM → Usar branding      |
-+---------------------------+
-            | NÃO
-            v
-+---------------------------+
-|  2. Registro tem          |
-|     titular_name?         |
-|---------------------------+
-|  SIM → Usar dados         |
-|        do registro        |
-+---------------------------+
-            | NÃO
-            v
-+---------------------------+
-|  3. Fallback: perfil      |
-|     do usuário            |
-+---------------------------+
+```typescript
+// Antes (linha 383):
+const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_safe', {
+
+// Depois:
+const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_atomic', {
+  p_user_id: userId,
+  p_registro_id: registroId,
+  p_reason: 'Consumo para registro em blockchain'
+});
 ```
 
-## Resultado Esperado
+### 2. Mover o Consumo para ANTES do Status CONFIRMED
 
-**Antes:** O certificado mostrava "Webmarcas Patentes Ltda" como titular
+O consumo deve acontecer ANTES de confirmar o registro, para garantir que:
+- Se não houver crédito, o registro não é confirmado
+- O ledger tem o registro do consumo
 
-**Depois:** O certificado mostra os dados reais do cliente:
-- Nome: "DAVILYS DANQUES DE OLIVEIRA CUNHA"
-- CPF: "393.239.118-79"
+```typescript
+// Mover para ANTES de "Update registro to CONFIRMED"
 
-## Arquivo a Modificar
+// ⚠️ CRITICAL: Consume credit BEFORE confirming
+const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_atomic', {
+  p_user_id: userId,
+  p_registro_id: registroId,
+  p_reason: 'Consumo para registro em blockchain'
+});
 
-- `supabase/functions/generate-certificate/index.ts`
-  - Adicionar função `formatDocument()`
-  - Modificar lógica de seleção do titular (linhas 268-282)
-  - Usar dados do registro como fonte primária
+if (!creditResult?.success && !isSuperAdmin) {
+  // Se falhar consumo e não for super_admin, reverter
+  console.log(`[PROCESS-REGISTRO] Credit consumption failed: ${creditResult?.error}`);
+  
+  // Não confirmar o registro
+  await supabaseAdmin
+    .from('registros')
+    .update({ status: 'falhou', error_message: 'Créditos insuficientes' })
+    .eq('id', registroId);
 
-## Validações
+  return new Response(
+    JSON.stringify({ 
+      success: false,
+      registroId,
+      status: 'falhou',
+      error: creditResult?.error || 'Créditos insuficientes'
+    }),
+    { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
 
-- Registro com titular preenchido → mostra dados do cliente
-- Registro sem titular → usa perfil do usuário
-- Business com branding → usa branding (mantém comportamento atual)
-- Todos casos → nunca mostrar dados da WebMarcas como titular
+// Agora sim, confirmar o registro
+await supabaseAdmin
+  .from('registros')
+  .update({ status: 'confirmado', error_message: null })
+  .eq('id', registroId);
+```
 
-## Deploy
+## Arquivos a Modificar
 
-Após modificação, a edge function será automaticamente redeployada.
+- `supabase/functions/process-registro/index.ts`
+  - Adicionar validação de créditos no início (após autenticação)
+  - Substituir `consume_credit_safe` por `consume_credit_atomic`
+  - Mover consumo de crédito para ANTES de confirmar o registro
+  - Adicionar verificação de super_admin para bypass
+
+## Fluxo Corrigido Detalhado
+
+```text
+process-registro(registroId)
+│
+├── 1. Autenticar usuário
+│
+├── 2. Verificar se é super_admin
+│   └── SE SIM: pular validação de créditos
+│
+├── 3. Validar créditos via get_ledger_balance()
+│   └── SE saldo < 1: REJEITAR com erro 402
+│
+├── 4. Verificar se registro já foi processado (idempotência)
+│
+├── 5. Atualizar status para PROCESSANDO
+│
+├── 6. Processar timestamp (OTS ou interno)
+│
+├── 7. Criar transação blockchain
+│
+├── 8. CONSUMIR CRÉDITO via consume_credit_atomic()
+│   └── SE falhar: REJEITAR e reverter status
+│
+└── 9. Atualizar status para CONFIRMED
+```
+
+## Benefícios da Correção
+
+1. **Validação server-side**: Créditos verificados direto no banco, não no frontend
+2. **Idempotência**: consume_credit_atomic impede consumo duplicado para mesmo registro
+3. **Auditoria**: Todas operações registradas no ledger
+4. **Consistência**: Cache (credits) e ledger sempre sincronizados
+5. **Segurança**: Impossível processar registro sem crédito disponível
+
+## Correção dos Dados Atuais
+
+Após implementar a correção, será necessário reconciliar o saldo do usuário afetado:
+
+```sql
+-- Verificar situação atual
+SELECT * FROM credits WHERE user_id = '38600758-12b7-4332-abd9-f91e74b0b514';
+-- available_credits: 1, used_credits: 5, total_credits: 4 (INCONSISTENTE)
+
+-- Corrigir via reconcile_credit_balance
+SELECT reconcile_credit_balance('38600758-12b7-4332-abd9-f91e74b0b514');
+-- Isso vai corrigir o cache baseado no ledger (saldo real = 4)
+```

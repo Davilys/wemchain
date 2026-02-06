@@ -188,13 +188,24 @@ export default function Checkout() {
     fetchProfile();
   }, [user]);
 
-  // Verificar plano na URL
+  // Verificar plano e quantidade na URL
   useEffect(() => {
     const planId = searchParams.get("plan");
+    const qtyParam = searchParams.get("qty");
+    
     if (planId) {
       const plan = [...PLANS, PLANO_ADICIONAL].find(p => p.id === planId.toUpperCase());
       if (plan) {
         setSelectedPlan(plan);
+        
+        // Set quantity from URL if BASICO plan
+        if (plan.id === "BASICO" && qtyParam) {
+          const qty = parseInt(qtyParam);
+          if (qty >= 1 && qty <= 50) {
+            setCreditQuantity(qty);
+          }
+        }
+        
         setStep("form");
       }
     }

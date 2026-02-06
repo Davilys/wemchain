@@ -120,6 +120,36 @@ serve(async (req) => {
     // Use service role client for database operations
     supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+    // === VALIDAÇÃO DE CRÉDITOS (ANTES de processar) ===
+    // Verificar se é super_admin (créditos ilimitados)
+    const { data: isSuperAdmin } = await supabaseAdmin.rpc('is_super_admin', {
+      _user_id: userId
+    });
+
+    if (!isSuperAdmin) {
+      // Buscar saldo FRESH do ledger (fonte da verdade)
+      const { data: balance } = await supabaseAdmin.rpc('get_ledger_balance', {
+        p_user_id: userId
+      });
+
+      console.log(`[PROCESS-REGISTRO] Credit balance check: ${balance}`);
+
+      if ((balance || 0) < 1) {
+        console.log(`[PROCESS-REGISTRO] Créditos insuficientes. Saldo: ${balance}`);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            registroId,
+            status: 'falhou',
+            error: 'Créditos insuficientes. Adquira mais créditos para continuar.'
+          }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      console.log(`[PROCESS-REGISTRO] Super admin detected - unlimited credits`);
+    }
+
     // Get registro details and verify ownership
     const { data: registro, error: registroError } = await supabaseAdmin
       .from('registros')
@@ -370,27 +400,54 @@ serve(async (req) => {
       txData = data;
     }
 
-    // Update registro to CONFIRMED
+    // ⚠️ CRITICAL: Consume credit BEFORE confirming (atomic + ledger)
+    let creditConsumed = false;
+    
+    if (!isSuperAdmin) {
+      const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_atomic', {
+        p_user_id: userId,
+        p_registro_id: registroId,
+        p_reason: 'Consumo para registro em blockchain'
+      });
+
+      if (creditResult && creditResult.success) {
+        creditConsumed = true;
+        console.log(`[PROCESS-REGISTRO] Credit consumed atomically. Remaining: ${creditResult.remaining_balance}`);
+      } else if (creditResult?.idempotent) {
+        // Credit already consumed for this registro (idempotent)
+        creditConsumed = true;
+        console.log(`[PROCESS-REGISTRO] Credit already consumed for this registro (idempotent)`);
+      } else {
+        // Credit consumption failed - DO NOT confirm the registro
+        console.error(`[PROCESS-REGISTRO] Credit consumption failed: ${creditResult?.error}`);
+        
+        await supabaseAdmin
+          .from('registros')
+          .update({ status: 'falhou', error_message: 'Créditos insuficientes para confirmar registro' })
+          .eq('id', registroId);
+
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            registroId,
+            status: 'falhou',
+            error: creditResult?.error || 'Créditos insuficientes'
+          }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      creditConsumed = true; // Super admin - no credit needed
+      console.log(`[PROCESS-REGISTRO] Super admin - credit bypass`);
+    }
+
+    // Now confirm the registro (credit already consumed)
     await supabaseAdmin
       .from('registros')
       .update({ status: 'confirmado', error_message: null })
       .eq('id', registroId);
 
     console.log('[PROCESS-REGISTRO] Status updated to CONFIRMED');
-
-    // ⚠️ CRITICAL: Consume credit ONLY after CONFIRMED status
-    let creditConsumed = false;
-    const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_safe', {
-      p_user_id: userId,
-      p_registro_id: registroId
-    });
-
-    if (creditResult && creditResult.success) {
-      creditConsumed = true;
-      console.log(`[PROCESS-REGISTRO] Credit consumed. Remaining: ${creditResult.remaining_credits}`);
-    } else {
-      console.log(`[PROCESS-REGISTRO] Credit consumption skipped or failed: ${creditResult?.error || 'Unknown'}`);
-    }
 
     const totalTime = Date.now() - startTime;
     console.log(`[PROCESS-REGISTRO] Job completed in ${totalTime}ms`);

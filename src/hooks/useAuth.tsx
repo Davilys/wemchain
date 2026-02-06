@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Only navigate if it was an intentional sign out
           if (isIntentionalSignOut.current) {
             isIntentionalSignOut.current = false;
-            navigate("/");
+            navigate("/login");
           }
         } else if (event === "TOKEN_REFRESHED") {
           // Token was refreshed, session is still valid
@@ -167,16 +167,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Mark this as intentional sign out before calling signOut
     isIntentionalSignOut.current = true;
     
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      isIntentionalSignOut.current = false;
-      throw error;
-    }
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        isIntentionalSignOut.current = false;
+        throw error;
+      }
 
-    toast({
-      title: "Até logo!",
-      description: "Você saiu da sua conta.",
-    });
+      // Clear state immediately
+      setUser(null);
+      setSession(null);
+
+      toast({
+        title: "Até logo!",
+        description: "Você saiu da sua conta.",
+      });
+
+      // Navigate to login page
+      navigate("/login");
+    } catch (error) {
+      isIntentionalSignOut.current = false;
+      console.error("Error signing out:", error);
+      toast({
+        title: "Erro ao sair",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

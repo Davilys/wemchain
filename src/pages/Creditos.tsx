@@ -1,15 +1,17 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditBalanceCard } from "@/components/credits/CreditBalanceCard";
 import { CreditHistory } from "@/components/credits/CreditHistory";
 import { 
   Plus, 
+  Minus,
   ArrowLeft,
   Loader2,
   Info,
@@ -24,6 +26,7 @@ export default function Creditos() {
   const { user, loading: authLoading } = useAuth();
   const { credits, ledger, loading: creditsLoading, isUnlimited } = useCredits();
   const navigate = useNavigate();
+  const [creditQuantity, setCreditQuantity] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -101,17 +104,78 @@ export default function Creditos() {
                   <p className="font-display font-bold text-foreground text-lg">Básico</p>
                   <p className="font-body text-xs text-muted-foreground">Registro avulso de propriedade</p>
                 </div>
-                <p className="font-display text-3xl font-bold text-primary mb-4">
+                <p className="font-display text-3xl font-bold text-primary mb-2">
                   R$ 49
+                  <span className="text-sm font-normal text-muted-foreground">/crédito</span>
                 </p>
-                <ul className="space-y-2 mb-6">
+
+                {/* Quantity Selector */}
+                <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border/50 mb-4">
+                  <p className="text-xs font-medium text-foreground text-center">
+                    Quantos créditos?
+                  </p>
+                  <div className="flex items-center justify-center gap-1.5">
+                    {[1, 3, 5, 10].map((qty) => (
+                      <Button
+                        key={qty}
+                        type="button"
+                        variant={creditQuantity === qty ? "default" : "outline"}
+                        size="sm"
+                        className={`w-9 h-9 p-0 text-xs ${creditQuantity === qty ? "bg-primary text-primary-foreground" : ""}`}
+                        onClick={() => setCreditQuantity(qty)}
+                      >
+                        {qty}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setCreditQuantity(Math.max(1, creditQuantity - 1))}
+                      disabled={creditQuantity <= 1}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={creditQuantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setCreditQuantity(Math.max(1, Math.min(50, val)));
+                      }}
+                      className="w-14 h-7 text-center text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setCreditQuantity(Math.min(50, creditQuantity + 1))}
+                      disabled={creditQuantity >= 50}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="text-center pt-2 border-t border-border/50">
+                    <p className="text-lg font-bold text-primary">
+                      Total: R$ {(creditQuantity * 49).toLocaleString('pt-BR')},00
+                    </p>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 mb-4">
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    1 Registro de Propriedade
+                    {creditQuantity} Registro{creditQuantity > 1 ? "s" : ""} de Propriedade
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                    Certificado PDF
+                    Certificado{creditQuantity > 1 ? "s" : ""} PDF
                   </li>
                   <li className="flex items-center gap-2 text-sm font-body text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
@@ -119,8 +183,8 @@ export default function Creditos() {
                   </li>
                 </ul>
                 <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body font-medium">
-                  <Link to="/checkout?plan=basico">
-                    Comprar agora
+                  <Link to={`/checkout?plan=basico&qty=${creditQuantity}`}>
+                    Comprar {creditQuantity} crédito{creditQuantity > 1 ? "s" : ""}
                   </Link>
                 </Button>
               </CardContent>

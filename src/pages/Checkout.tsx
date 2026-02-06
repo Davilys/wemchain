@@ -323,6 +323,22 @@ export default function Checkout() {
         throw new Error(response.data?.error || "Erro ao criar pagamento");
       }
 
+      // Salvar dados do cliente no perfil para próximas compras
+      try {
+        await supabase
+          .from("profiles")
+          .update({
+            full_name: customerName,
+            cpf_cnpj: customerCpfCnpj.replace(/\D/g, ""),
+            phone: customerPhone.replace(/\D/g, "") || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id);
+      } catch (profileError) {
+        console.error("Error saving profile:", profileError);
+        // Não bloquear o fluxo se falhar ao salvar perfil
+      }
+
       setPaymentData(response.data.payment);
       setStep("payment");
       toast.success("Pagamento criado! Escaneie o QR Code ou copie o código Pix.");

@@ -1,127 +1,107 @@
 
-# Plano: Adicionar Opção de Conceder Créditos no Menu de Ações do Admin
+# Plano: Corrigir Erro "Invalid Key" no Upload de Arquivos
 
-## Objetivo
-Adicionar uma nova opção "Conceder Créditos" no menu de ações (3 pontos) da página de gestão de usuários do painel administrativo, permitindo ao super admin/admin conceder uma quantidade específica de créditos a um usuário.
+## Problema Identificado
 
-## Análise da Implementação Atual
+O Supabase Storage está rejeitando uploads de arquivos que contêm caracteres especiais no nome:
+- **Erro**: `Invalid key: 38600758-12b7-4332-abd9-f91e74b0b514/1770409349411-Dãozin Teixeira - Só Jesus.wav`
+- **Causa**: O nome do arquivo contém acentos (ã, ó), espaços e caracteres não permitidos
+- **Impacto**: Usuários não conseguem registrar arquivos com nomes contendo acentos ou espaços
 
-O sistema já possui:
-- Função de banco `add_credits_admin(p_user_id, p_amount, p_reason, p_admin_id)` que adiciona créditos com auditoria
-- Menu dropdown com ações: Ver Detalhes, Editar, Conceder/Editar/Revogar Plano Business, Bloquear
-- Edge function `admin-manage-subscription` que usa a função `add_credits_admin`
+## Solução
+
+Criar uma função de sanitização que normalize o nome do arquivo para o storage, enquanto preserva o nome original para exibição.
+
+## Fluxo da Correção
+
+```text
++---------------------------+        +---------------------------+
+|  Nome Original            |   -->  |  Nome Sanitizado          |
+|  (arquivo_nome no BD)     |        |  (filePath no Storage)    |
++---------------------------+        +---------------------------+
+| Dãozin Teixeira - Só.wav  |   -->  | daozin_teixeira_so.wav    |
++---------------------------+        +---------------------------+
+```
 
 ## Mudanças Necessárias
 
-### 1. Frontend - AdminUsuarios.tsx
+### 1. NovoRegistro.tsx - Adicionar Função de Sanitização
 
-**Novos Estados:**
+**Nova função utilitária:**
 ```typescript
-// Estado para o dialog de conceder créditos
-const [grantCreditsDialogOpen, setGrantCreditsDialogOpen] = useState(false);
-const [grantCreditsAmount, setGrantCreditsAmount] = useState(1);
-const [grantCreditsReason, setGrantCreditsReason] = useState("");
-const [grantingCredits, setGrantingCredits] = useState(false);
+/**
+ * Sanitiza nome de arquivo para upload no Supabase Storage
+ * - Remove acentos e caracteres especiais
+ * - Substitui espaços por underscores
+ * - Mantém apenas letras, números, underscores, hífens e pontos
+ */
+const sanitizeFileName = (fileName: string): string => {
+  // Normaliza caracteres acentuados (NFD) e remove diacríticos
+  const normalized = fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  
+  // Extrai nome e extensão
+  const lastDot = normalized.lastIndexOf(".");
+  const name = lastDot > 0 ? normalized.substring(0, lastDot) : normalized;
+  const ext = lastDot > 0 ? normalized.substring(lastDot) : "";
+  
+  // Sanitiza o nome: substitui espaços e caracteres inválidos
+  const safeName = name
+    .toLowerCase()
+    .replace(/\s+/g, "_")           // espaços -> underscores
+    .replace(/[^a-z0-9_-]/g, "");   // remove caracteres inválidos
+  
+  return safeName + ext.toLowerCase();
+};
 ```
 
-**Nova opção no DropdownMenu:**
-- Adicionar item "Conceder Créditos" com ícone `Coins` (já importado)
-- Posicionar após "Editar Dados" e antes das opções de Plano Business
+### 2. Modificar handleSubmit
 
-**Novo Dialog - Conceder Créditos:**
-- Campo: Seletor de quantidade (1-50) com botões predefinidos (1, 5, 10, 20)
-- Campo: Input numérico para quantidade customizada
-- Campo: Textarea para motivo (obrigatório para auditoria)
-- Exibir nome do usuário selecionado
-- Botão "Conceder Créditos" que chama a função RPC
-
-**Nova Função:**
+**Antes (linha 386):**
 ```typescript
-async function handleGrantCredits() {
-  // Validação
-  // Chamar supabase.rpc("add_credits_admin", {...})
-  // Log da ação
-  // Feedback e atualização
-}
+const filePath = `${user.id}/${Date.now()}-${file.name}`;
 ```
 
-### 2. Integração com Banco de Dados
-
-Usar diretamente a RPC function existente:
+**Depois:**
 ```typescript
-const { data, error } = await supabase.rpc("add_credits_admin", {
-  p_user_id: selectedUser.user_id,
-  p_amount: grantCreditsAmount,
-  p_reason: grantCreditsReason,
-  p_admin_id: adminUser.id,
-});
+const safeFileName = sanitizeFileName(file.name);
+const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
 ```
 
-### 3. UI do Dialog
+### 3. Preservar Nome Original
 
-```text
-┌─────────────────────────────────────────────────┐
-│  🪙 Conceder Créditos                           │
-│─────────────────────────────────────────────────│
-│  Conceder créditos para: João Silva             │
-│                                                 │
-│  Quantidade de créditos:                        │
-│                                                 │
-│  [ 1 ]  [ 5 ]  [ 10 ]  [ 20 ]                  │
-│                                                 │
-│  Quantidade:  [ 5    ] ─  +                     │
-│                                                 │
-│  Motivo (obrigatório):                          │
-│  ┌─────────────────────────────────────────┐    │
-│  │ Bonificação por uso do sistema...       │    │
-│  └─────────────────────────────────────────┘    │
-│                                                 │
-│        [ Cancelar ]  [ Conceder Créditos ]      │
-└─────────────────────────────────────────────────┘
+O nome original do arquivo já é salvo corretamente no banco de dados:
+```typescript
+arquivo_nome: file.name,  // Nome original preservado para exibição
 ```
 
-## Detalhes Técnicos
+Nenhuma alteração necessária nessa parte.
 
-### Componentes UI a Adicionar no Dialog:
-1. Botões de quantidade predefinida (1, 5, 10, 20)
-2. Input numérico com botões +/- para ajuste fino
-3. Validação: mínimo 1, máximo 100 créditos
-4. Textarea para motivo (obrigatório)
+## Exemplos de Transformação
 
-### Validações:
-- Quantidade deve ser entre 1 e 100
-- Motivo é obrigatório (mínimo 10 caracteres)
-- Apenas admins podem executar a ação
+| Nome Original | Nome Sanitizado |
+|---------------|-----------------|
+| Dãozin Teixeira - Só Jesus.wav | daozin_teixeira_-_so_jesus.wav |
+| Minha Música #1 (Final).mp3 | minha_musica_1_final.mp3 |
+| Contrato João & Maria.pdf | contrato_joao__maria.pdf |
+| 日本語ファイル.png | .png → fallback para file.png |
 
-### Auditoria:
-- Usar `logAction` para registrar a ação no admin_action_logs
-- A função `add_credits_admin` já registra no credits_ledger
+## Tratamento de Edge Cases
 
-### Fluxo Completo:
-1. Admin clica nos 3 pontos → "Conceder Créditos"
-2. Dialog abre com o nome do usuário
-3. Admin seleciona quantidade (botões ou input)
-4. Admin digita motivo
-5. Clica em "Conceder Créditos"
-6. Sistema chama RPC `add_credits_admin`
-7. Log é registrado automaticamente
-8. Toast de sucesso com quantidade concedida
-9. Lista de usuários é atualizada
+1. **Nome vira vazio**: Se o nome sanitizado ficar vazio (só caracteres especiais), usar "file" como fallback
+2. **Extensão preservada**: A extensão do arquivo é sempre mantida
+3. **Lowercase**: Tudo convertido para minúsculas para evitar problemas de case-sensitivity
 
-### Arquivos a Modificar:
-- `src/pages/admin/AdminUsuarios.tsx` - Adicionar menu item, dialog e lógica
+## Arquivo a Modificar
 
-### Imports Necessários:
-- `Minus`, `Plus` de lucide-react (para botões +/-)
-- Demais componentes já estão importados
+- `src/pages/NovoRegistro.tsx`
+  - Adicionar função `sanitizeFileName`
+  - Atualizar linha do `filePath` no `handleSubmit`
 
-### Ordem do Menu Atualizada:
-1. Ver Detalhes
-2. Editar Dados
-3. **Conceder Créditos** ← NOVO
-4. --- Separador ---
-5. Conceder Plano Business
-6. Editar Plano Business
-7. Revogar Plano Business
-8. --- Separador ---
-9. Bloquear/Desbloquear
+## Resultado Esperado
+
+- Qualquer arquivo pode ser registrado independente do nome
+- Nomes com acentos, espaços, caracteres especiais funcionam
+- O nome original é preservado para exibição ao usuário
+- O storage recebe apenas nomes válidos (ASCII, sem espaços)

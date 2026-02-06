@@ -10,7 +10,7 @@ import {
   Shield,
   FolderOpen,
   Crown,
-  User,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBusinessPlan } from "@/hooks/useBusinessPlan";
@@ -76,9 +76,9 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
       show: true,
     },
     {
-      title: "Conta",
+      title: "Configurações",
       url: "/conta",
-      icon: User,
+      icon: Settings,
       color: "text-slate-500",
       bgColor: "bg-slate-500/10",
       show: true,

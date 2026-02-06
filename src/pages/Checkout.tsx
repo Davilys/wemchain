@@ -641,7 +641,7 @@ export default function Checkout() {
                 <Button 
                   type="submit" 
                   className="w-full h-12 sm:h-11 bg-primary text-primary-foreground text-base sm:text-sm font-medium"
-                  disabled={loading}
+                  disabled={loading || !!cpfCnpjError}
                 >
                   {loading ? (
                     <>

@@ -1,123 +1,127 @@
 
-# Plano: Compra de Créditos com Quantidade Selecionável
+# Plano: Adicionar Opção de Conceder Créditos no Menu de Ações do Admin
 
 ## Objetivo
-Modificar o plano "Básico" (R$49) para permitir que o usuário selecione a quantidade de créditos desejada, com cálculo automático do valor total. O pagamento será processado no Asaas e os créditos liberados após confirmação.
+Adicionar uma nova opção "Conceder Créditos" no menu de ações (3 pontos) da página de gestão de usuários do painel administrativo, permitindo ao super admin/admin conceder uma quantidade específica de créditos a um usuário.
 
-## Visão Geral da Implementação
+## Análise da Implementação Atual
 
-```text
-+---------------------------+       +---------------------------+
-|  Tela de Checkout         |       |  Edge Function            |
-|  (Plano Básico)           |       |  create-asaas-payment     |
-|---------------------------|       |---------------------------|
-| - Seletor de quantidade   |  -->  | - Recebe quantity         |
-| - Cálculo: qtd x R$49     |       | - Calcula valor total     |
-| - Total dinâmico na UI    |       | - Cria pagamento no Asaas |
-+---------------------------+       +---------------------------+
-                                              |
-                                              v
-                            +---------------------------+
-                            |  Webhook Asaas            |
-                            |---------------------------|
-                            | - Confirma pagamento      |
-                            | - Libera créditos (qty)   |
-                            +---------------------------+
-```
+O sistema já possui:
+- Função de banco `add_credits_admin(p_user_id, p_amount, p_reason, p_admin_id)` que adiciona créditos com auditoria
+- Menu dropdown com ações: Ver Detalhes, Editar, Conceder/Editar/Revogar Plano Business, Bloquear
+- Edge function `admin-manage-subscription` que usa a função `add_credits_admin`
 
 ## Mudanças Necessárias
 
-### 1. Frontend - Checkout.tsx
+### 1. Frontend - AdminUsuarios.tsx
 
-**Novo Estado:**
-- Adicionar estado `creditQuantity` para controlar a quantidade selecionada (mínimo: 1, máximo: 50)
-
-**Novo Componente - Seletor de Quantidade:**
-- Exibir seletor apenas quando o plano "BASICO" for selecionado
-- Opções: campo numérico ou botões +/- para ajustar quantidade
-- Valores predefinidos sugeridos: 1, 3, 5, 10 créditos
-
-**Cálculo Dinâmico:**
-- Preço unitário: R$ 49,00
-- Total: `quantidade × 49`
-- Atualizar exibição do plano selecionado em tempo real
-
-**Modificações no Formulário:**
-- Mostrar: "X créditos × R$ 49,00 = R$ XXX,00"
-- Enviar `quantity` junto com `planType` na requisição
-
-### 2. Edge Function - create-asaas-payment
-
-**Alterações na Interface:**
+**Novos Estados:**
 ```typescript
-interface CreatePaymentRequest {
-  planType: "BASICO" | "PROFISSIONAL" | "BUSINESS" | "ADICIONAL";
-  quantity?: number; // NOVO: quantidade de créditos (apenas para BASICO)
-  customerName: string;
-  customerEmail: string;
-  customerCpfCnpj: string;
-  customerPhone?: string;
+// Estado para o dialog de conceder créditos
+const [grantCreditsDialogOpen, setGrantCreditsDialogOpen] = useState(false);
+const [grantCreditsAmount, setGrantCreditsAmount] = useState(1);
+const [grantCreditsReason, setGrantCreditsReason] = useState("");
+const [grantingCredits, setGrantingCredits] = useState(false);
+```
+
+**Nova opção no DropdownMenu:**
+- Adicionar item "Conceder Créditos" com ícone `Coins` (já importado)
+- Posicionar após "Editar Dados" e antes das opções de Plano Business
+
+**Novo Dialog - Conceder Créditos:**
+- Campo: Seletor de quantidade (1-50) com botões predefinidos (1, 5, 10, 20)
+- Campo: Input numérico para quantidade customizada
+- Campo: Textarea para motivo (obrigatório para auditoria)
+- Exibir nome do usuário selecionado
+- Botão "Conceder Créditos" que chama a função RPC
+
+**Nova Função:**
+```typescript
+async function handleGrantCredits() {
+  // Validação
+  // Chamar supabase.rpc("add_credits_admin", {...})
+  // Log da ação
+  // Feedback e atualização
 }
 ```
 
-**Lógica de Processamento:**
-- Se `planType === "BASICO"` e `quantity > 1`:
-  - Valor total = `quantity × 49.00`
-  - Créditos = `quantity`
-  - Descrição: "X Registros de Propriedade em Blockchain"
-- Validação: quantidade entre 1 e 50
-- Demais planos funcionam normalmente
+### 2. Integração com Banco de Dados
 
-**Registro no Banco:**
-- `valor`: valor total calculado
-- `credits_amount`: quantidade de créditos
-- `plan_type`: "BASICO" (mantém compatibilidade)
+Usar diretamente a RPC function existente:
+```typescript
+const { data, error } = await supabase.rpc("add_credits_admin", {
+  p_user_id: selectedUser.user_id,
+  p_amount: grantCreditsAmount,
+  p_reason: grantCreditsReason,
+  p_admin_id: adminUser.id,
+});
+```
 
-### 3. UI do Seletor de Quantidade
-
-**Design proposto para o card do plano Básico:**
+### 3. UI do Dialog
 
 ```text
-┌─────────────────────────────────────┐
-│           🛡️ Básico                 │
-│   Registro avulso de propriedade    │
-│                                     │
-│        R$ 49 / crédito              │
-│                                     │
-│   Quantos créditos você quer?       │
-│                                     │
-│   [ 1 ] [ 3 ] [ 5 ] [ 10 ] [___]   │
-│                                     │
-│   ─────────────────────────────     │
-│   Total: 5 créditos = R$ 245,00     │
-│                                     │
-│        [ Selecionar ]               │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  🪙 Conceder Créditos                           │
+│─────────────────────────────────────────────────│
+│  Conceder créditos para: João Silva             │
+│                                                 │
+│  Quantidade de créditos:                        │
+│                                                 │
+│  [ 1 ]  [ 5 ]  [ 10 ]  [ 20 ]                  │
+│                                                 │
+│  Quantidade:  [ 5    ] ─  +                     │
+│                                                 │
+│  Motivo (obrigatório):                          │
+│  ┌─────────────────────────────────────────┐    │
+│  │ Bonificação por uso do sistema...       │    │
+│  └─────────────────────────────────────────┘    │
+│                                                 │
+│        [ Cancelar ]  [ Conceder Créditos ]      │
+└─────────────────────────────────────────────────┘
 ```
 
 ## Detalhes Técnicos
 
-### Validações
-- Quantidade mínima: 1
-- Quantidade máxima: 50 (evitar abusos)
-- Apenas números inteiros
-- Campo obrigatório para plano Básico
+### Componentes UI a Adicionar no Dialog:
+1. Botões de quantidade predefinida (1, 5, 10, 20)
+2. Input numérico com botões +/- para ajuste fino
+3. Validação: mínimo 1, máximo 100 créditos
+4. Textarea para motivo (obrigatório)
 
-### Fluxo Completo
-1. Usuário clica no card "Básico"
-2. Seletor de quantidade é exibido
-3. Usuário escolhe quantidade desejada
-4. Total é calculado automaticamente (qtd × R$49)
-5. Clica em "Selecionar" para ir ao formulário
-6. Formulário mostra resumo: "X créditos × R$ 49,00 = R$ XXX,00"
-7. Após preencher dados, gera pagamento Pix no Asaas
-8. Webhook confirma e libera a quantidade de créditos
+### Validações:
+- Quantidade deve ser entre 1 e 100
+- Motivo é obrigatório (mínimo 10 caracteres)
+- Apenas admins podem executar a ação
 
-### Arquivos a Modificar
-1. `src/pages/Checkout.tsx` - Interface e lógica do seletor
-2. `supabase/functions/create-asaas-payment/index.ts` - Processamento de quantidade
+### Auditoria:
+- Usar `logAction` para registrar a ação no admin_action_logs
+- A função `add_credits_admin` já registra no credits_ledger
 
-### Compatibilidade
-- Planos Profissional e Business continuam funcionando normalmente
-- Registro Adicional (R$39) continua sem alteração
-- Webhook não precisa de modificação (já usa credits_amount do banco)
+### Fluxo Completo:
+1. Admin clica nos 3 pontos → "Conceder Créditos"
+2. Dialog abre com o nome do usuário
+3. Admin seleciona quantidade (botões ou input)
+4. Admin digita motivo
+5. Clica em "Conceder Créditos"
+6. Sistema chama RPC `add_credits_admin`
+7. Log é registrado automaticamente
+8. Toast de sucesso com quantidade concedida
+9. Lista de usuários é atualizada
+
+### Arquivos a Modificar:
+- `src/pages/admin/AdminUsuarios.tsx` - Adicionar menu item, dialog e lógica
+
+### Imports Necessários:
+- `Minus`, `Plus` de lucide-react (para botões +/-)
+- Demais componentes já estão importados
+
+### Ordem do Menu Atualizada:
+1. Ver Detalhes
+2. Editar Dados
+3. **Conceder Créditos** ← NOVO
+4. --- Separador ---
+5. Conceder Plano Business
+6. Editar Plano Business
+7. Revogar Plano Business
+8. --- Separador ---
+9. Bloquear/Desbloquear

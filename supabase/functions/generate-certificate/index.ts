@@ -255,31 +255,73 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    // Decide which identity to use:
-    // Only use custom branding if Business user has EXPLICITLY configured it
-    const useBranding = brandingSettings && 
-      brandingSettings.display_name && 
-      brandingSettings.display_name.trim() !== '' &&
-      brandingSettings.document_number &&
-      brandingSettings.document_number.trim() !== '';
+  // Decide which identity to use:
+  // Only use custom branding if Business user has EXPLICITLY configured it
+  const useBranding = brandingSettings && 
+    brandingSettings.display_name && 
+    brandingSettings.display_name.trim() !== '' &&
+    brandingSettings.document_number &&
+    brandingSettings.document_number.trim() !== '';
 
-    console.log(`[GENERATE-CERTIFICATE] Using branding: ${useBranding}, Settings: ${JSON.stringify(brandingSettings)}`);
+  console.log(`[GENERATE-CERTIFICATE] Using branding: ${useBranding}, Settings: ${JSON.stringify(brandingSettings)}`);
+  console.log(`[GENERATE-CERTIFICATE] Registro titular data: name=${registro.titular_name}, doc=${registro.titular_document}, type=${registro.titular_type}`);
 
-    // Default WebMarcas data - Dados oficiais da empresa
-    const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
-    const WEBMARCAS_CNPJ = "39.528.012/0001-29";
+  // Função para formatar CPF/CNPJ
+  function formatDocument(doc: string, type: string | null): string {
+    const cleaned = doc.replace(/\D/g, '');
+    if (type === 'CNPJ' || cleaned.length === 14) {
+      // CNPJ: XX.XXX.XXX/XXXX-XX
+      return cleaned.replace(
+        /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+        '$1.$2.$3/$4-$5'
+      );
+    } else {
+      // CPF: XXX.XXX.XXX-XX
+      return cleaned.replace(
+        /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+        '$1.$2.$3-$4'
+      );
+    }
+  }
 
-    // Generate certificate data
-    const certificateData = generatePDFContent({
-      registroId: registro.id,
-      nomeAtivo: registro.nome_ativo,
-      tipoAtivo: registro.tipo_ativo,
-      arquivoNome: registro.arquivo_nome,
-      hashSha256: registro.hash_sha256,
-      createdAt: registro.created_at,
-      // Use custom branding if configured, otherwise WebMarcas
-      userName: useBranding ? brandingSettings.display_name : WEBMARCAS_NAME,
-      userDocument: useBranding ? brandingSettings.document_number : WEBMARCAS_CNPJ,
+  // Determinar dados do titular do certificado
+  // Prioridade: 1) Branding Business, 2) Dados do Registro, 3) Perfil do usuário, 4) WebMarcas (fallback)
+  let certificateHolderName: string;
+  let certificateHolderDocument: string;
+
+  if (useBranding) {
+    // Business com branding customizado
+    certificateHolderName = brandingSettings.display_name;
+    certificateHolderDocument = brandingSettings.document_number;
+    console.log(`[GENERATE-CERTIFICATE] Using BRANDING data: ${certificateHolderName}`);
+  } else if (registro.titular_name && registro.titular_document) {
+    // Usar dados do titular informados no registro
+    certificateHolderName = registro.titular_name;
+    certificateHolderDocument = formatDocument(registro.titular_document, registro.titular_type);
+    console.log(`[GENERATE-CERTIFICATE] Using REGISTRO data: ${certificateHolderName}`);
+  } else if (profile?.full_name && profile?.cpf_cnpj) {
+    // Fallback: usar perfil do usuário
+    certificateHolderName = profile.full_name;
+    certificateHolderDocument = profile.cpf_cnpj;
+    console.log(`[GENERATE-CERTIFICATE] Using PROFILE data: ${certificateHolderName}`);
+  } else {
+    // Último fallback: WebMarcas (não deveria acontecer em produção)
+    certificateHolderName = "Webmarcas Patentes Ltda";
+    certificateHolderDocument = "39.528.012/0001-29";
+    console.log(`[GENERATE-CERTIFICATE] Using WEBMARCAS fallback (no client data found)`);
+  }
+
+  // Generate certificate data
+  const certificateData = generatePDFContent({
+    registroId: registro.id,
+    nomeAtivo: registro.nome_ativo,
+    tipoAtivo: registro.tipo_ativo,
+    arquivoNome: registro.arquivo_nome,
+    hashSha256: registro.hash_sha256,
+    createdAt: registro.created_at,
+    // Usar os dados determinados pela lógica de prioridade
+    userName: certificateHolderName,
+    userDocument: certificateHolderDocument,
       txHash: txData.tx_hash,
       network: txData.network,
       timestampMethod: txData.timestamp_method || 'SMART_CONTRACT',

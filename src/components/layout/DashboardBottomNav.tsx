@@ -4,9 +4,9 @@ import {
   LayoutDashboard,
   FileText,
   Plus,
-  Coins,
   FolderOpen,
   Crown,
+  Settings,
 } from "lucide-react";
 import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 
@@ -50,9 +50,9 @@ export function DashboardBottomNav() {
       show: true,
     },
     {
-      title: "Créditos",
-      url: "/creditos",
-      icon: Coins,
+      title: "Config",
+      url: "/conta",
+      icon: Settings,
       show: true,
     },
   ];

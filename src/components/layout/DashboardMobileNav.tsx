@@ -9,7 +9,8 @@ import {
   Home,
   Shield,
   FolderOpen,
-  User,
+  Settings,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,9 +72,9 @@ const menuItems = [
     bgColor: "bg-orange-500/10",
   },
   {
-    title: "Minha Conta",
+    title: "Configurações",
     url: "/conta",
-    icon: User,
+    icon: Settings,
     color: "text-slate-500",
     bgColor: "bg-slate-500/10",
   },

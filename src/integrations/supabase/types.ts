@@ -233,6 +233,45 @@ export type Database = {
         }
         Relationships: []
       }
+      business_branding_settings: {
+        Row: {
+          created_at: string
+          display_name: string
+          document_number: string
+          id: string
+          is_active: boolean | null
+          logo_path: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          document_number: string
+          id?: string
+          is_active?: boolean | null
+          logo_path?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          document_number?: string
+          id?: string
+          is_active?: boolean | null
+          logo_path?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           created_at: string

@@ -434,7 +434,7 @@ export async function generateCertificatePDF(registroId: string): Promise<Blob> 
   pdf.setTextColor(colors.muted.r, colors.muted.g, colors.muted.b);
   pdf.setFontSize(7);
   pdf.setFont("helvetica", "normal");
-  pdf.text("WebMarcas • Uma empresa WebPatentes", pageWidth / 2, footerY + 5, { align: "center" });
+  pdf.text("Webmarcas Patentes Ltda • CNPJ: 39.528.012/0001-29", pageWidth / 2, footerY + 5, { align: "center" });
   
   pdf.setFontSize(6.5);
   pdf.setTextColor(colors.light.r, colors.light.g, colors.light.b);

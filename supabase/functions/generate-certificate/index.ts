@@ -265,9 +265,9 @@ serve(async (req) => {
 
     console.log(`[GENERATE-CERTIFICATE] Using branding: ${useBranding}, Settings: ${JSON.stringify(brandingSettings)}`);
 
-    // Default WebMarcas data
-    const WEBMARCAS_NAME = "WebMarcas";
-    const WEBMARCAS_CNPJ = "55.772.928/0001-50";
+    // Default WebMarcas data - Dados oficiais da empresa
+    const WEBMARCAS_NAME = "Webmarcas Patentes Ltda";
+    const WEBMARCAS_CNPJ = "39.528.012/0001-29";
 
     // Generate certificate data
     const certificateData = generatePDFContent({

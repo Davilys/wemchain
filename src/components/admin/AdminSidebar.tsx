@@ -59,7 +59,7 @@ const iconMap: Record<string, LucideIcon> = {
 const mainMenuItems: MenuItem[] = [
   {
     title: "Visão Geral",
-    url: "/admin",
+    url: "/admin/dashboard",
     icon: LayoutDashboard,
     permissions: [],
     color: "text-blue-400",
@@ -151,8 +151,8 @@ export function AdminSidebar() {
   const { role, can, canAny } = useAdminPermissions();
 
   const isActive = (path: string) => {
-    if (path === "/admin") {
-      return location.pathname === "/admin";
+    if (path === "/admin/dashboard") {
+      return location.pathname === "/admin/dashboard";
     }
     return location.pathname.startsWith(path);
   };
@@ -203,7 +203,7 @@ export function AdminSidebar() {
   return (
     <Sidebar className="w-64 border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <Link to="/admin" className="flex items-center gap-3">
+        <Link to="/admin/dashboard" className="flex items-center gap-3">
           <div className="relative">
             <img 
               src={webmarcasLogo} 

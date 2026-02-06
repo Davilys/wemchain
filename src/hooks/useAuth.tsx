@@ -166,33 +166,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     // Mark this as intentional sign out before calling signOut
     isIntentionalSignOut.current = true;
-    
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        isIntentionalSignOut.current = false;
-        throw error;
-      }
 
-      // Clear state immediately
-      setUser(null);
-      setSession(null);
+    // Always clear UI state immediately (even if server session is already gone)
+    setUser(null);
+    setSession(null);
+
+    try {
+      // Prefer local sign-out to avoid "session_not_found" hard-failing logout
+      // (this clears tokens from storage and updates the app state)
+      await supabase.auth.signOut({ scope: "local" });
 
       toast({
         title: "Até logo!",
         description: "Você saiu da sua conta.",
       });
-
-      // Navigate to login page
-      navigate("/login");
-    } catch (error) {
-      isIntentionalSignOut.current = false;
+    } catch (error: any) {
+      // If even local fails (rare), still proceed to login
       console.error("Error signing out:", error);
+
       toast({
-        title: "Erro ao sair",
-        description: "Tente novamente.",
-        variant: "destructive",
+        title: "Até logo!",
+        description: "Você saiu da sua conta.",
       });
+    } finally {
+      isIntentionalSignOut.current = false;
+      navigate("/login");
     }
   };
 

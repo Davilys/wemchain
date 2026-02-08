@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { AnimatedList } from "@/components/ui/AnimatedList";
 import { 
   Search,
   FileText,
@@ -256,7 +257,7 @@ export default function MeusRegistros() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <AnimatedList className="space-y-3" staggerDelay={0.05}>
             {filteredRegistros.map((registro) => {
               const statusConfig = getStatusConfig(registro.status);
               const StatusIcon = statusConfig.icon;
@@ -340,7 +341,7 @@ export default function MeusRegistros() {
                 </Card>
               );
             })}
-          </div>
+          </AnimatedList>
         )}
       </div>
     </DashboardLayout>

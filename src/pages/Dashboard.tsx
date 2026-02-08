@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import { supabase } from "@/integrations/supabase/client";
+import { AnimatedList } from "@/components/ui/AnimatedList";
 import { 
   Plus, 
   FileText, 
@@ -155,7 +156,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards - Premium Style */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AnimatedList className="grid grid-cols-2 lg:grid-cols-4 gap-3" staggerDelay={0.08}>
           {/* Credits */}
           <div className="card-premium p-4 border-primary/20 bg-primary/5">
             <div className="flex items-center gap-3">
@@ -237,7 +238,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </AnimatedList>
 
         {/* Action Buttons - Different for Business */}
         {isBusinessPlan ? (
@@ -354,7 +355,7 @@ export default function Dashboard() {
               </Button>
             </div>
           ) : (
-            <div className="divide-y divide-border/50">
+            <AnimatedList className="divide-y divide-border/50" staggerDelay={0.06}>
               {registros.map((registro) => (
                 <Link
                   key={registro.id}
@@ -377,7 +378,7 @@ export default function Dashboard() {
                   {getStatusBadge(registro.status)}
                 </Link>
               ))}
-            </div>
+            </AnimatedList>
           )}
         </div>
 

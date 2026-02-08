@@ -1,192 +1,171 @@
 
-# Plano: Corrigir Consumo de Créditos no Registro
 
-## Problema Identificado
+# Plano: Adicionar Animações de Transição com Framer Motion
 
-O cliente conseguiu fazer **5 registros confirmados** tendo apenas **4 créditos** disponíveis. A análise revelou:
+## Objetivo
 
-1. **Tabela credits (cache)**: `used_credits=5`, `available_credits=1`, `total_credits=4` - **inconsistente!**
-2. **Tabela credits_ledger**: Apenas 2 operações ADD (2+2=4), **NENHUMA operação CONSUME**
-3. **A função `consume_credit_safe`** atualiza apenas a tabela cache, mas **NÃO insere no ledger**
-4. **NÃO há validação de créditos ANTES do processamento** - o crédito só é consumido APÓS o registro ser confirmado
+Implementar animações de transição suaves nas páginas usando `framer-motion` para melhorar significativamente a experiência do usuário em toda a plataforma.
 
-## Causa Raiz
+## Análise Atual
+
+- O projeto já usa algumas animações CSS via Tailwind (fade-up, scale-in, etc.)
+- Não possui `framer-motion` instalado
+- As mudanças de página são instantâneas sem transições
+- Os layouts (DashboardLayout, AdminLayout) são pontos ideais para implementar as animações
+
+## Arquitetura da Solução
 
 ```text
-FLUXO ATUAL (PROBLEMÁTICO):
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. Frontend: hasCredits = true (pode estar desatualizado)      │
-│ 2. Edge function: process-registro inicia                      │
-│ 3. Processamento completo (OTS timestamp, etc)                 │
-│ 4. Status = CONFIRMED                                          │
-│ 5. DEPOIS: consume_credit_safe() ← Só agora tenta consumir!    │
-│    └── Se saldo zerou entre 1-4, registro já foi feito         │
-│    └── Função não insere no ledger = sem auditoria             │
+│                        App.tsx                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │              AnimatePresence (wrapper)                    │  │
+│  │  ┌─────────────────────────────────────────────────────┐  │  │
+│  │  │                 Routes                              │  │  │
+│  │  │   ┌─────────────────┐  ┌─────────────────┐          │  │  │
+│  │  │   │  PageTransition │  │  PageTransition │          │  │  │
+│  │  │   │   (wrapper)     │  │   (wrapper)     │          │  │  │
+│  │  │   │  ┌───────────┐  │  │  ┌───────────┐  │          │  │  │
+│  │  │   │  │  Content  │  │  │  │  Content  │  │          │  │  │
+│  │  │   │  └───────────┘  │  │  └───────────┘  │          │  │  │
+│  │  │   └─────────────────┘  └─────────────────┘          │  │  │
+│  │  └─────────────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Solução
+## Componentes a Criar/Modificar
 
-Implementar validação e consumo de crédito **ANTES** de processar o registro:
+### 1. Novo Componente: PageTransition.tsx
 
-```text
-FLUXO CORRIGIDO:
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Edge function: VALIDA créditos direto no banco (fresh)      │
-│ 2. SE saldo < 1 → REJEITA com erro "Créditos insuficientes"    │
-│ 3. SE ok → CONSUME crédito usando consume_credit_atomic        │
-│    └── Insere no ledger com idempotência (reference=registro)  │
-│ 4. Processamento (OTS timestamp, etc)                          │
-│ 5. Status = CONFIRMED (crédito já foi consumido)               │
-│ 6. SE falhar → crédito pode ser estornado por admin            │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Mudanças Necessárias
-
-### 1. Edge Function - process-registro/index.ts
-
-**Adicionar validação de créditos no INÍCIO (após autenticação):**
+Wrapper reutilizável que aplica animações de entrada/saída:
 
 ```typescript
-// === VALIDAÇÃO DE CRÉDITOS (ANTES de processar) ===
-// Verificar se é super_admin (créditos ilimitados)
-const { data: isSuperAdmin } = await supabaseAdmin.rpc('is_super_admin', {
-  _user_id: userId
-});
+// Variantes de animação disponíveis:
+- fadeUp: Fade + slide de baixo para cima (padrão)
+- fadeIn: Apenas fade
+- slideRight: Slide da esquerda
+- scale: Scale + fade
+- stagger: Container com elementos animados em sequência
+```
 
-if (!isSuperAdmin) {
-  // Buscar saldo FRESH do ledger (fonte da verdade)
-  const { data: balance } = await supabaseAdmin.rpc('get_ledger_balance', {
-    p_user_id: userId
-  });
+### 2. Novo Componente: AnimatedList.tsx
 
-  if ((balance || 0) < 1) {
-    console.log(`[PROCESS-REGISTRO] Créditos insuficientes. Saldo: ${balance}`);
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        registroId,
-        status: 'falhou',
-        error: 'Créditos insuficientes. Adquira mais créditos para continuar.'
-      }),
-      { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+Para listas de cards/items com animação stagger:
+
+```typescript
+// Cards aparecem um após o outro com delay
+- Cada item tem delay incremental (0.05s)
+- Animação de entrada suave
+- Perfeito para dashboards e listas
+```
+
+### 3. Modificações nos Layouts
+
+**DashboardLayout.tsx:**
+- Envolver `{children}` com `<PageTransition>`
+- Animação fadeUp por padrão
+
+**AdminLayout.tsx:**
+- Mesmo tratamento que o dashboard
+- Consistência visual em toda plataforma
+
+**App.tsx:**
+- Adicionar `AnimatePresence` no nível de rotas
+- Permitir animações de saída
+
+## Detalhes de Implementação
+
+### Instalação
+```bash
+npm install framer-motion
+```
+
+### Variantes de Animação
+
+```typescript
+const pageVariants = {
+  fadeUp: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 }
+  },
+  fadeIn: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  },
+  slideRight: {
+    initial: { opacity: 0, x: -20 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 20 }
+  },
+  scale: {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.98 }
   }
-}
+};
 ```
 
-**Substituir consume_credit_safe por consume_credit_atomic:**
+### Uso Simplificado
 
-```typescript
-// Antes (linha 383):
-const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_safe', {
-
-// Depois:
-const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_atomic', {
-  p_user_id: userId,
-  p_registro_id: registroId,
-  p_reason: 'Consumo para registro em blockchain'
-});
-```
-
-### 2. Mover o Consumo para ANTES do Status CONFIRMED
-
-O consumo deve acontecer ANTES de confirmar o registro, para garantir que:
-- Se não houver crédito, o registro não é confirmado
-- O ledger tem o registro do consumo
-
-```typescript
-// Mover para ANTES de "Update registro to CONFIRMED"
-
-// ⚠️ CRITICAL: Consume credit BEFORE confirming
-const { data: creditResult } = await supabaseAdmin.rpc('consume_credit_atomic', {
-  p_user_id: userId,
-  p_registro_id: registroId,
-  p_reason: 'Consumo para registro em blockchain'
-});
-
-if (!creditResult?.success && !isSuperAdmin) {
-  // Se falhar consumo e não for super_admin, reverter
-  console.log(`[PROCESS-REGISTRO] Credit consumption failed: ${creditResult?.error}`);
-  
-  // Não confirmar o registro
-  await supabaseAdmin
-    .from('registros')
-    .update({ status: 'falhou', error_message: 'Créditos insuficientes' })
-    .eq('id', registroId);
-
-  return new Response(
-    JSON.stringify({ 
-      success: false,
-      registroId,
-      status: 'falhou',
-      error: creditResult?.error || 'Créditos insuficientes'
-    }),
-    { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+```tsx
+// Nas páginas, basta usar o layout - animação automática
+export default function Dashboard() {
+  return (
+    <DashboardLayout>
+      {/* Conteúdo será animado automaticamente */}
+    </DashboardLayout>
   );
 }
 
-// Agora sim, confirmar o registro
-await supabaseAdmin
-  .from('registros')
-  .update({ status: 'confirmado', error_message: null })
-  .eq('id', registroId);
+// Para listas com stagger
+<AnimatedList>
+  {items.map(item => <Card key={item.id}>{item.name}</Card>)}
+</AnimatedList>
 ```
+
+## Páginas Beneficiadas
+
+### Área do Usuário
+| Página | Animação | Elementos Animados |
+|--------|----------|-------------------|
+| Dashboard | fadeUp + stagger | Cards de métricas, lista de registros |
+| MeusRegistros | fadeUp + stagger | Header, filtros, lista de cards |
+| NovoRegistro | fadeUp | Steps do formulário |
+| Certificado | scale | Card do certificado |
+| Checkout | fadeUp | Cards de preços |
+
+### Área Admin
+| Página | Animação | Elementos Animados |
+|--------|----------|-------------------|
+| AdminDashboard | fadeUp + stagger | Cards de métricas |
+| AdminUsuarios | fadeUp + stagger | Tabela de usuários |
+| AdminRegistros | fadeUp + stagger | Lista de registros |
+| Todas as demais | fadeUp | Conteúdo principal |
 
 ## Arquivos a Modificar
 
-- `supabase/functions/process-registro/index.ts`
-  - Adicionar validação de créditos no início (após autenticação)
-  - Substituir `consume_credit_safe` por `consume_credit_atomic`
-  - Mover consumo de crédito para ANTES de confirmar o registro
-  - Adicionar verificação de super_admin para bypass
+1. **package.json** - Adicionar dependência `framer-motion`
+2. **src/components/ui/PageTransition.tsx** - NOVO: Componente de transição
+3. **src/components/ui/AnimatedList.tsx** - NOVO: Lista animada
+4. **src/components/layout/DashboardLayout.tsx** - Integrar PageTransition
+5. **src/components/admin/AdminLayout.tsx** - Integrar PageTransition
+6. **src/App.tsx** - Adicionar AnimatePresence
 
-## Fluxo Corrigido Detalhado
+## Benefícios
 
-```text
-process-registro(registroId)
-│
-├── 1. Autenticar usuário
-│
-├── 2. Verificar se é super_admin
-│   └── SE SIM: pular validação de créditos
-│
-├── 3. Validar créditos via get_ledger_balance()
-│   └── SE saldo < 1: REJEITAR com erro 402
-│
-├── 4. Verificar se registro já foi processado (idempotência)
-│
-├── 5. Atualizar status para PROCESSANDO
-│
-├── 6. Processar timestamp (OTS ou interno)
-│
-├── 7. Criar transação blockchain
-│
-├── 8. CONSUMIR CRÉDITO via consume_credit_atomic()
-│   └── SE falhar: REJEITAR e reverter status
-│
-└── 9. Atualizar status para CONFIRMED
-```
+1. **UX Premium**: Transições suaves criam sensação de app nativo
+2. **Feedback Visual**: Usuário percebe mudanças de estado
+3. **Consistência**: Mesmo padrão em toda plataforma
+4. **Performance**: Framer Motion usa GPU para animações
+5. **Manutenibilidade**: Componentes reutilizáveis e configuráveis
 
-## Benefícios da Correção
+## Considerações Técnicas
 
-1. **Validação server-side**: Créditos verificados direto no banco, não no frontend
-2. **Idempotência**: consume_credit_atomic impede consumo duplicado para mesmo registro
-3. **Auditoria**: Todas operações registradas no ledger
-4. **Consistência**: Cache (credits) e ledger sempre sincronizados
-5. **Segurança**: Impossível processar registro sem crédito disponível
+- **Reduced Motion**: Respeitar `prefers-reduced-motion` do sistema
+- **Performance**: Animações curtas (200-400ms) para não atrasar UX
+- **Mobile**: Animações mais sutis em dispositivos móveis
+- **Bundle Size**: Framer Motion adiciona ~30KB gzipped
 
-## Correção dos Dados Atuais
-
-Após implementar a correção, será necessário reconciliar o saldo do usuário afetado:
-
-```sql
--- Verificar situação atual
-SELECT * FROM credits WHERE user_id = '38600758-12b7-4332-abd9-f91e74b0b514';
--- available_credits: 1, used_credits: 5, total_credits: 4 (INCONSISTENTE)
-
--- Corrigir via reconcile_credit_balance
-SELECT reconcile_credit_balance('38600758-12b7-4332-abd9-f91e74b0b514');
--- Isso vai corrigir o cache baseado no ledger (saldo real = 4)
-```

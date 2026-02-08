@@ -4,6 +4,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { DashboardLayout } from "./DashboardLayout";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 interface LayoutProps {
   children: ReactNode;
@@ -25,7 +26,9 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 pt-16 md:pt-20">
-        {children}
+        <PageTransition variant="fadeUp">
+          {children}
+        </PageTransition>
       </main>
       {showFooter && <Footer />}
       <WhatsAppButton />

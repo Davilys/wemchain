@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   FileText,
@@ -61,12 +62,15 @@ export function DashboardBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      {/* Gradient overlay for seamless blend */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent -top-4 pointer-events-none" />
+      {/* Premium gradient overlay */}
+      <div className="absolute inset-0 -top-8 bg-gradient-to-t from-background via-background/98 to-transparent pointer-events-none" />
       
-      {/* Main nav container */}
-      <div className="relative bg-card/98 backdrop-blur-xl border-t border-border/40 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center justify-around px-1 py-2 max-w-md mx-auto safe-area-bottom">
+      {/* Glass morphism container */}
+      <div className="relative mx-2 mb-2 rounded-2xl bg-card/80 backdrop-blur-2xl border border-border/30 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.15)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]">
+        {/* Subtle top glow */}
+        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        
+        <div className="flex items-center justify-around px-2 py-2.5 max-w-md mx-auto">
           {visibleItems.map((item) => {
             const active = isActive(item.url);
             
@@ -76,17 +80,23 @@ export function DashboardBottomNav() {
                 <Link
                   key={item.url}
                   to={item.url}
-                  className="flex flex-col items-center justify-center -mt-6 group"
+                  className="flex flex-col items-center justify-center -mt-8 group"
                 >
-                  <div className="relative">
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg scale-110 group-hover:scale-125 transition-transform" />
-                    {/* Button */}
-                    <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 border-[3px] border-background ring-2 ring-primary/20 group-hover:scale-105 transition-transform">
-                      <item.icon className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
+                  <motion.div 
+                    className="relative"
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    {/* Outer glow ring */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/50 to-primary/20 blur-xl scale-150 opacity-60 group-hover:opacity-80 transition-opacity" />
+                    
+                    {/* Main button */}
+                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border-4 border-background ring-2 ring-primary/30">
+                      <div className="absolute inset-1 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
+                      <item.icon className="h-7 w-7 text-primary-foreground relative z-10" strokeWidth={2.5} />
                     </div>
-                  </div>
-                  <span className="text-[10px] font-semibold text-primary mt-1.5 tracking-tight">
+                  </motion.div>
+                  <span className="text-[11px] font-bold text-primary mt-2 tracking-tight">
                     {item.title}
                   </span>
                 </Link>
@@ -98,17 +108,26 @@ export function DashboardBottomNav() {
                 key={item.url}
                 to={item.url}
                 className={cn(
-                  "flex flex-col items-center justify-center py-1.5 px-3 min-w-[56px] transition-all duration-200 group"
+                  "flex flex-col items-center justify-center py-1 px-2 min-w-[60px] transition-all duration-300 group"
                 )}
               >
-                <div className={cn(
-                  "relative w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200",
-                  active 
-                    ? "bg-primary/15 scale-105" 
-                    : "bg-transparent group-hover:bg-muted/60"
-                )}>
+                <motion.div 
+                  className={cn(
+                    "relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300",
+                    active 
+                      ? "bg-gradient-to-br from-primary/20 to-primary/10 shadow-lg shadow-primary/10" 
+                      : "bg-transparent group-hover:bg-muted/50"
+                  )}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  {/* Active state inner glow */}
+                  {active && (
+                    <div className="absolute inset-0 rounded-2xl ring-1 ring-primary/30" />
+                  )}
+                  
                   <item.icon className={cn(
-                    "h-5 w-5 transition-all duration-200",
+                    "h-5 w-5 transition-all duration-300 relative z-10",
                     active 
                       ? "text-primary" 
                       : "text-muted-foreground group-hover:text-foreground"
@@ -116,29 +135,37 @@ export function DashboardBottomNav() {
                   
                   {/* Business badge */}
                   {"isBusiness" in item && item.isBusiness && (
-                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border border-amber-300 dark:border-amber-700">
-                      <Crown className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" />
+                    <div className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-background">
+                      <Crown className="h-2.5 w-2.5 text-white" />
                     </div>
                   )}
-                  
-                  {/* Active indicator dot */}
-                  {active && (
-                    <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                  )}
-                </div>
+                </motion.div>
+                
                 <span className={cn(
-                  "text-[10px] font-medium mt-0.5 transition-colors duration-200 tracking-tight",
+                  "text-[10px] font-semibold mt-1 transition-colors duration-300 tracking-tight",
                   active 
-                    ? "text-primary font-semibold" 
+                    ? "text-primary" 
                     : "text-muted-foreground group-hover:text-foreground"
                 )}>
                   {item.title}
                 </span>
+                
+                {/* Active indicator bar */}
+                {active && (
+                  <motion.div 
+                    className="absolute bottom-0.5 w-6 h-0.5 rounded-full bg-gradient-to-r from-primary/60 via-primary to-primary/60"
+                    layoutId="activeTab"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
               </Link>
             );
           })}
         </div>
       </div>
+      
+      {/* Safe area padding */}
+      <div className="h-safe-area-inset-bottom bg-background" />
     </nav>
   );
 }

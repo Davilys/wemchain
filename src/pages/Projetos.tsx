@@ -12,6 +12,7 @@ import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import { useProjects, Project, CreateProjectData } from "@/hooks/useProjects";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
 import { ProjectCard } from "@/components/projects/ProjectCard";
+import { AnimatedList } from "@/components/ui/AnimatedList";
 import {
   FolderPlus,
   Search,
@@ -148,7 +149,7 @@ export default function Projetos() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <AnimatedList className="grid grid-cols-1 sm:grid-cols-3 gap-4" staggerDelay={0.08}>
           <Card className="border-amber-500/20 bg-amber-500/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -176,7 +177,7 @@ export default function Projetos() {
               <p className="text-2xl font-bold mt-1 text-primary">{credits?.available_credits || 0}</p>
             </CardContent>
           </Card>
-        </div>
+        </AnimatedList>
 
         {/* Info Banner */}
         <Card className="border-primary/20 bg-primary/5">
@@ -241,7 +242,7 @@ export default function Projetos() {
                 )}
               </div>
             ) : (
-              <div className="space-y-3">
+              <AnimatedList className="space-y-3" staggerDelay={0.05}>
                 {filteredProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
@@ -252,7 +253,7 @@ export default function Projetos() {
                     onUnarchive={(p) => unarchiveProject(p.id)}
                   />
                 ))}
-              </div>
+              </AnimatedList>
             )}
           </CardContent>
         </Card>

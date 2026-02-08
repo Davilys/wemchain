@@ -14,10 +14,11 @@ import {
   Activity,
   Award,
   LucideIcon,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
-import { Permission, hasAnyPermission } from "@/lib/adminPermissions";
+import { Permission } from "@/lib/adminPermissions";
 import { RoleBadge } from "./RoleBadge";
 import webmarcasLogo from "@/assets/webmarcas-logo.png";
 import {
@@ -31,6 +32,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
@@ -42,19 +44,6 @@ interface MenuItem {
   color: string;
   bgColor: string;
 }
-
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Users,
-  Coins,
-  FileCheck,
-  CreditCard,
-  CalendarSync,
-  ScrollText,
-  Settings,
-  Activity,
-  Award,
-};
 
 const mainMenuItems: MenuItem[] = [
   {
@@ -82,7 +71,7 @@ const mainMenuItems: MenuItem[] = [
     bgColor: "bg-yellow-400/10",
   },
   {
-    title: "Registros Blockchain",
+    title: "Registros",
     url: "/admin/registros",
     icon: FileCheck,
     permissions: ["registros.view"],
@@ -128,7 +117,7 @@ const systemMenuItems: MenuItem[] = [
     bgColor: "bg-emerald-400/10",
   },
   {
-    title: "Logs e Auditoria",
+    title: "Logs",
     url: "/admin/logs",
     icon: ScrollText,
     permissions: ["logs.view"],
@@ -136,7 +125,7 @@ const systemMenuItems: MenuItem[] = [
     bgColor: "bg-pink-400/10",
   },
   {
-    title: "Configurações",
+    title: "Config",
     url: "/admin/configuracoes",
     icon: Settings,
     permissions: ["config.view"],
@@ -148,7 +137,9 @@ const systemMenuItems: MenuItem[] = [
 export function AdminSidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
-  const { role, can, canAny } = useAdminPermissions();
+  const { role, canAny } = useAdminPermissions();
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
     if (path === "/admin/dashboard") {
@@ -157,12 +148,18 @@ export function AdminSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  // Filtrar itens baseado nas permissões do usuário
+  // Filter items based on user permissions
   const filterMenuItems = (items: MenuItem[]) => {
     return items.filter(item => {
       if (item.permissions.length === 0) return true;
       return canAny(item.permissions);
     });
+  };
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   const renderMenuItems = (items: MenuItem[]) => {
@@ -172,27 +169,39 @@ export function AdminSidebar() {
 
     return (
       <SidebarMenu>
-        {filteredItems.map((item) => (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive(item.url)}
-              className={cn(
-                "w-full justify-start gap-3 px-3 py-2.5 rounded-lg transition-all",
-                isActive(item.url)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-              )}
-            >
-              <Link to={item.url}>
-                <div className={cn("p-1.5 rounded-md", item.bgColor)}>
-                  <item.icon className={cn("h-4 w-4", item.color)} />
-                </div>
-                <span className="font-medium">{item.title}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+        {filteredItems.map((item) => {
+          const active = isActive(item.url);
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={active}
+                className={cn(
+                  "w-full justify-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                  active
+                    ? "bg-primary/10 border border-primary/20 text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border border-transparent"
+                )}
+              >
+                <Link to={item.url} onClick={handleLinkClick}>
+                  <div className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    active ? item.bgColor : "bg-muted"
+                  )}>
+                    <item.icon className={cn(
+                      "h-4 w-4",
+                      active ? item.color : "text-muted-foreground"
+                    )} />
+                  </div>
+                  <span className="font-medium text-sm">{item.title}</span>
+                  {active && (
+                    <ChevronRight className="h-3.5 w-3.5 ml-auto text-primary" />
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
       </SidebarMenu>
     );
   };
@@ -201,37 +210,48 @@ export function AdminSidebar() {
   const filteredSystemItems = filterMenuItems(systemMenuItems);
 
   return (
-    <Sidebar className="w-64 border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <Link to="/admin/dashboard" className="flex items-center gap-3">
-          <div className="relative">
-            <img 
-              src={webmarcasLogo} 
-              alt="WebMarcas" 
-              className="h-10 w-10 object-contain"
-            />
-            <ShieldCheck className="absolute -bottom-1 -right-1 h-4 w-4 text-primary bg-background rounded-full" />
+    <Sidebar 
+      className="w-64 border-r border-sidebar-border bg-sidebar"
+      collapsible="icon"
+    >
+      <SidebarHeader className="p-4 border-b border-sidebar-border/50">
+        <Link 
+          to="/admin/dashboard" 
+          className="flex items-center gap-3"
+          onClick={handleLinkClick}
+        >
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
+              <img 
+                src={webmarcasLogo} 
+                alt="WebMarcas" 
+                className="h-7 w-7 object-contain"
+              />
+            </div>
+            <ShieldCheck className="absolute -bottom-1 -right-1 h-4 w-4 text-primary bg-background rounded-full border border-primary/20" />
           </div>
-          <div>
-            <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
-              <span>Web</span>
-              <span className="text-primary">Marcas</span>
-            </span>
-            <p className="text-xs text-primary font-semibold">
-              Painel Admin
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div>
+              <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
+                <span>Web</span>
+                <span className="text-primary">Marcas</span>
+              </span>
+              <p className="text-xs text-primary font-semibold">
+                Painel Admin
+              </p>
+            </div>
+          )}
         </Link>
-        {role && (
+        {!isCollapsed && role && (
           <div className="mt-3">
             <RoleBadge role={role} size="sm" />
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 overflow-y-auto">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider px-3 mb-2 font-semibold">
             Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -241,7 +261,7 @@ export function AdminSidebar() {
 
         {filteredFinanceItems.length > 0 && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
+            <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider px-3 mb-2 font-semibold">
               Financeiro
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -252,7 +272,7 @@ export function AdminSidebar() {
 
         {filteredSystemItems.length > 0 && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider px-3 mb-2">
+            <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider px-3 mb-2 font-semibold">
               Sistema
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -262,23 +282,26 @@ export function AdminSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-2">
-        <Link to="/dashboard">
+      <SidebarFooter className="p-3 border-t border-sidebar-border/50 space-y-2">
+        <Link to="/dashboard" onClick={handleLinkClick}>
           <Button
             variant="outline"
-            className="w-full justify-start gap-3"
+            className="w-full justify-start gap-3 h-10 rounded-xl text-sm"
           >
             <LayoutDashboard className="h-4 w-4" />
-            <span>Voltar ao Dashboard</span>
+            {!isCollapsed && <span>Voltar ao Dashboard</span>}
           </Button>
         </Link>
         <Button
           variant="ghost"
-          onClick={signOut}
-          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={() => {
+            handleLinkClick();
+            signOut();
+          }}
+          className="w-full justify-start gap-3 h-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 text-sm"
         >
           <LogOut className="h-4 w-4" />
-          <span>Sair</span>
+          {!isCollapsed && <span>Sair</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

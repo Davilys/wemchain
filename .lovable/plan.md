@@ -1,171 +1,165 @@
 
 
-# Plano: Adicionar Animações de Transição com Framer Motion
+# Plano: Criar Seção FAQ Animada com Accordion
 
 ## Objetivo
 
-Implementar animações de transição suaves nas páginas usando `framer-motion` para melhorar significativamente a experiência do usuário em toda a plataforma.
+Substituir a seção "Perguntas Frequentes" atual por uma seção "FAQ" completa e animada, com 10 perguntas principais sobre registro em blockchain, incluindo uma pergunta específica sobre a diferença entre INPI e blockchain.
 
 ## Análise Atual
 
-- O projeto já usa algumas animações CSS via Tailwind (fade-up, scale-in, etc.)
-- Não possui `framer-motion` instalado
-- As mudanças de página são instantâneas sem transições
-- Os layouts (DashboardLayout, AdminLayout) são pontos ideais para implementar as animações
+- A seção FAQ atual na Home.tsx (linhas 315-356) tem apenas 3 perguntas simples
+- Usa Cards estáticos sem interatividade
+- O projeto já possui o componente Accordion do Radix UI com animações CSS
+- O AnimatedList.tsx pode ser usado para entrada staggered dos items
+- Framer-motion está instalado para micro-interações
 
-## Arquitetura da Solução
+## Nova Arquitetura
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                        App.tsx                                  │
+│                     Seção FAQ Animada                           │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │              AnimatePresence (wrapper)                    │  │
+│  │  Header com Badge "FAQ" + Título animado                  │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  AnimatedList (stagger entry)                             │  │
 │  │  ┌─────────────────────────────────────────────────────┐  │  │
-│  │  │                 Routes                              │  │  │
-│  │  │   ┌─────────────────┐  ┌─────────────────┐          │  │  │
-│  │  │   │  PageTransition │  │  PageTransition │          │  │  │
-│  │  │   │   (wrapper)     │  │   (wrapper)     │          │  │  │
-│  │  │   │  ┌───────────┐  │  │  ┌───────────┐  │          │  │  │
-│  │  │   │  │  Content  │  │  │  │  Content  │  │          │  │  │
-│  │  │   │  └───────────┘  │  │  └───────────┘  │          │  │  │
-│  │  │   └─────────────────┘  └─────────────────┘          │  │  │
+│  │  │ AccordionItem 1 - Ícone + Pergunta + Resposta       │  │  │
+│  │  └─────────────────────────────────────────────────────┘  │  │
+│  │  ┌─────────────────────────────────────────────────────┐  │  │
+│  │  │ AccordionItem 2 - Ícone + Pergunta + Resposta       │  │  │
+│  │  └─────────────────────────────────────────────────────┘  │  │
+│  │  ...                                                      │  │
+│  │  ┌─────────────────────────────────────────────────────┐  │  │
+│  │  │ AccordionItem 10 - INPI vs Blockchain (destaque)    │  │  │
 │  │  └─────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Componentes a Criar/Modificar
+## As 10 Perguntas do FAQ
 
-### 1. Novo Componente: PageTransition.tsx
+| # | Pergunta | Categoria |
+|---|----------|-----------|
+| 1 | O que é registro em blockchain? | Conceito |
+| 2 | Como funciona a prova de anterioridade? | Funcionamento |
+| 3 | Meu registro é permanente e imutável? | Segurança |
+| 4 | Quais tipos de arquivos posso registrar? | Uso |
+| 5 | O registro tem validade jurídica? | Legal |
+| 6 | Como posso verificar meu registro? | Verificação |
+| 7 | O que é um hash criptográfico? | Técnico |
+| 8 | Quanto tempo leva para confirmar o registro? | Processo |
+| 9 | Posso registrar marcas e logos? | Uso |
+| 10 | Qual a diferença entre registro no INPI e blockchain? | **DESTAQUE** |
 
-Wrapper reutilizável que aplica animações de entrada/saída:
+## Componente a Criar
 
-```typescript
-// Variantes de animação disponíveis:
-- fadeUp: Fade + slide de baixo para cima (padrão)
-- fadeIn: Apenas fade
-- slideRight: Slide da esquerda
-- scale: Scale + fade
-- stagger: Container com elementos animados em sequência
-```
+### FAQSection.tsx
 
-### 2. Novo Componente: AnimatedList.tsx
+Novo componente dedicado para a seção FAQ com:
 
-Para listas de cards/items com animação stagger:
+- Accordion animado do Radix UI
+- Entrada staggered com AnimatedList
+- Ícones coloridos por categoria
+- Item destacado (INPI vs Blockchain) com borda especial
+- Animação suave de abertura/fechamento
+- Design premium consistente com o resto do site
 
-```typescript
-// Cards aparecem um após o outro com delay
-- Cada item tem delay incremental (0.05s)
-- Animação de entrada suave
-- Perfeito para dashboards e listas
-```
-
-### 3. Modificações nos Layouts
-
-**DashboardLayout.tsx:**
-- Envolver `{children}` com `<PageTransition>`
-- Animação fadeUp por padrão
-
-**AdminLayout.tsx:**
-- Mesmo tratamento que o dashboard
-- Consistência visual em toda plataforma
-
-**App.tsx:**
-- Adicionar `AnimatePresence` no nível de rotas
-- Permitir animações de saída
-
-## Detalhes de Implementação
-
-### Instalação
-```bash
-npm install framer-motion
-```
-
-### Variantes de Animação
+### Estrutura do Componente
 
 ```typescript
-const pageVariants = {
-  fadeUp: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 }
+// Dados estruturados das FAQs
+const faqData = [
+  {
+    id: "blockchain-registro",
+    icon: Shield,
+    iconColor: "text-blue-500",
+    iconBg: "bg-blue-500/10",
+    question: "O que é registro em blockchain?",
+    answer: "É uma forma de criar uma prova digital imutável..."
   },
-  fadeIn: {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 }
-  },
-  slideRight: {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 20 }
-  },
-  scale: {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.98 }
+  // ... mais 9 perguntas
+  {
+    id: "inpi-vs-blockchain",
+    icon: Scale, // Ícone de balança
+    iconColor: "text-primary",
+    iconBg: "bg-primary/10",
+    question: "Qual a diferença entre registro no INPI e blockchain?",
+    answer: "Explicação detalhada...",
+    highlighted: true // Destaque visual
   }
-};
+];
 ```
 
-### Uso Simplificado
+## Animações Implementadas
 
-```tsx
-// Nas páginas, basta usar o layout - animação automática
-export default function Dashboard() {
-  return (
-    <DashboardLayout>
-      {/* Conteúdo será animado automaticamente */}
-    </DashboardLayout>
-  );
-}
-
-// Para listas com stagger
-<AnimatedList>
-  {items.map(item => <Card key={item.id}>{item.name}</Card>)}
-</AnimatedList>
-```
-
-## Páginas Beneficiadas
-
-### Área do Usuário
-| Página | Animação | Elementos Animados |
-|--------|----------|-------------------|
-| Dashboard | fadeUp + stagger | Cards de métricas, lista de registros |
-| MeusRegistros | fadeUp + stagger | Header, filtros, lista de cards |
-| NovoRegistro | fadeUp | Steps do formulário |
-| Certificado | scale | Card do certificado |
-| Checkout | fadeUp | Cards de preços |
-
-### Área Admin
-| Página | Animação | Elementos Animados |
-|--------|----------|-------------------|
-| AdminDashboard | fadeUp + stagger | Cards de métricas |
-| AdminUsuarios | fadeUp + stagger | Tabela de usuários |
-| AdminRegistros | fadeUp + stagger | Lista de registros |
-| Todas as demais | fadeUp | Conteúdo principal |
+1. **Entrada Staggered**: Cada item do accordion aparece com delay progressivo
+2. **Accordion Expand/Collapse**: Animação suave de altura com Radix
+3. **Hover States**: Elevação e borda destacada ao passar o mouse
+4. **Ícone Rotação**: Chevron rotaciona 180 graus ao abrir
+5. **Fade do Conteúdo**: Resposta aparece com fade suave
 
 ## Arquivos a Modificar
 
-1. **package.json** - Adicionar dependência `framer-motion`
-2. **src/components/ui/PageTransition.tsx** - NOVO: Componente de transição
-3. **src/components/ui/AnimatedList.tsx** - NOVO: Lista animada
-4. **src/components/layout/DashboardLayout.tsx** - Integrar PageTransition
-5. **src/components/admin/AdminLayout.tsx** - Integrar PageTransition
-6. **src/App.tsx** - Adicionar AnimatePresence
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/components/home/FAQSection.tsx` | CRIAR | Novo componente FAQ animado |
+| `src/pages/Home.tsx` | MODIFICAR | Substituir seção FAQ antiga pelo novo componente |
 
-## Benefícios
+## Design Visual
 
-1. **UX Premium**: Transições suaves criam sensação de app nativo
-2. **Feedback Visual**: Usuário percebe mudanças de estado
-3. **Consistência**: Mesmo padrão em toda plataforma
-4. **Performance**: Framer Motion usa GPU para animações
-5. **Manutenibilidade**: Componentes reutilizáveis e configuráveis
+- Accordion com bordas arredondadas e fundo card-premium
+- Ícones coloridos à esquerda de cada pergunta
+- Chevron animado à direita
+- Item INPI vs Blockchain com borda primary/gradiente
+- Responsivo: funciona bem em mobile e desktop
+- Suporte a tema claro/escuro
 
-## Considerações Técnicas
+## Respostas Detalhadas (Conteúdo)
 
-- **Reduced Motion**: Respeitar `prefers-reduced-motion` do sistema
-- **Performance**: Animações curtas (200-400ms) para não atrasar UX
-- **Mobile**: Animações mais sutis em dispositivos móveis
-- **Bundle Size**: Framer Motion adiciona ~30KB gzipped
+### 1. O que é registro em blockchain?
+Blockchain é uma tecnologia de registro distribuído que cria um histórico imutável e transparente. Ao registrar seu arquivo, geramos um hash criptográfico único que é gravado permanentemente na rede, comprovando que você possuía aquele conteúdo em determinada data.
+
+### 2. Como funciona a prova de anterioridade?
+Quando você faz um registro, capturamos a data e hora exata (timestamp) e o hash do seu arquivo. Essa informação é gravada na blockchain, criando uma prova irrefutável de que aquele conteúdo existia naquele momento, antes de qualquer outro registro posterior.
+
+### 3. Meu registro é permanente e imutável?
+Sim. Uma vez confirmado na blockchain, o registro não pode ser alterado, excluído ou falsificado. A tecnologia garante que a prova permanecerá íntegra e verificável por tempo indeterminado.
+
+### 4. Quais tipos de arquivos posso registrar?
+Você pode registrar imagens (logos, artes), documentos (contratos, PDFs), código-fonte, vídeos, músicas, planilhas e qualquer arquivo digital. O sistema aceita diversos formatos e tamanhos.
+
+### 5. O registro tem validade jurídica?
+O registro em blockchain constitui prova técnica de anterioridade reconhecida em processos judiciais. É um documento complementar que pode ser utilizado como evidência em disputas de autoria e propriedade intelectual.
+
+### 6. Como posso verificar meu registro?
+Cada registro gera um certificado com QR Code e link de verificação pública. Qualquer pessoa pode acessar e confirmar a autenticidade do registro de forma independente, sem precisar de login.
+
+### 7. O que é um hash criptográfico?
+É uma "impressão digital" única do seu arquivo, gerada por algoritmos matemáticos (SHA-256). Qualquer alteração mínima no arquivo gera um hash completamente diferente, garantindo a integridade do conteúdo original.
+
+### 8. Quanto tempo leva para confirmar o registro?
+O registro é processado em poucos minutos. Após a confirmação na blockchain, você recebe o certificado digital em PDF por email e pode acessá-lo pelo painel a qualquer momento.
+
+### 9. Posso registrar marcas e logos?
+Sim, você pode registrar a imagem da sua marca ou logo como prova de anterioridade. Porém, para proteção legal completa de marca, recomendamos também o registro formal junto ao INPI.
+
+### 10. Qual a diferença entre registro no INPI e blockchain? (DESTAQUE)
+**INPI (Instituto Nacional da Propriedade Industrial):**
+- Registro oficial de marcas no Brasil
+- Processo burocrático (12-24 meses)
+- Confere direito exclusivo de uso
+- Custo mais elevado
+- Necessário para proteção jurídica completa
+
+**Blockchain (WebMarcas):**
+- Prova técnica de anterioridade
+- Registro instantâneo (minutos)
+- Comprova existência em data específica
+- Custo acessível (R$49)
+- Complementa o registro no INPI
+
+**Recomendação:** Utilize ambos. O registro em blockchain garante prova imediata enquanto aguarda o processo do INPI, formando uma proteção completa para sua propriedade intelectual.
 

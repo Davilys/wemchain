@@ -7,6 +7,7 @@ import { RotatingText } from "@/components/home/RotatingText";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
 import { PricingBlock } from "@/components/home/PricingBlock";
+import { FAQSection } from "@/components/home/FAQSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackInitiateCheckout } from "@/lib/metaPixel";
 import {
@@ -312,48 +313,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ Curto */}
-      <section className="section-padding bg-background relative">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-                <HelpCircle className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Dúvidas Frequentes</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                Perguntas <span className="text-primary">Frequentes</span>
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              {[
-                {
-                  q: "O que é um crédito?",
-                  a: "Cada crédito corresponde a um registro de propriedade em blockchain."
-                },
-                {
-                  q: "Os créditos acumulam?",
-                  a: "Não. Os créditos do plano são renovados mensalmente."
-                },
-                {
-                  q: "Posso comprar registros adicionais?",
-                  a: "Sim. Cada registro adicional custa R$ 39,00."
-                }
-              ].map((faq, index) => (
-                <Card key={index} className="card-premium">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{faq.q}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{faq.a}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* CTA Final */}
       <section className="section-padding bg-gradient-hero relative overflow-hidden">

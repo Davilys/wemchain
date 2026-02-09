@@ -193,25 +193,28 @@ const itemVariants = {
 
 export function FAQSection() {
   return (
-    <section className="section-padding bg-background relative">
-      <div className="container mx-auto px-4">
+    <section className="section-padding bg-background relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" />
+      
+      <div className="container mx-auto px-4 relative">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-14"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <HelpCircle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">FAQ</span>
+              <span className="text-sm font-semibold text-primary tracking-wide">FAQ</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
               Perguntas <span className="text-primary">Frequentes</span>
             </h2>
-            <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+            <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
               Tire suas dúvidas sobre registro em blockchain e proteção de
               propriedade intelectual
             </p>
@@ -230,31 +233,32 @@ export function FAQSection() {
                   <AccordionItem
                     value={faq.id}
                     className={cn(
-                      "border rounded-xl px-4 md:px-6 bg-card transition-all duration-300",
-                      "hover:shadow-md hover:border-primary/30",
-                      "data-[state=open]:shadow-lg data-[state=open]:border-primary/40",
+                      "border rounded-2xl px-4 md:px-6 bg-card transition-all duration-300",
+                      "hover:border-primary/30",
+                      "data-[state=open]:border-primary/40",
                       faq.highlighted &&
-                        "border-primary/50 bg-gradient-to-r from-primary/5 to-transparent ring-1 ring-primary/20"
+                        "border-primary/40 bg-gradient-to-r from-primary/5 to-transparent ring-1 ring-primary/15"
                     )}
+                    style={{ boxShadow: '0 2px 8px -2px rgb(0 0 0 / 0.05)' }}
                   >
                     <AccordionTrigger className="hover:no-underline py-5 gap-4">
                       <div className="flex items-center gap-4 text-left">
                         <div
                           className={cn(
-                            "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300",
+                            "relative w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105",
                             faq.iconBg
                           )}
                         >
                           <faq.icon
                             className={cn(
-                              "h-5 w-5 md:h-6 md:w-6",
+                              "h-5 w-5 md:h-6 md:w-6 relative z-10",
                               faq.iconColor
                             )}
                           />
                         </div>
                         <span
                           className={cn(
-                            "font-semibold text-sm md:text-base text-foreground",
+                            "font-semibold text-sm md:text-base text-foreground transition-colors",
                             faq.highlighted && "text-primary"
                           )}
                         >

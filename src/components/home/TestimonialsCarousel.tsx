@@ -171,30 +171,34 @@ const testimonials = [
 
 function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] }) {
   return (
-    <div className="flex-shrink-0 w-full p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 select-none cursor-grab active:cursor-grabbing h-full">
+    <div className="flex-shrink-0 w-full p-5 rounded-2xl bg-card border border-border/40 transition-all duration-300 select-none cursor-grab active:cursor-grabbing h-full group hover:border-primary/30"
+         style={{ boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
       {/* Stars and Quote */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-0.5">
           {[...Array(5)].map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+            <Star key={i} className="h-4 w-4 fill-primary text-primary drop-shadow-sm" />
           ))}
         </div>
-        <Quote className="h-6 w-6 text-primary/30" />
+        <Quote className="h-6 w-6 text-primary/20 group-hover:text-primary/40 transition-colors" />
       </div>
 
       {/* Testimonial Text */}
-      <p className="text-foreground/90 text-sm leading-relaxed mb-4 min-h-[60px]">
+      <p className="text-foreground/85 text-sm leading-relaxed mb-4 min-h-[60px]">
         "{testimonial.text}"
       </p>
 
       {/* Author */}
       <div className="flex items-center gap-3">
-        <img 
-          src={testimonial.photo} 
-          alt={testimonial.name}
-          className="w-10 h-10 rounded-full object-cover border-2 border-border"
-          draggable={false}
-        />
+        <div className="relative">
+          <img 
+            src={testimonial.photo} 
+            alt={testimonial.name}
+            className="w-11 h-11 rounded-full object-cover border-2 border-border group-hover:border-primary/30 transition-colors"
+            draggable={false}
+          />
+          <div className="absolute inset-0 rounded-full ring-2 ring-primary/0 group-hover:ring-primary/20 transition-all" />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground text-sm truncate">{testimonial.name}</span>
@@ -272,19 +276,22 @@ export function TestimonialsCarousel() {
   };
 
   return (
-    <section className="py-20 md:py-28 bg-background relative overflow-hidden">
-      <div className="container mx-auto px-4 mb-10">
+    <section className="py-20 md:py-32 bg-background relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" />
+      
+      <div className="container mx-auto px-4 mb-12 relative">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-up">
             <Star className="h-4 w-4 text-primary fill-primary" />
-            <span className="text-sm font-semibold text-primary">
+            <span className="text-sm font-semibold text-primary tracking-wide">
               {language === "en" ? "Testimonials" : language === "es" ? "Testimonios" : "Depoimentos"}
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 animate-fade-up delay-100">
             {getTitle()}
           </h2>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <p className="text-muted-foreground text-sm md:text-base animate-fade-up delay-200">
             {getSubtitle()}
           </p>
         </div>

@@ -96,10 +96,13 @@ export function BenefitsSection() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-card relative border-y border-border/30">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+    <section className="py-16 md:py-28 bg-card relative border-y border-border/20 overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50" />
+      
+      <div className="container mx-auto px-4 relative">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight animate-fade-up">
             {getSectionTitle()}
           </h2>
         </div>
@@ -108,15 +111,18 @@ export function BenefitsSection() {
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="flex flex-col items-center text-center p-5 md:p-6 rounded-2xl bg-background border border-border/50 hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 group"
+              className="flex flex-col items-center text-center p-5 md:p-6 rounded-2xl bg-background border border-border/50 hover:border-primary/40 transition-all duration-300 group animate-fade-up"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl ${benefit.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <benefit.icon className={`h-7 w-7 md:h-8 md:w-8 ${benefit.color}`} />
+              {/* Icon with glow effect */}
+              <div className={`relative w-14 h-14 md:w-16 md:h-16 rounded-xl ${benefit.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300`}>
+                <div className={`absolute inset-0 rounded-xl ${benefit.bg} blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300`} />
+                <benefit.icon className={`h-7 w-7 md:h-8 md:w-8 ${benefit.color} relative z-10`} />
               </div>
-              <h3 className="font-bold text-foreground text-sm md:text-base mb-2">
+              <h3 className="font-bold text-foreground text-sm md:text-base mb-2 group-hover:text-primary transition-colors">
                 {getTitle(benefit)}
               </h3>
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                 {getDesc(benefit)}
               </p>
             </div>

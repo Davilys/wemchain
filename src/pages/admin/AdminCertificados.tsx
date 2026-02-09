@@ -19,9 +19,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Download, RefreshCw, Eye, Loader2, FileText, Award } from "lucide-react";
+import { Search, Download, RefreshCw, Eye, Loader2, FileText, Award, ChevronDown, ChevronRight, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -47,6 +52,12 @@ interface Certificate {
   };
 }
 
+interface UserGroup {
+  userId: string;
+  userName: string;
+  certificates: Certificate[];
+}
+
 export default function AdminCertificados() {
   const { user } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -54,14 +65,18 @@ export default function AdminCertificados() {
   const [searchTerm, setSearchTerm] = useState("");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [reissuingId, setReissuingId] = useState<string | null>(null);
-  
-  // Detail dialog
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchCertificates();
   }, []);
+
+  useEffect(() => {
+    const groups = getGroupedCertificates();
+    setOpenGroups(new Set(groups.map(g => g.userId)));
+  }, [certificates]);
 
   async function fetchCertificates() {
     try {
@@ -73,7 +88,6 @@ export default function AdminCertificados() {
 
       if (error) throw error;
 
-      // Fetch profiles and registros
       const userIds = [...new Set(certsData?.map(c => c.user_id) || [])];
       const registroIds = certsData?.map(c => c.registro_id) || [];
 
@@ -104,18 +118,11 @@ export default function AdminCertificados() {
     setDownloadingId(cert.id);
     try {
       await downloadCertificate(cert.registro_id);
-      
-      // Log admin action
       await supabase.from("audit_logs").insert({
         user_id: user?.id,
         action_type: "admin_certificate_downloaded",
-        metadata: {
-          certificate_id: cert.id,
-          registro_id: cert.registro_id,
-          admin_action: true,
-        },
+        metadata: { certificate_id: cert.id, registro_id: cert.registro_id, admin_action: true },
       });
-
       toast.success("Certificado baixado com sucesso");
     } catch (error: any) {
       console.error("Download error:", error);
@@ -129,7 +136,6 @@ export default function AdminCertificados() {
     setReissuingId(cert.id);
     try {
       const { data: session } = await supabase.auth.getSession();
-      
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`,
         {
@@ -138,39 +144,19 @@ export default function AdminCertificados() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.session?.access_token}`,
           },
-          body: JSON.stringify({ 
-            registroId: cert.registro_id,
-            forceRegenerate: true,
-          }),
+          body: JSON.stringify({ registroId: cert.registro_id, forceRegenerate: true }),
         }
       );
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "Erro ao reemitir certificado");
       }
-
-      // Update reissued_count
-      await supabase
-        .from("certificates")
-        .update({ 
-          reissued_count: cert.reissued_count + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", cert.id);
-
-      // Log admin action
+      await supabase.from("certificates").update({ reissued_count: cert.reissued_count + 1, updated_at: new Date().toISOString() }).eq("id", cert.id);
       await supabase.from("audit_logs").insert({
         user_id: user?.id,
         action_type: "admin_certificate_reissued",
-        metadata: {
-          certificate_id: cert.id,
-          registro_id: cert.registro_id,
-          previous_reissue_count: cert.reissued_count,
-          admin_action: true,
-        },
+        metadata: { certificate_id: cert.id, registro_id: cert.registro_id, previous_reissue_count: cert.reissued_count, admin_action: true },
       });
-
       toast.success("Certificado reemitido com sucesso");
       fetchCertificates();
     } catch (error: any) {
@@ -179,6 +165,15 @@ export default function AdminCertificados() {
     } finally {
       setReissuingId(null);
     }
+  }
+
+  function toggleGroup(userId: string) {
+    setOpenGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
   }
 
   const filteredCertificates = certificates.filter((c) => {
@@ -191,8 +186,24 @@ export default function AdminCertificados() {
     );
   });
 
+  function getGroupedCertificates(): UserGroup[] {
+    const groupMap = new Map<string, UserGroup>();
+    filteredCertificates.forEach(c => {
+      if (!groupMap.has(c.user_id)) {
+        groupMap.set(c.user_id, {
+          userId: c.user_id,
+          userName: c.profile?.full_name || "Usuário sem nome",
+          certificates: [],
+        });
+      }
+      groupMap.get(c.user_id)!.certificates.push(c);
+    });
+    return Array.from(groupMap.values()).sort((a, b) => a.userName.localeCompare(b.userName));
+  }
+
   const totalCerts = certificates.length;
   const reissuedCerts = certificates.filter(c => c.reissued_count > 0).length;
+  const userGroups = getGroupedCertificates();
 
   return (
     <AdminLayout>
@@ -200,7 +211,7 @@ export default function AdminCertificados() {
         <div>
           <h1 className="text-3xl font-bold font-display">Certificados</h1>
           <p className="text-muted-foreground font-body">
-            Visualize e gerencie todos os certificados emitidos
+            Visualize e gerencie todos os certificados emitidos — organizados por usuário
           </p>
         </div>
 
@@ -243,7 +254,7 @@ export default function AdminCertificados() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -253,7 +264,9 @@ export default function AdminCertificados() {
                   className="pl-9"
                 />
               </div>
-              <Badge variant="outline">{filteredCertificates.length} certificados</Badge>
+              <Badge variant="outline">
+                {filteredCertificates.length} certificados · {userGroups.length} usuários
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -261,88 +274,89 @@ export default function AdminCertificados() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
+            ) : userGroups.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Award className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p>Nenhum certificado encontrado</p>
+              </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Ativo</TableHead>
-                      <TableHead>Arquivo</TableHead>
-                      <TableHead>Emitido</TableHead>
-                      <TableHead className="text-center">Reemissões</TableHead>
-                      <TableHead>Último Download</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCertificates.map((cert) => (
-                      <TableRow key={cert.id}>
-                        <TableCell className="font-medium">
-                          {cert.profile?.full_name || "—"}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {cert.registro?.nome_ativo || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">
-                          {cert.file_name}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {format(new Date(cert.issued_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={cert.reissued_count > 0 ? "secondary" : "outline"}>
-                            {cert.reissued_count}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {cert.last_downloaded_at 
-                            ? format(new Date(cert.last_downloaded_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                            : "—"
-                          }
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedCert(cert);
-                                setDetailDialogOpen(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownload(cert)}
-                              disabled={downloadingId === cert.id}
-                            >
-                              {downloadingId === cert.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Download className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleReissue(cert)}
-                              disabled={reissuingId === cert.id}
-                            >
-                              {reissuingId === cert.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <RefreshCw className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="space-y-3">
+                {userGroups.map((group) => (
+                  <Collapsible
+                    key={group.userId}
+                    open={openGroups.has(group.userId)}
+                    onOpenChange={() => toggleGroup(group.userId)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left">
+                        {openGroups.has(group.userId) ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                        )}
+                        <User className="h-4 w-4 text-primary shrink-0" />
+                        <span className="font-semibold text-sm flex-1 truncate">{group.userName}</span>
+                        <Badge variant="secondary" className="shrink-0">
+                          {group.certificates.length} {group.certificates.length === 1 ? "certificado" : "certificados"}
+                        </Badge>
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="overflow-x-auto mt-1 border rounded-lg">
+                        <Table className="min-w-[650px]">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Ativo</TableHead>
+                              <TableHead>Arquivo</TableHead>
+                              <TableHead>Emitido</TableHead>
+                              <TableHead className="text-center">Reemissões</TableHead>
+                              <TableHead>Último Download</TableHead>
+                              <TableHead className="text-right">Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.certificates.map((cert) => (
+                              <TableRow key={cert.id}>
+                                <TableCell className="font-medium max-w-[200px] truncate">
+                                  {cert.registro?.nome_ativo || "—"}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">
+                                  {cert.file_name}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {format(new Date(cert.issued_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant={cert.reissued_count > 0 ? "secondary" : "outline"}>
+                                    {cert.reissued_count}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {cert.last_downloaded_at
+                                    ? format(new Date(cert.last_downloaded_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                                    : "—"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => { setSelectedCert(cert); setDetailDialogOpen(true); }}>
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id}>
+                                      {downloadingId === cert.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => handleReissue(cert)} disabled={reissuingId === cert.id}>
+                                      {reissuingId === cert.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
               </div>
             )}
           </CardContent>
@@ -385,9 +399,7 @@ export default function AdminCertificados() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Hash SHA-256</p>
                     <div className="p-3 bg-muted rounded-lg">
-                      <code className="text-xs break-all">
-                        {selectedCert.registro.hash_sha256}
-                      </code>
+                      <code className="text-xs break-all">{selectedCert.registro.hash_sha256}</code>
                     </div>
                   </div>
                 )}
@@ -395,9 +407,7 @@ export default function AdminCertificados() {
                 <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Emitido em</p>
-                    <p className="font-medium">
-                      {format(new Date(selectedCert.issued_at), "dd/MM/yyyy", { locale: ptBR })}
-                    </p>
+                    <p className="font-medium">{format(new Date(selectedCert.issued_at), "dd/MM/yyyy", { locale: ptBR })}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Reemissões</p>
@@ -406,10 +416,9 @@ export default function AdminCertificados() {
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Último Download</p>
                     <p className="font-medium">
-                      {selectedCert.last_downloaded_at 
+                      {selectedCert.last_downloaded_at
                         ? format(new Date(selectedCert.last_downloaded_at), "dd/MM/yyyy", { locale: ptBR })
-                        : "Nunca"
-                      }
+                        : "Nunca"}
                     </p>
                   </div>
                 </div>
@@ -417,16 +426,10 @@ export default function AdminCertificados() {
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
-                Fechar
-              </Button>
+              <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>Fechar</Button>
               {selectedCert && (
                 <Button onClick={() => handleDownload(selectedCert)} disabled={downloadingId === selectedCert.id}>
-                  {downloadingId === selectedCert.id ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
+                  {downloadingId === selectedCert.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                   Baixar Certificado
                 </Button>
               )}

@@ -75,10 +75,10 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="left" 
-        className="w-[85vw] max-w-[320px] p-0 bg-card border-r border-border/50"
+        className="w-[85vw] max-w-[320px] p-0 bg-card border-r border-border/50 flex flex-col"
       >
         {/* Header */}
-        <SheetHeader className="p-4 border-b border-border/50 bg-muted/30">
+        <SheetHeader className="p-4 border-b border-border/50 bg-muted/30 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
               <img 
@@ -98,8 +98,8 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           </div>
         </SheetHeader>
 
-        {/* Content */}
-        <div className="flex flex-col h-[calc(100vh-80px)] overflow-y-auto">
+        {/* Content - Scrollable area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* User Credits Card (if logged in) */}
           {user && (
             <div className="p-4 border-b border-border/50">
@@ -125,7 +125,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           )}
 
           {/* Navigation Links */}
-          <nav className="flex-1 p-4">
+          <nav className="p-4">
             {/* Public links or Dashboard links based on context */}
             <div className="space-y-1">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
@@ -178,55 +178,55 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
               </div>
             )}
           </nav>
+        </div>
 
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-border/50 bg-muted/30 mt-auto space-y-2">
-            {loading ? (
-              <div className="h-12 bg-muted animate-pulse rounded-xl" />
-            ) : user ? (
-              <>
-                <Button 
-                  asChild 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-semibold"
-                >
-                  <Link to="/checkout" onClick={handleLinkClick}>
-                    <Coins className="h-4 w-4 mr-2" />
-                    {t("nav.myCredits")}
-                  </Link>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={handleSignOut}
-                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-11"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t("nav.logout")}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  asChild 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-semibold"
-                >
-                  <Link to="/verificar-registro" onClick={handleLinkClick}>
-                    <Shield className="h-4 w-4 mr-2" />
-                    {t("nav.verify")}
-                  </Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  asChild 
-                  className="w-full rounded-xl h-11 border-border/50"
-                >
-                  <Link to="/login" onClick={handleLinkClick}>
-                    <User className="h-4 w-4 mr-2" />
-                    {t("nav.login")}
-                  </Link>
-                </Button>
-              </>
-            )}
-          </div>
+        {/* Bottom Actions - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-border/50 bg-muted/30 space-y-2 pb-safe">
+          {loading ? (
+            <div className="h-12 bg-muted animate-pulse rounded-xl" />
+          ) : user ? (
+            <>
+              <Button 
+                asChild 
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-semibold"
+              >
+                <Link to="/checkout" onClick={handleLinkClick}>
+                  <Coins className="h-4 w-4 mr-2" />
+                  {t("nav.myCredits")}
+                </Link>
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-11"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {t("nav.logout")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                asChild 
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-semibold"
+              >
+                <Link to="/verificar-registro" onClick={handleLinkClick}>
+                  <Shield className="h-4 w-4 mr-2" />
+                  {t("nav.verify")}
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                asChild 
+                className="w-full rounded-xl h-11 border-border/50"
+              >
+                <Link to="/login" onClick={handleLinkClick}>
+                  <User className="h-4 w-4 mr-2" />
+                  {t("nav.login")}
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

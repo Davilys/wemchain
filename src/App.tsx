@@ -3,11 +3,11 @@ import AdminHomologacao from "./pages/admin/AdminHomologacao";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
-import { AnimatePresence } from "framer-motion";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import Home from "./pages/Home";
 import ComoFunciona from "./pages/ComoFunciona";
 import Creditos from "./pages/Creditos";
@@ -55,44 +55,45 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
             <AuthProvider>
               <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/como-funciona" element={<ComoFunciona />} />
-              <Route path="/servicos" element={<Servicos />} />
-              <Route path="/vantagens" element={<Vantagens />} />
-              <Route path="/verificar" element={<Verificar />} />
-              <Route path="/verificar-registro" element={<VerificarRegistro />} />
-              <Route path="/verificar/registro/:hash" element={<VerificacaoPublica />} />
-              <Route path="/termos-de-uso" element={<TermosDeUso />} />
-              <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
-              <Route path="/politica-blockchain" element={<PoliticaBlockchain />} />
-              <Route path="/privacidade" element={<Privacidade />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/cadastro" element={<Cadastro />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/conta" element={<Conta />} />
-              <Route path="/novo-registro" element={<NovoRegistro />} />
-              <Route path="/meus-registros" element={<MeusRegistros />} />
-              <Route path="/projetos" element={<Projetos />} />
-              <Route path="/projetos/:id" element={<ProjetoDetalhe />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/creditos" element={<Creditos />} />
-              <Route path="/processando/:id" element={<Processando />} />
-              <Route path="/certificado/:id" element={<Certificado />} />
-{/* Admin Routes */}
-              <Route path="/admin" element={<AdminEntry />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-              <Route path="/admin/creditos" element={<AdminCreditos />} />
-              <Route path="/admin/registros" element={<AdminRegistros />} />
-              <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
-              <Route path="/admin/assinaturas" element={<AdminAssinaturas />} />
-              <Route path="/admin/certificados" element={<AdminCertificados />} />
-              <Route path="/admin/logs" element={<AdminLogs />} />
-              <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
-              <Route path="/admin/monitoramento" element={<AdminMonitoramento />} />
-              <Route path="/admin/homologacao" element={<AdminHomologacao />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/como-funciona" element={<ComoFunciona />} />
+                <Route path="/servicos" element={<Servicos />} />
+                <Route path="/vantagens" element={<Vantagens />} />
+                <Route path="/verificar" element={<Verificar />} />
+                <Route path="/verificar-registro" element={<VerificarRegistro />} />
+                <Route path="/verificar/registro/:hash" element={<VerificacaoPublica />} />
+                <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+                <Route path="/politica-blockchain" element={<PoliticaBlockchain />} />
+                <Route path="/privacidade" element={<Privacidade />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/cadastro" element={<Cadastro />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/conta" element={<Conta />} />
+                <Route path="/novo-registro" element={<NovoRegistro />} />
+                <Route path="/meus-registros" element={<MeusRegistros />} />
+                <Route path="/projetos" element={<Projetos />} />
+                <Route path="/projetos/:id" element={<ProjetoDetalhe />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/creditos" element={<Creditos />} />
+                <Route path="/processando/:id" element={<Processando />} />
+                <Route path="/certificado/:id" element={<Certificado />} />
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminEntry />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                <Route path="/admin/creditos" element={<AdminCreditos />} />
+                <Route path="/admin/registros" element={<AdminRegistros />} />
+                <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
+                <Route path="/admin/assinaturas" element={<AdminAssinaturas />} />
+                <Route path="/admin/certificados" element={<AdminCertificados />} />
+                <Route path="/admin/logs" element={<AdminLogs />} />
+                <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
+                <Route path="/admin/monitoramento" element={<AdminMonitoramento />} />
+                <Route path="/admin/homologacao" element={<AdminHomologacao />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

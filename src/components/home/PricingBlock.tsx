@@ -33,7 +33,7 @@ export function PricingBlock() {
           decimal: ",00",
           perUnit: "one-time payment",
           subtitle: "Complete registration with perpetual validity",
-          cta: "Register for R$49",
+          cta: "Make your 1st Free Registration",
           benefits: [
             { icon: FileText, text: "Blockchain registration" },
             { icon: Award, text: "Digital certificate in PDF" },
@@ -57,7 +57,7 @@ export function PricingBlock() {
           decimal: ",00",
           perUnit: "pago único",
           subtitle: "Registro completo con validez perpetua",
-          cta: "Registrar por R$49",
+          cta: "Haz tu 1er Registro Gratis",
           benefits: [
             { icon: FileText, text: "Registro en blockchain" },
             { icon: Award, text: "Certificado digital en PDF" },
@@ -81,7 +81,7 @@ export function PricingBlock() {
           decimal: ",00",
           perUnit: "pagamento único",
           subtitle: "Registro completo com validade perpétua",
-          cta: "Registrar por R$49",
+          cta: "Faça seu 1º Registro Grátis",
           benefits: [
             { icon: FileText, text: "Registro em blockchain" },
             { icon: Award, text: "Certificado digital em PDF" },

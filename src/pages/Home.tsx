@@ -101,10 +101,10 @@ export default function Home() {
               >
                 <Link to="/cadastro" onClick={() => trackInitiateCheckout()}>
                   {language === "en" 
-                    ? "Start registration for R$49" 
+                    ? "Make your 1st Free Registration" 
                     : language === "es" 
-                    ? "Comenzar registro por R$49" 
-                    : "Começar registro por R$49"}
+                    ? "Haz tu 1er Registro Gratis" 
+                    : "Faça seu 1º Registro Grátis"}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
                 </Link>
               </Button>
@@ -367,7 +367,7 @@ export default function Home() {
                 style={{ boxShadow: '0 10px 40px -10px hsl(var(--primary) / 0.4)' }}
               >
                 <Link to="/cadastro">
-                  Começar registro por R$49
+                  Faça seu 1º Registro Grátis
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
                 </Link>
               </Button>

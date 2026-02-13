@@ -61,12 +61,16 @@ export function useCredits(): UseCreditsReturn {
       setLoading(true);
       setError(null);
 
-      // Verificar se é super_admin (créditos ilimitados)
-      const { data: isSuperAdmin } = await supabase.rpc("is_super_admin", {
-        _user_id: user.id,
-      });
+      // Verificar se é super_admin ou parceiro com créditos ilimitados
+      const [superAdminResult, profileResult] = await Promise.all([
+        supabase.rpc("is_super_admin", { _user_id: user.id }),
+        supabase.from("profiles").select("unlimited_credits, is_partner, partner_status").eq("user_id", user.id).maybeSingle(),
+      ]);
 
-      setIsUnlimited(isSuperAdmin === true);
+      const isSuperAdmin = superAdminResult.data === true;
+      const isPartnerUnlimited = profileResult.data?.unlimited_credits === true && profileResult.data?.partner_status === "approved";
+
+      setIsUnlimited(isSuperAdmin || isPartnerUnlimited);
 
       // Buscar cache de créditos
       const { data: creditsData, error: creditsError } = await supabase
@@ -91,10 +95,11 @@ export function useCredits(): UseCreditsReturn {
         console.error("Error fetching ledger:", ledgerError);
       }
 
-      // Marcar créditos como ilimitados se for super_admin
+      // Marcar créditos como ilimitados se for super_admin ou parceiro aprovado
+      const unlimitedFlag = isSuperAdmin || isPartnerUnlimited;
       const creditsWithUnlimited = creditsData 
-        ? { ...creditsData, is_unlimited: isSuperAdmin === true } as Credits
-        : isSuperAdmin 
+        ? { ...creditsData, is_unlimited: unlimitedFlag } as Credits
+        : unlimitedFlag 
           ? { is_unlimited: true, available_credits: -1 } as unknown as Credits 
           : null;
 

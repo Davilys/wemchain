@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Activity,
   Award,
+  Handshake,
   LucideIcon,
   ChevronRight,
   Sparkles,
@@ -93,6 +94,15 @@ const mainMenuItems: MenuItem[] = [
     color: "text-cyan-400",
     bgColor: "bg-cyan-400/15",
     glowColor: "shadow-cyan-400/20",
+  },
+  {
+    title: "Parcerias",
+    url: "/admin/parcerias",
+    icon: Handshake,
+    permissions: ["config.edit"],
+    color: "text-teal-400",
+    bgColor: "bg-teal-400/15",
+    glowColor: "shadow-teal-400/20",
   },
 ];
 

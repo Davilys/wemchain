@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
   Users,
   FileText,
   Info,
+  Handshake,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -39,12 +41,51 @@ export default function Projetos() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
+  const [isPartner, setIsPartner] = useState(false);
+  const [partnerLoading, setPartnerLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").select("is_partner").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        setIsPartner(data?.is_partner || false);
+        setPartnerLoading(false);
+      });
+    } else {
+      setPartnerLoading(false);
+    }
+  }, [user]);
+
+  // Parceiros não têm acesso a projetos
+  if (!partnerLoading && isPartner) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto py-12">
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="p-8 text-center">
+              <Handshake className="h-16 w-16 text-warning mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Feature não disponível</h2>
+              <p className="text-muted-foreground mb-6">
+                A funcionalidade de Projetos não está disponível para contas de parceria. 
+                Você pode registrar seus arquivos diretamente pelo Dashboard.
+              </p>
+              <Button variant="outline" asChild>
+                <Link to="/dashboard">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar ao Dashboard
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Se não tem plano Business, mostrar mensagem
   if (!businessLoading && !isBusinessPlan) {

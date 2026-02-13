@@ -43,12 +43,14 @@ interface Stats {
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { credits, loading: creditsLoading } = useCredits();
+  const { credits, loading: creditsLoading, isUnlimited } = useCredits();
   const { isBusinessPlan, loading: businessLoading } = useBusinessPlan();
   const navigate = useNavigate();
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, confirmados: 0, pendentes: 0, processando: 0, projectsCount: 0 });
   const [loading, setLoading] = useState(true);
+  const [partnerStatus, setPartnerStatus] = useState<string | null>(null);
+  const [isPartner, setIsPartner] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -59,6 +61,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchData();
+      // Check partner status
+      supabase.from("profiles").select("is_partner, partner_status").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          setIsPartner(data.is_partner || false);
+          setPartnerStatus(data.partner_status || null);
+        }
+      });
     }
   }, [user]);
 
@@ -133,6 +142,47 @@ export default function Dashboard() {
     );
   }
 
+  // Tela de parceiro pendente
+  if (isPartner && partnerStatus === "pending") {
+    return (
+      <DashboardLayout>
+        <div className="max-w-md mx-auto py-16 text-center">
+          <Card className="border-primary/20">
+            <CardContent className="pt-8 pb-8">
+              <Clock className="h-16 w-16 text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-bold mb-2">Cadastro em Análise</h2>
+              <p className="text-muted-foreground mb-4">
+                Seu cadastro como parceiro está sendo analisado pela nossa equipe. Você será notificado assim que for aprovado.
+              </p>
+              <Badge className="bg-primary/10 text-primary border-primary/20">
+                Aguardando Aprovação
+              </Badge>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Tela de parceiro bloqueado
+  if (isPartner && partnerStatus === "blocked") {
+    return (
+      <DashboardLayout>
+        <div className="max-w-md mx-auto py-16 text-center">
+          <Card className="border-destructive/20">
+            <CardContent className="pt-8 pb-8">
+              <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
+              <h2 className="text-xl font-bold mb-2">Parceria Bloqueada</h2>
+              <p className="text-muted-foreground">
+                Sua parceria foi bloqueada pelo administrador. Entre em contato com o suporte para mais informações.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl mx-auto">
@@ -166,7 +216,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs text-muted-foreground font-body">Créditos</p>
                 <p className="text-2xl font-bold text-primary font-display">
-                  {creditsLoading ? "..." : credits?.available_credits || 0}
+                  {creditsLoading ? "..." : isUnlimited ? "∞" : credits?.available_credits || 0}
                 </p>
               </div>
             </div>

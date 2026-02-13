@@ -116,7 +116,8 @@ export default function AdminParcerias() {
   }
 
   function copyLink(code: string) {
-    const url = `${window.location.origin}/parceria/register?ref=${code}`;
+    const publishedUrl = "https://wemchain.lovable.app";
+    const url = `${publishedUrl}/parceria/register?ref=${code}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado!");
   }

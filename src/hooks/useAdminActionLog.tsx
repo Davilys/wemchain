@@ -42,11 +42,15 @@ type AdminActionType =
   | "admin_logout"
   | "admin_created"
   | "admin_role_changed"
-  | "admin_removed";
+  | "admin_removed"
+  // Parcerias
+  | "partner_link_created"
+  | "partner_approved"
+  | "partner_blocked";
 
 interface LogActionParams {
   actionType: AdminActionType;
-  targetType?: "user" | "registro" | "certificate" | "payment" | "subscription" | "config" | "admin";
+  targetType?: "user" | "registro" | "certificate" | "payment" | "subscription" | "config" | "admin" | "partner_link";
   targetId?: string;
   details?: Record<string, unknown>;
 }

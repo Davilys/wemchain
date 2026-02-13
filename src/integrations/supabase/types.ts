@@ -536,6 +536,30 @@ export type Database = {
           },
         ]
       }
+      partner_links: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: []
+      }
       processing_logs: {
         Row: {
           attempt_number: number
@@ -599,8 +623,14 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          instagram_url: string | null
           is_blocked: boolean
+          is_partner: boolean
+          partner_link_id: string | null
+          partner_status: string | null
           phone: string | null
+          tiktok_url: string | null
+          unlimited_credits: boolean
           updated_at: string
           user_id: string
         }
@@ -612,8 +642,14 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          instagram_url?: string | null
           is_blocked?: boolean
+          is_partner?: boolean
+          partner_link_id?: string | null
+          partner_status?: string | null
           phone?: string | null
+          tiktok_url?: string | null
+          unlimited_credits?: boolean
           updated_at?: string
           user_id: string
         }
@@ -625,12 +661,26 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          instagram_url?: string | null
           is_blocked?: boolean
+          is_partner?: boolean
+          partner_link_id?: string | null
+          partner_status?: string | null
           phone?: string | null
+          tiktok_url?: string | null
+          unlimited_credits?: boolean
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_partner_link_id_fkey"
+            columns: ["partner_link_id"]
+            isOneToOne: false
+            referencedRelation: "partner_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_logs: {
         Row: {
@@ -1031,6 +1081,10 @@ export type Database = {
         Returns: string
       }
       get_user_admin_role: { Args: { _user_id: string }; Returns: string }
+      handle_partner_approval: {
+        Args: { p_action: string; p_admin_id: string; p_user_id: string }
+        Returns: Json
+      }
       handle_payment_refund: {
         Args: { p_asaas_payment_id: string; p_refund_amount?: number }
         Returns: Json

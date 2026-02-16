@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const rotatingWords = [
-  { key: "marca", pt: "Marca", en: "Brand", es: "Marca" },
-  { key: "logo", pt: "Logo", en: "Logo", es: "Logo" },
-  { key: "livro", pt: "Livro", en: "Book", es: "Libro" },
-  { key: "musica", pt: "Música", en: "Music", es: "Música" },
+  { key: "marca", pt: "Marca", en: "Brand", es: "Marca", ptPrefix: "Registre Sua" },
+  { key: "logo", pt: "Logo", en: "Logo", es: "Logo", ptPrefix: "Registre Sua" },
+  { key: "livro", pt: "Livro", en: "Book", es: "Libro", ptPrefix: "Registre Seu" },
+  { key: "musica", pt: "Música", en: "Music", es: "Música", ptPrefix: "Registre Sua" },
 ];
 
 export function RotatingText() {
@@ -38,13 +38,14 @@ export function RotatingText() {
   };
 
   const getPrefix = () => {
+    const word = rotatingWords[currentIndex];
     switch (language) {
       case "en":
         return "Register Your";
       case "es":
         return "Registre Su";
       default:
-        return "Registre Sua";
+        return word.ptPrefix;
     }
   };
 

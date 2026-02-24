@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
 
   if (!asaasApiKey) {
@@ -40,6 +41,9 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
+
+  // Client com service role para operações administrativas (liberar créditos)
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
   const token = authHeader.replace("Bearer ", "");
   const { data: claimsData, error: claimsError } = await supabase.auth.getUser(token);
@@ -83,6 +87,49 @@ Deno.serve(async (req) => {
         );
       }
 
+      // SINCRONIZAÇÃO: Se Asaas confirma mas banco ainda está PENDING, liberar créditos
+      let creditsSynced = false;
+      let syncResult = null;
+      const asaasConfirmed = ["CONFIRMED", "RECEIVED"].includes(paymentData.status);
+      const dbStillPending = dbPayment.status === "PENDING";
+
+      if (asaasConfirmed && dbStillPending) {
+        console.log(`[SYNC] Payment ${paymentId} confirmed in Asaas but PENDING in DB. Releasing credits...`);
+
+        // Determinar se é assinatura
+        const isSubscription = !!dbPayment.asaas_subscription_id;
+
+        // Chamar add_credits_atomic via service role
+        const { data: creditResult, error: creditError } = await supabaseAdmin.rpc("add_credits_atomic", {
+          p_user_id: userId,
+          p_amount: dbPayment.credits_amount,
+          p_reason: `Créditos liberados via sincronização polling - ${dbPayment.plan_type}`,
+          p_reference_type: "payment",
+          p_reference_id: paymentId,
+          p_is_subscription: isSubscription,
+          p_metadata: { plan_type: dbPayment.plan_type, sync_source: "check-asaas-payment" },
+        });
+
+        if (creditError) {
+          console.error(`[SYNC] Error releasing credits:`, creditError);
+        } else {
+          syncResult = creditResult;
+          
+          // Se créditos foram liberados (não idempotente), atualizar status do pagamento
+          if (creditResult?.success || creditResult?.idempotent) {
+            creditsSynced = true;
+
+            // Atualizar status do pagamento no banco via service role
+            await supabaseAdmin
+              .from("asaas_payments")
+              .update({ status: "CONFIRMED", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+              .eq("asaas_payment_id", paymentId);
+
+            console.log(`[SYNC] Credits released and payment ${paymentId} marked as CONFIRMED.`);
+          }
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -94,9 +141,11 @@ Deno.serve(async (req) => {
             confirmedDate: paymentData.confirmedDate,
             paymentDate: paymentData.paymentDate,
             invoiceUrl: paymentData.invoiceUrl,
-            dbStatus: dbPayment.status,
+            dbStatus: creditsSynced ? "CONFIRMED" : dbPayment.status,
             credits: dbPayment.credits_amount,
           },
+          creditsSynced,
+          syncResult,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

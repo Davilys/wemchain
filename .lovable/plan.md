@@ -1,133 +1,79 @@
 
-# Sistema de Link de Parceria (Influenciadores)
 
-## Resumo
+# Correcao: Sincronizacao de Pagamentos Asaas com Creditos
 
-Criar um sistema completo para gerenciar influenciadores digitais via links de parceria exclusivos. O admin master gera links, influenciadores se cadastram com redes sociais obrigatorias, e o admin aprova/bloqueia manualmente. Usuarios aprovados recebem creditos ilimitados no plano basico, sem acesso a projetos ou features Business.
+## Problema Identificado
 
-## Arquitetura
+O webhook do Asaas NAO esta chegando na edge function (tabela `asaas_webhook_logs` esta completamente vazia). Isso significa que quando o cliente paga, o Asaas confirma o pagamento, mas o sistema nunca recebe essa confirmacao para liberar os creditos.
 
-O sistema envolve 3 camadas: banco de dados (tabelas e funcoes), backend (edge function para validacao), e frontend (paginas de cadastro, admin e restricoes).
+A funcao `check-asaas-payment` faz polling na API do Asaas e VE que o pagamento esta confirmado, mas apenas retorna essa informacao -- nao atualiza o banco de dados nem libera os creditos.
 
-## 1. Migracao SQL - Novas Tabelas e Campos
-
-### Tabela `partner_links` (links de parceria)
-```text
-id             UUID PK
-code           TEXT UNIQUE (codigo do link, ex: "abc123")
-created_by     UUID (admin que criou)
-is_active      BOOLEAN DEFAULT true
-created_at     TIMESTAMPTZ
-```
-
-### Novos campos na tabela `profiles`
-```text
-is_partner          BOOLEAN DEFAULT false
-partner_status      TEXT ('pending', 'approved', 'blocked') 
-partner_link_id     UUID (ref partner_links)
-instagram_url       TEXT
-tiktok_url          TEXT
-unlimited_credits   BOOLEAN DEFAULT false
-```
-
-### RLS Policies
-- `partner_links`: somente super_admin pode INSERT/SELECT/UPDATE
-- Campos de parceria em `profiles`: admins podem ver/editar, usuarios veem o proprio
-
-### Funcao `handle_partner_approval`
-- Ao aprovar: seta `partner_status = 'approved'`, `unlimited_credits = true`, `is_blocked = false`
-- Ao bloquear: seta `partner_status = 'blocked'`, `is_blocked = true`
-
-## 2. Edge Function `partner-register`
-
-Nova edge function que:
-- Recebe `code`, `email`, `password`, `full_name`, `instagram_url`, `tiktok_url`
-- Valida se o `code` existe e esta ativo na tabela `partner_links`
-- Cria o usuario via Admin API (auto-confirma email)
-- Atualiza o `profiles` com `is_partner = true`, `partner_status = 'pending'`, redes sociais
-- Retorna sucesso com mensagem de "aguardando aprovacao"
-
-## 3. Frontend - Pagina de Cadastro de Parceria
-
-### Nova rota: `/parceria/register`
-- Verifica parametro `ref=xxxxx` na URL
-- Se nao tiver `ref` valido, mostra mensagem de bloqueio ("Link invalido ou expirado")
-- Formulario com campos: Nome, Email, Senha, Confirmar Senha, Instagram (obrigatorio), TikTok (obrigatorio)
-- Apos cadastro: tela de "Cadastro em analise"
-
-### Nova pagina: `src/pages/ParceriaRegister.tsx`
-
-## 4. Frontend - Area Admin
-
-### 4a. Nova aba no sidebar: "Parcerias" (dentro do grupo Principal)
-- Icone: `Handshake` ou `Link`
-- Permissao: `config.edit` (somente super_admin)
-
-### 4b. Nova pagina: `src/pages/admin/AdminParcerias.tsx`
-
-**Secao 1: Gerar Link**
-- Botao "Gerar Link de Parceria"
-- Lista de links gerados com: codigo, data criacao, status (ativo/inativo), botao copiar, toggle ativar/desativar
-
-**Secao 2: Usuarios de Parceria**
-- Cards de resumo: Total, Pendentes, Aprovados, Bloqueados
-- Tabela separada com usuarios parceiros
-- Ao clicar: painel com Nome, Email, Instagram, TikTok, Data cadastro, Status
-- Botoes: Aprovar Parceria / Bloquear Parceria
-
-### 4c. Modificacao em `AdminUsuarios.tsx`
-- Adicionar filtro/separacao: "Usuarios Normais" vs "Usuarios Parceria"
-- Badge visual para identificar parceiros
-
-## 5. Restricoes no Dashboard do Usuario
-
-### Em `src/pages/Projetos.tsx` e rotas de projetos:
-- Se `is_partner === true`: bloquear acesso, mostrar mensagem "Feature nao disponivel para seu plano"
-
-### Em `useCredits.tsx`:
-- Se `unlimited_credits === true`: retornar saldo como ilimitado (similar ao super_admin)
-
-### Tela pos-login para parceiros pendentes:
-- Se `partner_status === 'pending'`: mostrar tela de "Cadastro em analise" em vez do dashboard
-
-## 6. Arquivos a Criar/Modificar
-
-| Arquivo | Acao |
-|---------|------|
-| `supabase/migrations/xxx.sql` | Criar tabela partner_links, alterar profiles |
-| `supabase/functions/partner-register/index.ts` | Nova edge function |
-| `src/pages/ParceriaRegister.tsx` | Pagina de cadastro parceria |
-| `src/pages/admin/AdminParcerias.tsx` | Gestao de parcerias no admin |
-| `src/components/admin/AdminSidebar.tsx` | Adicionar menu "Parcerias" |
-| `src/App.tsx` | Adicionar rotas `/parceria/register` e `/admin/parcerias` |
-| `src/pages/admin/AdminUsuarios.tsx` | Separar usuarios normais vs parceiros |
-| `src/hooks/useCredits.tsx` | Suporte a creditos ilimitados para parceiros |
-| `src/pages/Dashboard.tsx` | Tela de "pendente" para parceiros |
-| `src/pages/Projetos.tsx` | Bloquear acesso para parceiros |
-| `src/lib/adminPermissions.ts` | Adicionar permissao `partners.manage` |
-
-## 7. Fluxo Completo
+## Causa Raiz
 
 ```text
-Admin gera link
+Cliente paga via Pix
        |
        v
-Influenciador acessa /parceria/register?ref=xxxxx
+Asaas confirma pagamento (status: CONFIRMED)
        |
        v
-Preenche formulario (nome, email, senha, Instagram, TikTok)
+Webhook deveria chamar edge function --> NAO CHEGA (webhook nao configurado ou URL errada)
        |
        v
-Edge function cria conta + marca como parceiro pendente
+Polling via check-asaas-payment --> LE status CONFIRMED da API do Asaas
        |
        v
-Influenciador ve tela "Cadastro em analise"
+Retorna ao frontend, mas creditos NUNCA SAO LIBERADOS no banco
        |
        v
-Admin ve notificacao na aba Parcerias
-       |
-       v
-Admin aprova --> conta ativada, creditos ilimitados, plano basico
-   ou
-Admin bloqueia --> login impedido
+Pagamento fica como "Pendente" para sempre no painel do cliente
 ```
+
+## Solucao
+
+Modificar a edge function `check-asaas-payment` para que, ao detectar um pagamento confirmado na API do Asaas que ainda esta como PENDING no banco, automaticamente libere os creditos usando a mesma funcao atomica `add_credits_atomic`.
+
+Isso cria um mecanismo de fallback: mesmo que o webhook falhe, o polling sincroniza o status.
+
+## Detalhes Tecnicos
+
+### Arquivo modificado: `supabase/functions/check-asaas-payment/index.ts`
+
+Quando a funcao detecta que:
+- Status na API do Asaas = `CONFIRMED` ou `RECEIVED`
+- Status no banco (dbPayment) = `PENDING`
+
+Entao:
+1. Chamar `add_credits_atomic` com os dados do pagamento para liberar creditos
+2. Atualizar status do pagamento na tabela `asaas_payments` para `CONFIRMED`
+3. Retornar o status atualizado ao frontend
+
+Para isso, a funcao precisara usar o `SUPABASE_SERVICE_ROLE_KEY` para chamar as RPCs, ja que o usuario autenticado nao tem permissao para executar essas funcoes diretamente.
+
+### Fluxo corrigido
+
+```text
+Polling via check-asaas-payment
+       |
+       v
+Busca status na API Asaas --> CONFIRMED
+       |
+       v
+Verifica status no banco --> PENDING
+       |
+       v
+Chama add_credits_atomic (libera creditos)
+       |
+       v
+Atualiza asaas_payments.status = CONFIRMED
+       |
+       v
+Retorna ao frontend com status confirmado
+       |
+       v
+Frontend exibe "Pagamento confirmado! Creditos liberados."
+```
+
+### Nenhum outro arquivo sera alterado
+
+Apenas `supabase/functions/check-asaas-payment/index.ts` sera modificado para adicionar a logica de sincronizacao automatica.

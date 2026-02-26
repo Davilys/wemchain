@@ -182,7 +182,11 @@ export default function AdminRegistros() {
       }
       groupMap.get(r.user_id)!.registros.push(r);
     });
-    return Array.from(groupMap.values()).sort((a, b) => a.userName.localeCompare(b.userName));
+    return Array.from(groupMap.values()).sort((a, b) => {
+      const aNewest = a.registros[0]?.created_at || "";
+      const bNewest = b.registros[0]?.created_at || "";
+      return bNewest.localeCompare(aNewest);
+    });
   }
 
   const getStatusBadge = (status: string) => {

@@ -616,60 +616,90 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bairro: string | null
           blocked_at: string | null
           blocked_reason: string | null
+          cep: string | null
+          cidade: string | null
+          cnpj: string | null
           company_name: string | null
+          complemento: string | null
+          cpf: string | null
           cpf_cnpj: string | null
           created_at: string
           email: string | null
+          estado: string | null
           full_name: string | null
           id: string
           instagram_url: string | null
           is_blocked: boolean
           is_partner: boolean
+          numero: string | null
           partner_link_id: string | null
           partner_status: string | null
           phone: string | null
+          razao_social: string | null
+          rua: string | null
           tiktok_url: string | null
           unlimited_credits: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          bairro?: string | null
           blocked_at?: string | null
           blocked_reason?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
           company_name?: string | null
+          complemento?: string | null
+          cpf?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email?: string | null
+          estado?: string | null
           full_name?: string | null
           id?: string
           instagram_url?: string | null
           is_blocked?: boolean
           is_partner?: boolean
+          numero?: string | null
           partner_link_id?: string | null
           partner_status?: string | null
           phone?: string | null
+          razao_social?: string | null
+          rua?: string | null
           tiktok_url?: string | null
           unlimited_credits?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          bairro?: string | null
           blocked_at?: string | null
           blocked_reason?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
           company_name?: string | null
+          complemento?: string | null
+          cpf?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email?: string | null
+          estado?: string | null
           full_name?: string | null
           id?: string
           instagram_url?: string | null
           is_blocked?: boolean
           is_partner?: boolean
+          numero?: string | null
           partner_link_id?: string | null
           partner_status?: string | null
           phone?: string | null
+          razao_social?: string | null
+          rua?: string | null
           tiktok_url?: string | null
           unlimited_credits?: boolean
           updated_at?: string

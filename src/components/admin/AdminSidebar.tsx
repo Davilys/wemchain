@@ -60,7 +60,7 @@ const mainMenuItems: MenuItem[] = [
     glowColor: "shadow-blue-400/20",
   },
   {
-    title: "Usuários",
+    title: "Clientes",
     url: "/admin/usuarios",
     icon: Users,
     permissions: ["users.view"],

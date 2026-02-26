@@ -198,7 +198,11 @@ export default function AdminCertificados() {
       }
       groupMap.get(c.user_id)!.certificates.push(c);
     });
-    return Array.from(groupMap.values()).sort((a, b) => a.userName.localeCompare(b.userName));
+    return Array.from(groupMap.values()).sort((a, b) => {
+      const aNewest = a.certificates[0]?.created_at || "";
+      const bNewest = b.certificates[0]?.created_at || "";
+      return bNewest.localeCompare(aNewest);
+    });
   }
 
   const totalCerts = certificates.length;

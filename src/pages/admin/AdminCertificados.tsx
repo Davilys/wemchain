@@ -73,10 +73,7 @@ export default function AdminCertificados() {
     fetchCertificates();
   }, []);
 
-  useEffect(() => {
-    const groups = getGroupedCertificates();
-    setOpenGroups(new Set(groups.map(g => g.userId)));
-  }, [certificates]);
+  // Groups start closed by default
 
   async function fetchCertificates() {
     try {
@@ -169,10 +166,8 @@ export default function AdminCertificados() {
 
   function toggleGroup(userId: string) {
     setOpenGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      return next;
+      if (prev.has(userId)) return new Set();
+      return new Set([userId]);
     });
   }
 

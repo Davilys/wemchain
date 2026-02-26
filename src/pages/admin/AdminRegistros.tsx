@@ -77,11 +77,7 @@ export default function AdminRegistros() {
     fetchRegistros();
   }, []);
 
-  // Open all groups by default when data loads
-  useEffect(() => {
-    const groups = getGroupedRegistros();
-    setOpenGroups(new Set(groups.map(g => g.userId)));
-  }, [registros]);
+  // Groups start closed by default
 
   async function fetchRegistros() {
     try {
@@ -154,10 +150,8 @@ export default function AdminRegistros() {
 
   function toggleGroup(userId: string) {
     setOpenGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      return next;
+      if (prev.has(userId)) return new Set();
+      return new Set([userId]);
     });
   }
 

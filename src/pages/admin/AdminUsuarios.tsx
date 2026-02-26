@@ -72,6 +72,7 @@ interface UserProfile {
   id: string;
   user_id: string;
   full_name: string | null;
+  email: string | null;
   cpf_cnpj: string | null;
   phone: string | null;
   company_name: string | null;
@@ -152,7 +153,7 @@ export default function AdminUsuarios() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, cpf_cnpj, phone, company_name, created_at, is_blocked, blocked_at, blocked_reason")
+        .select("id, user_id, full_name, email, cpf_cnpj, phone, company_name, created_at, is_blocked, blocked_at, blocked_reason")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -496,6 +497,7 @@ export default function AdminUsuarios() {
     const search = searchTerm.toLowerCase();
     return (
       user.full_name?.toLowerCase().includes(search) ||
+      user.email?.toLowerCase().includes(search) ||
       user.cpf_cnpj?.includes(search) ||
       user.phone?.includes(search) ||
       user.company_name?.toLowerCase().includes(search)
@@ -516,15 +518,15 @@ export default function AdminUsuarios() {
     <AdminLayout>
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold font-display">Gestão de Usuários</h1>
+           <div>
+            <h1 className="text-2xl md:text-3xl font-bold font-display">Gestão de Clientes</h1>
             <p className="text-muted-foreground font-body text-sm md:text-base">
-              Visualize e gerencie usuários do sistema
+              Visualize e gerencie clientes do sistema
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)} className="w-full sm:w-auto">
             <UserPlus className="h-4 w-4 mr-2" />
-            Novo Usuário
+            Novo Cliente
           </Button>
         </div>
 
@@ -534,7 +536,7 @@ export default function AdminUsuarios() {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-muted-foreground">Total de Usuários</span>
+                <span className="text-sm text-muted-foreground">Total de Clientes</span>
               </div>
               <p className="text-2xl font-bold mt-1">{users.length}</p>
             </CardContent>
@@ -571,13 +573,13 @@ export default function AdminUsuarios() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome, CPF/CNPJ, telefone..."
+                  placeholder="Buscar por nome, email, CPF/CNPJ, telefone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <Badge variant="outline">{filteredUsers.length} usuários</Badge>
+              <Badge variant="outline">{filteredUsers.length} clientes</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
@@ -591,9 +593,9 @@ export default function AdminUsuarios() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>CPF/CNPJ</TableHead>
                     <TableHead>Telefone</TableHead>
-                    <TableHead>Empresa</TableHead>
                     <TableHead>Cadastro</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -605,9 +607,11 @@ export default function AdminUsuarios() {
                       <TableCell className="font-medium">
                         {user.full_name || "—"}
                       </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {user.email || "—"}
+                      </TableCell>
                       <TableCell>{user.cpf_cnpj || "—"}</TableCell>
                       <TableCell>{user.phone || "—"}</TableCell>
-                      <TableCell>{user.company_name || "—"}</TableCell>
                       <TableCell>
                         {format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
@@ -679,7 +683,7 @@ export default function AdminUsuarios() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Detalhes do Usuário</DialogTitle>
+              <DialogTitle>Detalhes do Cliente</DialogTitle>
             </DialogHeader>
             
             {detailsLoading ? (
@@ -765,9 +769,9 @@ export default function AdminUsuarios() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogTitle>Editar Cliente</DialogTitle>
               <DialogDescription>
-                Atualize os dados do usuário. Esta ação será registrada no log de auditoria.
+                Atualize os dados do cliente. Esta ação será registrada no log de auditoria.
               </DialogDescription>
             </DialogHeader>
             
@@ -823,12 +827,12 @@ export default function AdminUsuarios() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {selectedUser?.is_blocked ? "Desbloquear" : "Bloquear"} Usuário
+                {selectedUser?.is_blocked ? "Desbloquear" : "Bloquear"} Cliente
               </AlertDialogTitle>
               <AlertDialogDescription>
                 {selectedUser?.is_blocked 
-                  ? "Deseja desbloquear este usuário? Ele poderá acessar a plataforma normalmente."
-                  : "Deseja bloquear este usuário? Ele não poderá acessar a plataforma até ser desbloqueado."
+                  ? "Deseja desbloquear este cliente? Ele poderá acessar a plataforma normalmente."
+                  : "Deseja bloquear este cliente? Ele não poderá acessar a plataforma até ser desbloqueado."
                 }
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -861,9 +865,9 @@ export default function AdminUsuarios() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogTitle>Criar Novo Cliente</DialogTitle>
               <DialogDescription>
-                Crie uma nova conta de usuário. O email será confirmado automaticamente.
+                Crie uma nova conta de cliente. O email será confirmado automaticamente.
               </DialogDescription>
             </DialogHeader>
             
@@ -908,7 +912,7 @@ export default function AdminUsuarios() {
                   onChange={(e) => setCreateData({ ...createData, initial_credits: parseInt(e.target.value) || 0 })}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Opcional: quantidade de créditos para o novo usuário
+                  Opcional: quantidade de créditos para o novo cliente
                 </p>
               </div>
             </div>
@@ -922,7 +926,7 @@ export default function AdminUsuarios() {
                 disabled={creating || !createData.email || !createData.password || !createData.full_name}
               >
                 {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Criar Usuário
+                Criar Cliente
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -940,11 +944,11 @@ export default function AdminUsuarios() {
               </DialogTitle>
               <DialogDescription>
                 {subscriptionAction === "grant" && 
-                  `Conceder acesso ao Plano Business para ${selectedUser?.full_name || "este usuário"}.`}
+                  `Conceder acesso ao Plano Business para ${selectedUser?.full_name || "este cliente"}.`}
                 {subscriptionAction === "revoke" && 
-                  `Revogar o acesso ao Plano Business de ${selectedUser?.full_name || "este usuário"}.`}
+                  `Revogar o acesso ao Plano Business de ${selectedUser?.full_name || "este cliente"}.`}
                 {subscriptionAction === "update" && 
-                  `Atualizar configurações do Plano Business de ${selectedUser?.full_name || "este usuário"}.`}
+                  `Atualizar configurações do Plano Business de ${selectedUser?.full_name || "este cliente"}.`}
               </DialogDescription>
             </DialogHeader>
             
@@ -972,7 +976,7 @@ export default function AdminUsuarios() {
               <div className="py-4">
                 <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
                   <p className="text-sm text-destructive">
-                    <strong>Atenção:</strong> Ao revogar o plano, o usuário perderá acesso à aba Projetos 
+                    <strong>Atenção:</strong> Ao revogar o plano, o cliente perderá acesso à aba Projetos 
                     e não poderá mais registrar em nome de terceiros.
                   </p>
                 </div>
@@ -1006,7 +1010,7 @@ export default function AdminUsuarios() {
                 Conceder Créditos
               </DialogTitle>
               <DialogDescription>
-                Conceder créditos para: <strong>{selectedUser?.full_name || "usuário selecionado"}</strong>
+                Conceder créditos para: <strong>{selectedUser?.full_name || "cliente selecionado"}</strong>
               </DialogDescription>
             </DialogHeader>
             

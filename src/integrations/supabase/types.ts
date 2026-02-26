@@ -621,6 +621,7 @@ export type Database = {
           company_name: string | null
           cpf_cnpj: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           instagram_url: string | null
@@ -640,6 +641,7 @@ export type Database = {
           company_name?: string | null
           cpf_cnpj?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           instagram_url?: string | null
@@ -659,6 +661,7 @@ export type Database = {
           company_name?: string | null
           cpf_cnpj?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           instagram_url?: string | null

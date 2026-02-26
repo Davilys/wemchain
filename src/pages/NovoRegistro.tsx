@@ -188,6 +188,13 @@ const suggestCategoryFromFile = (mimeType: string): string => {
 interface UserProfile {
   full_name: string | null;
   cpf_cnpj: string | null;
+  cpf: string | null;
+  cep: string | null;
+  rua: string | null;
+  numero: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
 }
 
 interface ProjectData {
@@ -283,14 +290,14 @@ export default function NovoRegistro() {
       }
       
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase
           .from("profiles")
-          .select("full_name, cpf_cnpj")
+          .select("full_name, cpf_cnpj, cpf, cep, rua, numero, bairro, cidade, estado") as any)
           .eq("user_id", user.id)
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        setProfile(data as UserProfile);
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -303,7 +310,15 @@ export default function NovoRegistro() {
 
   const hasCredits = (credits?.available_credits || 0) > 0;
 
+  // Check if profile is complete
+  const isProfileComplete = !projectId && profile ? !!(
+    profile.full_name &&
+    (profile.cpf || profile.cpf_cnpj) &&
+    profile.cep && profile.rua && profile.numero && profile.bairro && profile.cidade && profile.estado
+  ) : true;
+
   // Primary author derived from project (if Business) or user profile
+  const cpfValue = profile?.cpf || profile?.cpf_cnpj?.replace(/\D/g, "") || "";
   const primaryAuthor: Omit<Author, "id" | "display_order"> | null = project
     ? {
         name: project.name,
@@ -316,8 +331,8 @@ export default function NovoRegistro() {
     ? {
         name: profile.full_name,
         email: user?.email || "",
-        document_type: (profile.cpf_cnpj?.replace(/\D/g, "").length || 0) > 11 ? "CNPJ" : "CPF",
-        document_number: profile.cpf_cnpj?.replace(/\D/g, "") || "",
+        document_type: cpfValue.length > 11 ? "CNPJ" : "CPF",
+        document_number: cpfValue,
         role: "PRIMARY",
       }
     : null;
@@ -493,6 +508,23 @@ export default function NovoRegistro() {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isProfileComplete) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-lg mx-auto text-center py-16 space-y-4">
+          <AlertTriangle className="h-12 w-12 text-warning mx-auto" />
+          <h2 className="font-display text-xl font-bold">Perfil Incompleto</h2>
+          <p className="text-muted-foreground">
+            Complete seus dados pessoais e endereço em Configurações antes de registrar.
+          </p>
+          <Button asChild>
+            <Link to="/conta">Completar Perfil</Link>
+          </Button>
         </div>
       </DashboardLayout>
     );

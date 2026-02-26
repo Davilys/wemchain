@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.partner-register]
 verify_jwt = false
+
+[functions.admin-merge-clients]
+verify_jwt = false

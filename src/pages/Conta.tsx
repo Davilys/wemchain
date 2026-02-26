@@ -16,6 +16,8 @@ import { useBusinessPlan } from "@/hooks/useBusinessPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CertificateCustomization } from "@/components/certificates/CertificateCustomization";
+import { isValidCPF, isValidCNPJ } from "@/lib/cpfValidator";
+import { formatCPF, formatCNPJ } from "@/lib/documentFormatters";
 import {
   User,
   Mail,
@@ -38,6 +40,8 @@ import {
   Lock,
   Eye,
   EyeOff,
+  MapPin,
+  Search,
 } from "lucide-react";
 
 interface Profile {
@@ -45,8 +49,18 @@ interface Profile {
   user_id: string;
   full_name: string | null;
   cpf_cnpj: string | null;
+  cpf: string | null;
+  cnpj: string | null;
+  razao_social: string | null;
   phone: string | null;
   company_name: string | null;
+  cep: string | null;
+  rua: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
 }
 
 interface Payment {
@@ -80,14 +94,27 @@ export default function Conta() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
     full_name: "",
-    cpf_cnpj: "",
+    cpf: "",
     phone: "",
+    cnpj: "",
+    razao_social: "",
     company_name: "",
+    cep: "",
+    rua: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
   });
+
+  // Validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -121,7 +148,6 @@ export default function Conta() {
     try {
       setLoading(true);
 
-      // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -131,16 +157,24 @@ export default function Conta() {
       if (profileError) throw profileError;
 
       if (profileData) {
-        setProfile(profileData);
+        setProfile(profileData as unknown as Profile);
         setFormData({
           full_name: profileData.full_name || "",
-          cpf_cnpj: profileData.cpf_cnpj || "",
+          cpf: (profileData as any).cpf ? formatCPF((profileData as any).cpf) : "",
           phone: profileData.phone || "",
+          cnpj: (profileData as any).cnpj ? formatCNPJ((profileData as any).cnpj) : "",
+          razao_social: (profileData as any).razao_social || "",
           company_name: profileData.company_name || "",
+          cep: (profileData as any).cep || "",
+          rua: (profileData as any).rua || "",
+          numero: (profileData as any).numero || "",
+          complemento: (profileData as any).complemento || "",
+          bairro: (profileData as any).bairro || "",
+          cidade: (profileData as any).cidade || "",
+          estado: (profileData as any).estado || "",
         });
       }
 
-      // Fetch payments
       const { data: paymentsData, error: paymentsError } = await supabase
         .from("asaas_payments")
         .select("*")
@@ -150,7 +184,6 @@ export default function Conta() {
       if (paymentsError) throw paymentsError;
       setPayments(paymentsData || []);
 
-      // Fetch subscription
       const { data: subscriptionData } = await supabase
         .from("asaas_subscriptions")
         .select("*")
@@ -166,33 +199,163 @@ export default function Conta() {
     }
   };
 
+  const handleCepChange = async (value: string) => {
+    const cepNumbers = value.replace(/\D/g, "");
+    const formatted = cepNumbers.replace(/(\d{5})(\d{1,3})/, "$1-$2");
+    setFormData(prev => ({ ...prev, cep: formatted }));
+
+    if (cepNumbers.length === 8) {
+      setCepLoading(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`);
+        const data = await response.json();
+        if (!data.erro) {
+          setFormData(prev => ({
+            ...prev,
+            rua: data.logradouro || "",
+            bairro: data.bairro || "",
+            cidade: data.localidade || "",
+            estado: data.uf || "",
+          }));
+          setErrors(prev => {
+            const next = { ...prev };
+            delete next.cep;
+            delete next.rua;
+            delete next.bairro;
+            delete next.cidade;
+            delete next.estado;
+            return next;
+          });
+        } else {
+          setErrors(prev => ({ ...prev, cep: "CEP não encontrado" }));
+        }
+      } catch {
+        setErrors(prev => ({ ...prev, cep: "Erro ao buscar CEP" }));
+      } finally {
+        setCepLoading(false);
+      }
+    }
+  };
+
+  const handleCpfChange = (value: string) => {
+    const formatted = formatCPF(value);
+    setFormData(prev => ({ ...prev, cpf: formatted }));
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 11) {
+      if (!isValidCPF(numbers)) {
+        setErrors(prev => ({ ...prev, cpf: "CPF inválido" }));
+      } else {
+        setErrors(prev => { const n = { ...prev }; delete n.cpf; return n; });
+      }
+    } else {
+      setErrors(prev => { const n = { ...prev }; delete n.cpf; return n; });
+    }
+  };
+
+  const handleCnpjChange = (value: string) => {
+    const formatted = formatCNPJ(value);
+    setFormData(prev => ({ ...prev, cnpj: formatted }));
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 14) {
+      if (!isValidCNPJ(numbers)) {
+        setErrors(prev => ({ ...prev, cnpj: "CNPJ inválido" }));
+      } else {
+        setErrors(prev => { const n = { ...prev }; delete n.cnpj; return n; });
+      }
+    } else {
+      setErrors(prev => { const n = { ...prev }; delete n.cnpj; return n; });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.full_name.trim()) newErrors.full_name = "Nome é obrigatório";
+    const cpfNumbers = formData.cpf.replace(/\D/g, "");
+    if (!cpfNumbers) {
+      newErrors.cpf = "CPF é obrigatório";
+    } else if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
+      newErrors.cpf = "CPF inválido";
+    }
+    if (!formData.phone.trim()) newErrors.phone = "Telefone é obrigatório";
+    if (!formData.cep.replace(/\D/g, "")) newErrors.cep = "CEP é obrigatório";
+    if (!formData.rua.trim()) newErrors.rua = "Rua é obrigatória";
+    if (!formData.numero.trim()) newErrors.numero = "Número é obrigatório";
+    if (!formData.bairro.trim()) newErrors.bairro = "Bairro é obrigatório";
+    if (!formData.cidade.trim()) newErrors.cidade = "Cidade é obrigatória";
+    if (!formData.estado.trim()) newErrors.estado = "Estado é obrigatório";
+
+    const cnpjNumbers = formData.cnpj.replace(/\D/g, "");
+    if (cnpjNumbers && (cnpjNumbers.length !== 14 || !isValidCNPJ(cnpjNumbers))) {
+      newErrors.cnpj = "CNPJ inválido";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
+    if (!validateForm()) {
+      toast.error("Corrija os erros antes de salvar");
+      return;
+    }
 
     try {
       setSaving(true);
+      const cpfNumbers = formData.cpf.replace(/\D/g, "");
+      const cnpjNumbers = formData.cnpj.replace(/\D/g, "");
+
+      // Check CPF uniqueness using raw query approach
+      const { data: existingCpf } = await (supabase
+        .from("profiles")
+        .select("user_id") as any)
+        .eq("cpf", cpfNumbers)
+        .neq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingCpf) {
+        setErrors(prev => ({ ...prev, cpf: "Este CPF já está cadastrado em outra conta" }));
+        toast.error("Este CPF já está cadastrado em outra conta");
+        return;
+      }
+
+      const updateData: Record<string, any> = {
+        user_id: user.id,
+        full_name: formData.full_name || null,
+        cpf_cnpj: cpfNumbers || null,
+        cpf: cpfNumbers || null,
+        cnpj: cnpjNumbers || null,
+        razao_social: formData.razao_social || null,
+        phone: formData.phone || null,
+        company_name: formData.company_name || null,
+        cep: formData.cep.replace(/\D/g, "") || null,
+        rua: formData.rua || null,
+        numero: formData.numero || null,
+        complemento: formData.complemento || null,
+        bairro: formData.bairro || null,
+        cidade: formData.cidade || null,
+        estado: formData.estado || null,
+        updated_at: new Date().toISOString(),
+      };
 
       const { error } = await supabase
         .from("profiles")
-        .upsert({
-          user_id: user.id,
-          full_name: formData.full_name || null,
-          cpf_cnpj: formData.cpf_cnpj || null,
-          phone: formData.phone || null,
-          company_name: formData.company_name || null,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "user_id",
-        });
+        .update(updateData)
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
       toast.success("Perfil atualizado com sucesso!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar perfil:", error);
-      toast.error("Erro ao salvar perfil");
+      if (error.message?.includes("idx_profiles_cpf_unique")) {
+        setErrors(prev => ({ ...prev, cpf: "Este CPF já está cadastrado em outra conta" }));
+        toast.error("Este CPF já está cadastrado em outra conta");
+      } else {
+        toast.error("Erro ao salvar perfil");
+      }
     } finally {
-    setSaving(false);
+      setSaving(false);
     }
   };
 
@@ -201,12 +364,10 @@ export default function Conta() {
       toast.error("Preencha todos os campos de senha");
       return;
     }
-
     if (passwordData.newPassword.length < 6) {
       toast.error("A senha deve ter no mínimo 6 caracteres");
       return;
     }
-
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("As senhas não coincidem");
       return;
@@ -214,13 +375,10 @@ export default function Conta() {
 
     try {
       setChangingPassword(true);
-
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword,
       });
-
       if (error) throw error;
-
       toast.success("Senha alterada com sucesso!");
       setPasswordData({ newPassword: "", confirmPassword: "" });
     } catch (error: any) {
@@ -270,6 +428,11 @@ export default function Conta() {
       </div>
     );
   }
+
+  const renderFieldError = (field: string) => {
+    if (!errors[field]) return null;
+    return <p className="text-xs text-destructive mt-1">{errors[field]}</p>;
+  };
 
   return (
     <DashboardLayout>
@@ -322,95 +485,225 @@ export default function Conta() {
 
             {/* Tab: Perfil */}
             <TabsContent value="perfil" className="space-y-6">
+              {/* Dados Pessoais */}
               <Card className="card-premium">
                 <CardHeader>
                   <CardTitle className="font-display text-lg flex items-center gap-2">
                     <User className="h-5 w-5 text-primary" />
                     Dados Pessoais
                   </CardTitle>
+                  <p className="text-xs text-muted-foreground">Campos obrigatórios marcados com *</p>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4">
                   {/* Email (read-only) */}
                   <div className="space-y-2">
                     <Label className="font-body text-sm flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       E-mail
                     </Label>
-                    <Input
-                      value={user?.email || ""}
-                      disabled
-                      className="bg-muted/50"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      O e-mail não pode ser alterado
-                    </p>
+                    <Input value={user?.email || ""} disabled className="bg-muted/50" />
+                    <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado</p>
                   </div>
 
-                  <Separator />
-
-                  {/* Editable fields */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label className="font-body text-sm flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        Nome Completo
+                        Nome Completo *
                       </Label>
                       <Input
                         value={formData.full_name}
                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                         placeholder="Seu nome completo"
+                        className={errors.full_name ? "border-destructive" : ""}
                       />
+                      {renderFieldError("full_name")}
                     </div>
 
                     <div className="space-y-2">
                       <Label className="font-body text-sm flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
-                        CPF / CNPJ
+                        CPF *
                       </Label>
                       <Input
-                        value={formData.cpf_cnpj}
-                        onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
+                        value={formData.cpf}
+                        onChange={(e) => handleCpfChange(e.target.value)}
                         placeholder="000.000.000-00"
+                        maxLength={14}
+                        className={errors.cpf ? "border-destructive" : ""}
                       />
+                      {renderFieldError("cpf")}
                     </div>
 
                     <div className="space-y-2">
                       <Label className="font-body text-sm flex items-center gap-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        Telefone
+                        Telefone *
                       </Label>
                       <Input
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="(11) 99999-9999"
+                        className={errors.phone ? "border-destructive" : ""}
                       />
+                      {renderFieldError("phone")}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Endereço */}
+              <Card className="card-premium">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Endereço
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">Digite o CEP para preenchimento automático</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label className="font-body text-sm">CEP *</Label>
+                      <div className="relative">
+                        <Input
+                          value={formData.cep}
+                          onChange={(e) => handleCepChange(e.target.value)}
+                          placeholder="00000-000"
+                          maxLength={9}
+                          className={errors.cep ? "border-destructive pr-8" : "pr-8"}
+                        />
+                        {cepLoading && (
+                          <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                      {renderFieldError("cep")}
+                    </div>
+
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label className="font-body text-sm">Rua *</Label>
+                      <Input
+                        value={formData.rua}
+                        onChange={(e) => setFormData({ ...formData, rua: e.target.value })}
+                        placeholder="Rua / Avenida"
+                        className={errors.rua ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("rua")}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-4">
+                    <div className="space-y-2">
+                      <Label className="font-body text-sm">Número *</Label>
+                      <Input
+                        value={formData.numero}
+                        onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                        placeholder="123"
+                        className={errors.numero ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("numero")}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-body text-sm">Complemento</Label>
+                      <Input
+                        value={formData.complemento}
+                        onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                        placeholder="Apto, Sala..."
+                      />
+                    </div>
+
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label className="font-body text-sm">Bairro *</Label>
+                      <Input
+                        value={formData.bairro}
+                        onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                        placeholder="Bairro"
+                        className={errors.bairro ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("bairro")}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label className="font-body text-sm">Cidade *</Label>
+                      <Input
+                        value={formData.cidade}
+                        onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                        placeholder="Cidade"
+                        className={errors.cidade ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("cidade")}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-body text-sm">Estado *</Label>
+                      <Input
+                        value={formData.estado}
+                        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                        placeholder="UF"
+                        maxLength={2}
+                        className={errors.estado ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("estado")}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dados da Empresa (opcional) */}
+              <Card className="card-premium">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <Building className="h-5 w-5 text-primary" />
+                    Dados da Empresa
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">Opcional — preencha se for pessoa jurídica</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="font-body text-sm flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        CNPJ
+                      </Label>
+                      <Input
+                        value={formData.cnpj}
+                        onChange={(e) => handleCnpjChange(e.target.value)}
+                        placeholder="00.000.000/0000-00"
+                        maxLength={18}
+                        className={errors.cnpj ? "border-destructive" : ""}
+                      />
+                      {renderFieldError("cnpj")}
                     </div>
 
                     <div className="space-y-2">
                       <Label className="font-body text-sm flex items-center gap-2">
                         <Building className="h-4 w-4 text-muted-foreground" />
-                        Empresa
+                        Razão Social
                       </Label>
                       <Input
-                        value={formData.company_name}
-                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                        placeholder="Nome da empresa (opcional)"
+                        value={formData.razao_social}
+                        onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
+                        placeholder="Razão social da empresa"
                       />
                     </div>
                   </div>
-
-                  <div className="flex justify-end">
-                    <Button onClick={handleSaveProfile} disabled={saving} className="btn-premium">
-                      {saving ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4 mr-2" />
-                      )}
-                      Salvar Alterações
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
+
+              {/* Save Button */}
+              <div className="flex justify-end">
+                <Button onClick={handleSaveProfile} disabled={saving} className="btn-premium">
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Salvar Alterações
+                </Button>
+              </div>
 
               {/* Password Change Card */}
               <Card className="card-premium">
@@ -489,7 +782,6 @@ export default function Conta() {
 
             {/* Tab: Plano */}
             <TabsContent value="plano" className="space-y-6">
-              {/* Current Plan Card */}
               <Card className={cn(
                 "card-premium",
                 isBusinessPlan && "border-amber-500/30 bg-amber-500/5"

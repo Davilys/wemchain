@@ -1,79 +1,146 @@
 
 
-# Correcao: Sincronizacao de Pagamentos Asaas com Creditos
+# Plano: Deduplicacao de Clientes, Perfil Completo e Validacoes
 
-## Problema Identificado
+## Resumo
 
-O webhook do Asaas NAO esta chegando na edge function (tabela `asaas_webhook_logs` esta completamente vazia). Isso significa que quando o cliente paga, o Asaas confirma o pagamento, mas o sistema nunca recebe essa confirmacao para liberar os creditos.
+Corrigir duplicidade de clientes no painel admin, redesenhar a area de dados pessoais separando pessoa fisica e empresa, adicionar endereco com preenchimento automatico por CEP, e bloquear registro sem perfil completo.
 
-A funcao `check-asaas-payment` faz polling na API do Asaas e VE que o pagamento esta confirmado, mas apenas retorna essa informacao -- nao atualiza o banco de dados nem libera os creditos.
+---
 
-## Causa Raiz
+## 1. Migracoes de Banco de Dados
 
-```text
-Cliente paga via Pix
-       |
-       v
-Asaas confirma pagamento (status: CONFIRMED)
-       |
-       v
-Webhook deveria chamar edge function --> NAO CHEGA (webhook nao configurado ou URL errada)
-       |
-       v
-Polling via check-asaas-payment --> LE status CONFIRMED da API do Asaas
-       |
-       v
-Retorna ao frontend, mas creditos NUNCA SAO LIBERADOS no banco
-       |
-       v
-Pagamento fica como "Pendente" para sempre no painel do cliente
+### 1.1 Novos campos na tabela `profiles`
+
+Adicionar campos separados para CPF e CNPJ, razao social, e endereco completo:
+
+- `cpf` (text, nullable) - CPF do cliente (obrigatorio apos primeiro acesso)
+- `cnpj` (text, nullable) - CNPJ opcional
+- `razao_social` (text, nullable) - Razao social da empresa
+- `cep` (text, nullable) - obrigatorio
+- `rua` (text, nullable) - obrigatorio
+- `numero` (text, nullable) - obrigatorio
+- `complemento` (text, nullable) - opcional
+- `bairro` (text, nullable) - obrigatorio
+- `cidade` (text, nullable) - obrigatorio
+- `estado` (text, nullable) - obrigatorio
+
+### 1.2 Migrar dados existentes
+
+- Copiar `cpf_cnpj` para `cpf` ou `cnpj` baseado no tamanho (11 digitos = CPF, 14 = CNPJ)
+- Criar indice UNIQUE em `cpf` (WHERE cpf IS NOT NULL) para evitar duplicatas
+
+### 1.3 Constraint de unicidade
+
+```sql
+CREATE UNIQUE INDEX idx_profiles_cpf_unique ON profiles (cpf) WHERE cpf IS NOT NULL;
 ```
 
-## Solucao
+Isso impede dois perfis com o mesmo CPF.
 
-Modificar a edge function `check-asaas-payment` para que, ao detectar um pagamento confirmado na API do Asaas que ainda esta como PENDING no banco, automaticamente libere os creditos usando a mesma funcao atomica `add_credits_atomic`.
+---
 
-Isso cria um mecanismo de fallback: mesmo que o webhook falhe, o polling sincroniza o status.
+## 2. Admin - Deduplicacao de Clientes (AdminUsuarios.tsx)
 
-## Detalhes Tecnicos
+### 2.1 Identificar duplicatas por CPF/CNPJ
 
-### Arquivo modificado: `supabase/functions/check-asaas-payment/index.ts`
+Na listagem, agrupar clientes que compartilham o mesmo CPF ou CNPJ. Exibir um badge "Duplicado" ao lado de clientes com CPF repetido.
 
-Quando a funcao detecta que:
-- Status na API do Asaas = `CONFIRMED` ou `RECEIVED`
-- Status no banco (dbPayment) = `PENDING`
+### 2.2 Funcionalidade de unificacao
 
-Entao:
-1. Chamar `add_credits_atomic` com os dados do pagamento para liberar creditos
-2. Atualizar status do pagamento na tabela `asaas_payments` para `CONFIRMED`
-3. Retornar o status atualizado ao frontend
+Adicionar botao "Unificar" quando duplicatas sao detectadas:
+- Selecionar conta principal (a mais antiga ou a que tem mais registros)
+- Transferir todos os `registros`, `certificates`, `record_authors`, `credits_ledger`, `asaas_payments` da conta secundaria para a principal
+- Marcar conta secundaria como bloqueada com motivo "Conta unificada"
 
-Para isso, a funcao precisara usar o `SUPABASE_SERVICE_ROLE_KEY` para chamar as RPCs, ja que o usuario autenticado nao tem permissao para executar essas funcoes diretamente.
+Isso sera feito via uma nova edge function `admin-merge-clients` que:
+1. Recebe `primary_user_id` e `secondary_user_id`
+2. Usa service role para mover todos os dados
+3. Bloqueia a conta secundaria
 
-### Fluxo corrigido
+---
+
+## 3. Bloquear Cadastro Duplicado
+
+### 3.1 Na pagina de Cadastro (Cadastro.tsx)
+
+Sem alteracoes no cadastro inicial (apenas nome, email, senha). O CPF sera preenchido depois na area do cliente.
+
+### 3.2 Validacao no save do perfil
+
+Quando o cliente salvar o CPF na pagina de configuracoes, verificar se ja existe outro perfil com o mesmo CPF. Se existir, exibir erro "Este CPF ja esta cadastrado em outra conta".
+
+---
+
+## 4. Bloquear Registro sem Perfil Completo
+
+### 4.1 NovoRegistro.tsx
+
+Antes de permitir criar um registro, verificar se o perfil tem os campos obrigatorios preenchidos:
+- `full_name`
+- `cpf`
+- `cep`, `rua`, `numero`, `bairro`, `cidade`, `estado`
+
+Se incompleto, exibir mensagem: "Complete seus dados pessoais em Configuracoes antes de registrar" com link para `/conta`.
+
+---
+
+## 5. Redesenhar Pagina de Perfil (Conta.tsx - aba Perfil)
+
+### 5.1 Secao "Dados Pessoais" (obrigatorios)
+
+Campos na ordem:
+- E-mail (somente leitura)
+- Nome Completo (obrigatorio)
+- CPF (obrigatorio, com mascara e validacao)
+- Telefone (obrigatorio)
+
+### 5.2 Secao "Endereco" (obrigatorio)
+
+Campos na ordem:
+- CEP (com busca automatica via ViaCEP API: `https://viacep.com.br/ws/{cep}/json/`)
+- Rua (preenchido automaticamente)
+- Numero (manual)
+- Complemento (opcional)
+- Bairro (preenchido automaticamente)
+- Cidade (preenchido automaticamente)
+- Estado (preenchido automaticamente)
+
+### 5.3 Secao "Dados da Empresa" (opcional)
+
+- CNPJ (opcional, com mascara e validacao)
+- Razao Social (opcional)
+
+### 5.4 Busca automatica por CEP
+
+Ao digitar 8 digitos no campo CEP, chamar a API ViaCEP e preencher automaticamente rua, bairro, cidade e estado.
 
 ```text
-Polling via check-asaas-payment
-       |
-       v
-Busca status na API Asaas --> CONFIRMED
-       |
-       v
-Verifica status no banco --> PENDING
-       |
-       v
-Chama add_credits_atomic (libera creditos)
-       |
-       v
-Atualiza asaas_payments.status = CONFIRMED
-       |
-       v
-Retorna ao frontend com status confirmado
-       |
-       v
-Frontend exibe "Pagamento confirmado! Creditos liberados."
+Fluxo:
+CEP digitado (8 digitos) --> fetch viacep.com.br/ws/{cep}/json/
+  --> Preenche: rua, bairro, cidade, estado
+  --> Usuario preenche: numero, complemento
 ```
 
-### Nenhum outro arquivo sera alterado
+---
 
-Apenas `supabase/functions/check-asaas-payment/index.ts` sera modificado para adicionar a logica de sincronizacao automatica.
+## 6. Arquivos Modificados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| Nova migracao SQL | Campos de endereco, cpf, cnpj separados, indice unique |
+| `src/pages/Conta.tsx` | Redesenhar aba Perfil com 3 secoes + busca CEP |
+| `src/pages/NovoRegistro.tsx` | Validar perfil completo antes de permitir registro |
+| `src/pages/admin/AdminUsuarios.tsx` | Detectar e exibir duplicatas, botao unificar |
+| `supabase/functions/admin-merge-clients/index.ts` | Nova edge function para unificar contas |
+| `src/integrations/supabase/types.ts` | Atualizado automaticamente |
+
+---
+
+## 7. Seguranca
+
+- Indice UNIQUE no CPF garante que nao existam duplicatas futuras
+- Edge function de merge exige role `super_admin`
+- Validacao de CPF/CNPJ com algoritmo oficial (ja existe em `cpfValidator.ts`)
+- Busca CEP e client-side, sem dados sensiveis
+

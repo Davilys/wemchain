@@ -27,6 +27,7 @@ const plans = [
       "Verificação pública",
       "Suporte por e-mail"
     ],
+    savings: null,
     highlighted: false,
     cta: "Começar Agora",
     color: "text-blue-500",
@@ -45,9 +46,9 @@ const plans = [
       "Certificados digitais PDF",
       "Verificação pública",
       "Suporte prioritário",
-      "Dashboard completo",
-      "Economia de 40%"
+      "Dashboard completo"
     ],
+    savings: "Economia de R$ 96",
     highlighted: true,
     badge: "Mais Popular",
     cta: "Escolher Plano",
@@ -69,6 +70,7 @@ const plans = [
       "Dashboard para acompanhamento dos registros",
       "Histórico completo dos registros realizados"
     ],
+    savings: "Economia de R$ 48/mês",
     highlighted: false,
     cta: "Assinar Plano",
     color: "text-yellow-500",
@@ -146,6 +148,11 @@ export default function Servicos() {
                   <div className="text-center mb-8">
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-muted-foreground text-sm block mt-1">{plan.period}</span>
+                    {plan.savings && (
+                      <span className="inline-block mt-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-xs font-semibold">
+                        {plan.savings}
+                      </span>
+                    )}
                   </div>
                   <ul className="space-y-3">
                     {plan.features.map((feature, i) => (

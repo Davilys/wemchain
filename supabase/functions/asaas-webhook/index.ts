@@ -89,25 +89,32 @@ Deno.serve(async (req) => {
     const rawPayload = await req.text();
     const payload: AsaasWebhookPayload = JSON.parse(rawPayload);
 
-    // Validar webhook secret (se configurado)
+    // Validar webhook secret (se configurado e não vazio)
     const asaasToken = req.headers.get("asaas-access-token");
-    if (webhookSecret && asaasToken !== webhookSecret) {
-      console.error("Invalid webhook signature");
-      
-      // Log tentativa inválida
-      await supabase.from("asaas_webhook_logs").insert({
-        event_type: payload.event || "UNKNOWN",
-        raw_payload: payload,
-        processed: false,
-        action_taken: "REJECTED - Invalid signature",
-        error_message: "Assinatura do webhook inválida",
-        ip_address: req.headers.get("x-forwarded-for") || "unknown",
-      });
+    const maskedToken = asaasToken ? asaasToken.substring(0, 6) + "***" : "NONE";
+    console.log(`[ASAAS Webhook] Token recebido (mascarado): ${maskedToken}`);
 
-      return new Response(
-        JSON.stringify({ error: "Invalid webhook signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (webhookSecret && webhookSecret.trim().length > 0) {
+      if (asaasToken !== webhookSecret) {
+        console.error(`[ASAAS Webhook] Invalid signature. Expected secret length: ${webhookSecret.length}, received token length: ${asaasToken?.length || 0}`);
+        
+        // Log tentativa inválida
+        await supabase.from("asaas_webhook_logs").insert({
+          event_type: payload.event || "UNKNOWN",
+          raw_payload: payload,
+          processed: false,
+          action_taken: "REJECTED - Invalid signature",
+          error_message: `Assinatura do webhook inválida. Token: ${maskedToken}`,
+          ip_address: req.headers.get("x-forwarded-for") || "unknown",
+        });
+
+        return new Response(
+          JSON.stringify({ error: "Invalid webhook signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      console.warn("[ASAAS Webhook] ⚠️ ASAAS_WEBHOOK_SECRET não configurado ou vazio. Aceitando webhook sem validação de token.");
     }
 
     const eventType = payload.event;

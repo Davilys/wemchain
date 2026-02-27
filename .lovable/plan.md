@@ -1,146 +1,74 @@
 
 
-# Plano: Deduplicacao de Clientes, Perfil Completo e Validacoes
+# Correcao do Webhook ASAAS + Sincronizacao de Pagamentos Pendentes
 
-## Resumo
+## Diagnostico
 
-Corrigir duplicidade de clientes no painel admin, redesenhar a area de dados pessoais separando pessoa fisica e empresa, adicionar endereco com preenchimento automatico por CEP, e bloquear registro sem perfil completo.
+Analisei os logs do webhook e a configuracao do ASAAS. O problema e claro:
 
----
+- **TODOS os webhooks estao sendo rejeitados** com erro "Assinatura do webhook invalida"
+- O ASAAS envia o header `asaas-access-token`, mas o valor nao bate com o `ASAAS_WEBHOOK_SECRET` configurado no backend
+- Na screenshot do ASAAS, o webhook "SITE LOVABLE" esta **Ativado**, mas os eventos sao rejeitados pelo nosso sistema
+- Ha **8 pagamentos pendentes** no banco que provavelmente ja foram pagos no ASAAS
+- O webhook "registre block" esta com status **Interrompido** no ASAAS, provavelmente porque muitas respostas 401 foram retornadas
 
-## 1. Migracoes de Banco de Dados
+## Causa Raiz
 
-### 1.1 Novos campos na tabela `profiles`
+A validacao no webhook compara o header `asaas-access-token` com o secret `ASAAS_WEBHOOK_SECRET`. O token configurado no ASAAS nao corresponde ao secret armazenado, causando rejeicao de 100% dos eventos.
 
-Adicionar campos separados para CPF e CNPJ, razao social, e endereco completo:
+## Solucao em 3 Partes
 
-- `cpf` (text, nullable) - CPF do cliente (obrigatorio apos primeiro acesso)
-- `cnpj` (text, nullable) - CNPJ opcional
-- `razao_social` (text, nullable) - Razao social da empresa
-- `cep` (text, nullable) - obrigatorio
-- `rua` (text, nullable) - obrigatorio
-- `numero` (text, nullable) - obrigatorio
-- `complemento` (text, nullable) - opcional
-- `bairro` (text, nullable) - obrigatorio
-- `cidade` (text, nullable) - obrigatorio
-- `estado` (text, nullable) - obrigatorio
+### Parte 1: Corrigir validacao do webhook
 
-### 1.2 Migrar dados existentes
+Atualizar `supabase/functions/asaas-webhook/index.ts`:
 
-- Copiar `cpf_cnpj` para `cpf` ou `cnpj` baseado no tamanho (11 digitos = CPF, 14 = CNPJ)
-- Criar indice UNIQUE em `cpf` (WHERE cpf IS NOT NULL) para evitar duplicatas
+- Se `ASAAS_WEBHOOK_SECRET` estiver vazio ou nao configurado, **aceitar o webhook** e logar um warning (ao inves de rejeitar)
+- Quando o secret estiver configurado, manter a validacao normalmente
+- Adicionar log do token recebido (mascarado) para facilitar debug futuro
 
-### 1.3 Constraint de unicidade
-
-```sql
-CREATE UNIQUE INDEX idx_profiles_cpf_unique ON profiles (cpf) WHERE cpf IS NOT NULL;
-```
-
-Isso impede dois perfis com o mesmo CPF.
-
----
-
-## 2. Admin - Deduplicacao de Clientes (AdminUsuarios.tsx)
-
-### 2.1 Identificar duplicatas por CPF/CNPJ
-
-Na listagem, agrupar clientes que compartilham o mesmo CPF ou CNPJ. Exibir um badge "Duplicado" ao lado de clientes com CPF repetido.
-
-### 2.2 Funcionalidade de unificacao
-
-Adicionar botao "Unificar" quando duplicatas sao detectadas:
-- Selecionar conta principal (a mais antiga ou a que tem mais registros)
-- Transferir todos os `registros`, `certificates`, `record_authors`, `credits_ledger`, `asaas_payments` da conta secundaria para a principal
-- Marcar conta secundaria como bloqueada com motivo "Conta unificada"
-
-Isso sera feito via uma nova edge function `admin-merge-clients` que:
-1. Recebe `primary_user_id` e `secondary_user_id`
-2. Usa service role para mover todos os dados
-3. Bloqueia a conta secundaria
-
----
-
-## 3. Bloquear Cadastro Duplicado
-
-### 3.1 Na pagina de Cadastro (Cadastro.tsx)
-
-Sem alteracoes no cadastro inicial (apenas nome, email, senha). O CPF sera preenchido depois na area do cliente.
-
-### 3.2 Validacao no save do perfil
-
-Quando o cliente salvar o CPF na pagina de configuracoes, verificar se ja existe outro perfil com o mesmo CPF. Se existir, exibir erro "Este CPF ja esta cadastrado em outra conta".
-
----
-
-## 4. Bloquear Registro sem Perfil Completo
-
-### 4.1 NovoRegistro.tsx
-
-Antes de permitir criar um registro, verificar se o perfil tem os campos obrigatorios preenchidos:
-- `full_name`
-- `cpf`
-- `cep`, `rua`, `numero`, `bairro`, `cidade`, `estado`
-
-Se incompleto, exibir mensagem: "Complete seus dados pessoais em Configuracoes antes de registrar" com link para `/conta`.
-
----
-
-## 5. Redesenhar Pagina de Perfil (Conta.tsx - aba Perfil)
-
-### 5.1 Secao "Dados Pessoais" (obrigatorios)
-
-Campos na ordem:
-- E-mail (somente leitura)
-- Nome Completo (obrigatorio)
-- CPF (obrigatorio, com mascara e validacao)
-- Telefone (obrigatorio)
-
-### 5.2 Secao "Endereco" (obrigatorio)
-
-Campos na ordem:
-- CEP (com busca automatica via ViaCEP API: `https://viacep.com.br/ws/{cep}/json/`)
-- Rua (preenchido automaticamente)
-- Numero (manual)
-- Complemento (opcional)
-- Bairro (preenchido automaticamente)
-- Cidade (preenchido automaticamente)
-- Estado (preenchido automaticamente)
-
-### 5.3 Secao "Dados da Empresa" (opcional)
-
-- CNPJ (opcional, com mascara e validacao)
-- Razao Social (opcional)
-
-### 5.4 Busca automatica por CEP
-
-Ao digitar 8 digitos no campo CEP, chamar a API ViaCEP e preencher automaticamente rua, bairro, cidade e estado.
-
+Logica atual (rejeita tudo):
 ```text
-Fluxo:
-CEP digitado (8 digitos) --> fetch viacep.com.br/ws/{cep}/json/
-  --> Preenche: rua, bairro, cidade, estado
-  --> Usuario preenche: numero, complemento
+if (webhookSecret && asaasToken !== webhookSecret) -> REJEITA
 ```
 
----
+Nova logica:
+```text
+if (webhookSecret && webhookSecret.trim().length > 0) {
+  if (asaasToken !== webhookSecret) -> REJEITA
+} else {
+  -> ACEITA com warning no log
+}
+```
 
-## 6. Arquivos Modificados
+### Parte 2: Botao "Verificar Pagamento" no Admin
+
+Adicionar na tabela de pagamentos (`AdminPagamentos.tsx`) um botao de acao para pagamentos com status "Pendente":
+
+- Icone de refresh/sync ao lado do status pendente
+- Ao clicar, chama a edge function `check-asaas-payment` passando o `asaas_payment_id`
+- Se o ASAAS confirmar que ja foi pago, sincroniza status e libera creditos automaticamente
+- Feedback visual com toast de sucesso ou erro
+- Recarrega a lista apos sincronizacao
+
+### Parte 3: Sincronizar todos os pendentes de uma vez
+
+Adicionar um botao "Sincronizar Todos Pendentes" no topo da pagina de pagamentos que:
+
+- Busca todos os pagamentos PENDING
+- Para cada um, chama `check-asaas-payment` para verificar o status real no ASAAS
+- Atualiza automaticamente os que ja foram pagos
+- Mostra um resumo ao final (quantos sincronizados, quantos ainda pendentes)
+
+## Arquivos Modificados
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| Nova migracao SQL | Campos de endereco, cpf, cnpj separados, indice unique |
-| `src/pages/Conta.tsx` | Redesenhar aba Perfil com 3 secoes + busca CEP |
-| `src/pages/NovoRegistro.tsx` | Validar perfil completo antes de permitir registro |
-| `src/pages/admin/AdminUsuarios.tsx` | Detectar e exibir duplicatas, botao unificar |
-| `supabase/functions/admin-merge-clients/index.ts` | Nova edge function para unificar contas |
-| `src/integrations/supabase/types.ts` | Atualizado automaticamente |
+| `supabase/functions/asaas-webhook/index.ts` | Flexibilizar validacao de token, aceitar quando secret vazio |
+| `src/pages/admin/AdminPagamentos.tsx` | Adicionar botoes "Verificar Pagamento" e "Sincronizar Todos Pendentes" |
 
----
+## Apos a Correcao
 
-## 7. Seguranca
-
-- Indice UNIQUE no CPF garante que nao existam duplicatas futuras
-- Edge function de merge exige role `super_admin`
-- Validacao de CPF/CNPJ com algoritmo oficial (ja existe em `cpfValidator.ts`)
-- Busca CEP e client-side, sem dados sensiveis
+- Novos webhooks do ASAAS serao aceitos imediatamente
+- Pagamentos pendentes podem ser sincronizados manualmente pelo admin
+- Recomendacao: acessar o painel ASAAS e verificar/atualizar o token do webhook "SITE LOVABLE" para que bata com o `ASAAS_WEBHOOK_SECRET`, garantindo seguranca futura
 

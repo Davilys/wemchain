@@ -30,6 +30,7 @@ export function Header() {
     { href: "/vantagens", label: t("nav.advantages") },
     { href: "/como-funciona", label: t("nav.howItWorks") },
     { href: "/servicos", label: t("nav.pricing") },
+    { href: "/blog", label: "Blog" },
     { href: "/verificar-registro", label: t("nav.verify") },
   ];
 

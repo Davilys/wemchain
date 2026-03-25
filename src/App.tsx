@@ -46,6 +46,8 @@ import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import AdminMonitoramento from "./pages/admin/AdminMonitoramento";
 import AdminParcerias from "./pages/admin/AdminParcerias";
 import ParceriaRegister from "./pages/ParceriaRegister";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 const queryClient = new QueryClient();
 

@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.admin-merge-clients]
 verify_jwt = false
+
+[functions.sync-pending-payments]
+verify_jwt = false
